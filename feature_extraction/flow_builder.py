@@ -63,12 +63,6 @@ def add_packet_to_flow(packet):
     flows[key].add_packet(packet)
 
     # Display current statistics
-    flow = flows[key]
 
-    print("=" * 50)
-    print("Flow Statistics")
-    print(f"Packets      : {flow.packet_count}")
-    print(f"Bytes        : {flow.total_bytes}")
-    print(f"Duration     : {flow.duration:.6f} sec")
-    print(f"Packets/sec  : {flow.packets_per_second:.2f}")
-    print(f"Bytes/sec    : {flow.bytes_per_second:.2f}")
+    
+    return key
