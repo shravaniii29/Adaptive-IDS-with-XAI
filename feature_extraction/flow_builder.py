@@ -1,14 +1,12 @@
-from feature_extraction.flow import Flow
 from scapy.layers.inet import IP, TCP, UDP
 
-flows = {}
 
 def get_flow_key(packet):
     """
     Create a bidirectional unique key for every network flow.
 
     Forward and backward packets of the same connection
-    must generate the same flow key.
+    generate the same flow key.
     """
 
     if IP not in packet:
@@ -36,33 +34,11 @@ def get_flow_key(packet):
         return (
             endpoint_1,
             endpoint_2,
-            protocol
+            protocol,
         )
 
     return (
         endpoint_2,
         endpoint_1,
-        protocol
+        protocol,
     )
-    
-def add_packet_to_flow(packet):
-
-    key = get_flow_key(packet)
-
-    if key is None:
-        return
-
-    # Create a new flow if it doesn't exist
-    if key not in flows:
-        flows[key] = Flow(
-            src_ip=packet[IP].src,
-            dst_ip=packet[IP].dst
-        )
-
-    # Update the flow
-    flows[key].add_packet(packet)
-
-    # Display current statistics
-
-    
-    return key
