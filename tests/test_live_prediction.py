@@ -1,14 +1,15 @@
 from packet_capture.capture import start_capture
 
 from feature_extraction.flow_manager import FlowManager
-from feature_extraction.feature_extractor import extract_features
 
-from detection.predictor import predict_flow
+from detection.detection_service import DetectionService
 
 
 flow_manager = FlowManager(
     flow_timeout=5
 )
+
+detection_service = DetectionService()
 
 
 def predict_completed_flow(key, flow):
@@ -17,17 +18,16 @@ def predict_completed_flow(key, flow):
     if flow.packet_count < 5:
         return
 
-    features = extract_features(flow)
-
-    result = predict_flow(features)
+    result = detection_service.detect(flow)
 
     print("\n" + "=" * 60)
     print("COMPLETED FLOW IDS PREDICTION")
     print("=" * 60)
 
     print(f"Flow              : {key}")
-    print(f"Packets           : {flow.packet_count}")
-    print(f"Duration          : {flow.duration:.6f} sec")
+    print(f"Flow ID           : {result['flow_id']}")
+    print(f"Packets           : {result['packet_count']}")
+    print(f"Duration          : {result['duration']:.6f} sec")
 
     print(
         f"XGB Probability   : "
@@ -66,9 +66,7 @@ def process_packet(packet):
 
     flow_manager.process_packet(packet)
 
-    expired_flows = (
-        flow_manager.get_expired_flows()
-    )
+    expired_flows = flow_manager.get_expired_flows()
 
     for key, flow in expired_flows:
 
@@ -89,16 +87,10 @@ start_capture(
 
 
 print("\nCapture completed.")
-
-print(
-    "Flushing remaining active flows..."
-)
+print("Flushing remaining active flows...")
 
 
-remaining_flows = (
-    flow_manager.flush_all_flows()
-)
-
+remaining_flows = flow_manager.flush_all_flows()
 
 for key, flow in remaining_flows:
 
@@ -107,5 +99,15 @@ for key, flow in remaining_flows:
         flow,
     )
 
+
+stats = detection_service.get_statistics()
+
+print("\n" + "=" * 60)
+print("DETECTION SUMMARY")
+print("=" * 60)
+print(f"Total Flows      : {stats['total_flows']}")
+print(f"Normal Flows     : {stats['normal_flows']}")
+print(f"Positive Flows   : {stats['positive_flows']}")
+print("=" * 60)
 
 print("\nLive IDS test completed.")
