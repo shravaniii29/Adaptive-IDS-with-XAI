@@ -20,38 +20,43 @@ def predict_completed_flow(key, flow):
 
     result = detection_service.detect(flow)
 
-    print("\n" + "=" * 60)
-    print("COMPLETED FLOW IDS PREDICTION")
-    print("=" * 60)
+    print("\n" + "=" * 70)
+    print("LIVE IDS FLOW ANALYSIS")
+    print("=" * 70)
 
-    print(f"Flow              : {key}")
-    print(f"Flow ID           : {result['flow_id']}")
-    print(f"Packets           : {result['packet_count']}")
-    print(f"Duration          : {result['duration']:.6f} sec")
+    print(f"Flow               : {key}")
+    print(f"Flow ID            : {result['flow_id']}")
+    print(f"Packets            : {result['packet_count']}")
+    print(f"Duration           : {result['duration']:.6f} sec")
 
     print(
-        f"XGB Probability   : "
+        f"XGB Probability    : "
         f"{result['xgb_probability']:.6f}"
     )
 
     print(
-        f"XGB Prediction    : "
+        f"XGB Prediction     : "
         f"{result['xgb_prediction']}"
     )
 
     print(
-        f"Isolation Score   : "
+        f"Isolation Score    : "
         f"{result['isolation_score']:.6f}"
     )
 
     print(
-        f"Isolation Anomaly : "
+        f"Isolation Anomaly  : "
         f"{result['isolation_prediction']}"
     )
 
     print(
-        f"Hybrid Prediction : "
+        f"Hybrid Prediction  : "
         f"{result['hybrid_prediction']}"
+    )
+
+    print(
+        f"Drift Detected     : "
+        f"{result['drift_detected']}"
     )
 
     if result["hybrid_prediction"] == 1:
@@ -59,7 +64,22 @@ def predict_completed_flow(key, flow):
     else:
         print("STATUS             : NORMAL")
 
-    print("=" * 60)
+    print("\nTop SHAP Features")
+    print("-" * 70)
+
+    for index, feature in enumerate(
+        result["shap_explanation"],
+        start=1
+    ):
+
+        print(
+            f"{index}. "
+            f"{feature['feature']}"
+            f" | Value: {feature['value']:.4f}"
+            f" | Impact: {feature['impact']:.6f}"
+        )
+
+    print("=" * 70)
 
 
 def process_packet(packet):
@@ -76,7 +96,7 @@ def process_packet(packet):
         )
 
 
-print("Starting Live IDS...")
+print("Starting Live Adaptive IDS...")
 print("Listening for network traffic...\n")
 
 
@@ -102,12 +122,14 @@ for key, flow in remaining_flows:
 
 stats = detection_service.get_statistics()
 
-print("\n" + "=" * 60)
+print("\n" + "=" * 70)
 print("DETECTION SUMMARY")
-print("=" * 60)
-print(f"Total Flows      : {stats['total_flows']}")
-print(f"Normal Flows     : {stats['normal_flows']}")
-print(f"Positive Flows   : {stats['positive_flows']}")
-print("=" * 60)
+print("=" * 70)
 
-print("\nLive IDS test completed.")
+print(f"Total Flows       : {stats['total_flows']}")
+print(f"Normal Flows      : {stats['normal_flows']}")
+print(f"Positive Flows    : {stats['positive_flows']}")
+
+print("=" * 70)
+
+print("\nLive Adaptive IDS test completed.")

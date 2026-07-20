@@ -44,12 +44,12 @@ def create_test_flow():
 
 flow = create_test_flow()
 
-
 result = service.detect(flow)
 
 
-print("\nDETECTION RESULT")
-print("----------------")
+print("\n" + "=" * 60)
+print("DETECTION RESULT")
+print("=" * 60)
 
 print(
     "Flow ID:",
@@ -59,6 +59,11 @@ print(
 print(
     "Packets:",
     result["packet_count"],
+)
+
+print(
+    "Duration:",
+    result["duration"],
 )
 
 print(
@@ -72,6 +77,11 @@ print(
 )
 
 print(
+    "Isolation Score:",
+    result["isolation_score"],
+)
+
+print(
     "Isolation Prediction:",
     result["isolation_prediction"],
 )
@@ -81,12 +91,33 @@ print(
     result["hybrid_prediction"],
 )
 
+print(
+    "Drift Detected:",
+    result["drift_detected"],
+)
+
+print("\nTop SHAP Features")
+print("-----------------")
+
+for index, feature in enumerate(
+    result["shap_explanation"],
+    start=1
+):
+
+    print(
+        f"{index}. "
+        f"{feature['feature']}"
+        f" | Value: {feature['value']:.4f}"
+        f" | Impact: {feature['impact']:.6f}"
+    )
+
 
 statistics = service.get_statistics()
 
 
-print("\nDETECTION STATISTICS")
-print("--------------------")
+print("\n" + "=" * 60)
+print("DETECTION STATISTICS")
+print("=" * 60)
 
 print(
     "Total Flows:",
@@ -114,7 +145,7 @@ assert (
     == 1
 )
 
+assert len(result["shap_explanation"]) == 5
 
-print(
-    "\nDETECTION SERVICE TEST PASSED"
-)
+
+print("\nDETECTION SERVICE TEST PASSED")
