@@ -1,57 +1,13 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Network IDS Dashboard</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-
-<body>
-
-<h1>Network Intrusion Detection System</h1>
-
-<div class="card">
-    <h2>Prediction</h2>
-
-    <p>Flow ID:
-        <span id="flow"></span>
-    </p>
-
-    <p>Probability:
-        <span id="prob"></span>
-    </p>
-
-    <p>XGBoost:
-        <span id="xgb"></span>
-    </p>
-
-    <p>Isolation Forest:
-        <span id="iso"></span>
-    </p>
-
-    <p>Hybrid:
-        <span id="hybrid"></span>
-    </p>
-</div>
-
-<div class="card">
-    <h2>Drift Detection</h2>
-
-    <p id="drift"></p>
-</div>
-
-<div class="card">
-    <h2>System</h2>
-
-    <p id="system"></p>
-</div>
-
-<div class="card">
-    <h2>Top SHAP Features</h2>
-
-    <ul id="shap"></ul>
-</div>
-
-<script src="script.js"></script>
-
-</body>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>frontend</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

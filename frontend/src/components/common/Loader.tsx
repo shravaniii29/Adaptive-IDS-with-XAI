@@ -1,0 +1,1 @@
+export default function Loader({ label = "Loading..." }: { label?: string }) { return <div className="flex min-h-32 items-center justify-center gap-3 text-sm text-slate-400"><span className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-300 border-t-transparent" />{label}</div>; }

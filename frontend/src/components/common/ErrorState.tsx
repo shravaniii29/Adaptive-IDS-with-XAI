@@ -1,0 +1,1 @@
+export default function ErrorState({ message = "Unable to load this data.", onRetry }: { message?: string; onRetry?: () => void }) { return <div className="rounded-xl border border-rose-400/20 bg-rose-500/5 p-5 text-sm text-rose-200">{message}{onRetry && <button onClick={onRetry} className="ml-3 underline">Try again</button>}</div>; }
