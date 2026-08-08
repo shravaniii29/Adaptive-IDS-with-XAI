@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+* { box-sizing: border-box; }
+html, body, #root { min-height: 100%; }
+body { margin: 0; background: #030712; color: #f8fafc; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+
+/* Existing components use Tailwind dark shades. These visual overrides provide a complete light surface without changing their API. */
+html[data-theme="light"] body { background: #f1f5f9; color: #0f172a; }
+html[data-theme="light"] .bg-slate-950 { background-color: #f8fafc !important; }
+html[data-theme="light"] .bg-slate-900 { background-color: #ffffff !important; }
+html[data-theme="light"] .bg-slate-800, html[data-theme="light"] .bg-slate-800\/50 { background-color: #e9eef6 !important; }
+html[data-theme="light"] [class*="bg-[#111827]"] { background-color: #ffffff !important; }
+html[data-theme="light"] .bg-white\/5 { background-color: #e2e8f0 !important; }
+html[data-theme="light"] .bg-indigo-500\/15 { background-color: #e0e7ff !important; }
+html[data-theme="light"] .border-white\/10, html[data-theme="light"] .border-white\/5, html[data-theme="light"] .border-slate-800 { border-color: #cbd5e1 !important; }
+html[data-theme="light"] .text-white, html[data-theme="light"] .text-slate-100, html[data-theme="light"] .text-slate-200 { color: #0f172a !important; }
+html[data-theme="light"] .text-slate-300, html[data-theme="light"] .text-slate-400 { color: #475569 !important; }
+html[data-theme="light"] .text-slate-500 { color: #64748b !important; }
+html[data-theme="light"] input { color: #0f172a; }

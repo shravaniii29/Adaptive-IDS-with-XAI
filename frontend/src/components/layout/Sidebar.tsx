@@ -1,0 +1,8 @@
+import { Activity, BrainCircuit, FileBarChart2, LayoutDashboard, Settings, ShieldCheck } from "lucide-react";
+import { NavLink } from "react-router-dom";
+
+const menu = [{ icon: LayoutDashboard, title: "Overview", to: "/" }, { icon: Activity, title: "Live Logs", to: "/live-logs" }, { icon: BrainCircuit, title: "Explainability", to: "/explainability" }, { icon: FileBarChart2, title: "Reports", to: "/reports" }, { icon: Settings, title: "Settings", to: "/settings" }];
+
+export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+  return <div className="flex h-full flex-col px-4 pb-6 lg:pt-6"><div className="mb-8 flex items-center gap-3 px-3"><div className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-500/15 text-indigo-300 ring-1 ring-indigo-400/30"><ShieldCheck size={22} /></div><div><p className="font-semibold tracking-tight text-white">Adaptive IDS</p><p className="text-xs text-slate-500">Security operations</p></div></div><p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[.18em] text-slate-500">Workspace</p><ul className="space-y-1">{menu.map((item) => <li key={item.title}><NavLink end={item.to === "/"} to={item.to} onClick={onNavigate} className={({ isActive }) => `flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition ${isActive ? "bg-indigo-500/15 text-indigo-200 ring-1 ring-inset ring-indigo-400/20" : "text-slate-400 hover:bg-white/5 hover:text-slate-100"}`}><item.icon size={19} /><span>{item.title}</span></NavLink></li>)}</ul><div className="mt-auto rounded-xl border border-emerald-400/15 bg-emerald-500/5 p-3 text-xs text-emerald-200"><span className="mr-2 inline-block h-2 w-2 rounded-full bg-emerald-400" />Monitoring service connected</div></div>;
+}
