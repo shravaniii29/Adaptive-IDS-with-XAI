@@ -15,6 +15,12 @@ export interface AgentAnalysis {
   soc_analyst_summary: string;
   incident_report: IncidentReport;
   model_name: string;
+  memory_agent_result?: {
+    summary?: string;
+    similar_incidents?: number;
+    pattern_detected?: boolean;
+    last_seen?: string;
+  };
 }
 
 export interface AgentAnalysisResponse {
