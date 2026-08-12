@@ -2,7 +2,7 @@ from agents.drift_agent import DriftAgent
 from agents.response_agent import ResponseAgent
 from agents.explainability_agent import ExplainabilityAgent
 from agents.memory_agent import MemoryAgent
-
+from agents.retraining_agent import RetrainingAgent  
 
 class CoordinatorAgent:
     """
@@ -21,6 +21,8 @@ class CoordinatorAgent:
         self.explainability_agent = ExplainabilityAgent()
 
         self.memory_agent = MemoryAgent()
+
+        self.retraining_agent    = RetrainingAgent() 
 
     def analyze(self, detection_result):
 
@@ -43,6 +45,10 @@ class CoordinatorAgent:
             detection_result["drift_detected"]
 
         )
+
+        retraining_result = self.retraining_agent.analyze(   
+            drift_result                                     
+        )      
 
         # -----------------------------------------
         # Response Agent
@@ -106,7 +112,9 @@ class CoordinatorAgent:
 
             memory_result,
 
-            consensus
+            consensus,
+
+            retraining_result   
 
         )
 
@@ -117,6 +125,8 @@ class CoordinatorAgent:
             "explanation": explanation_result,
 
             "drift": drift_result,
+
+            "retraining":      retraining_result, 
 
             "response": response_result,
 
@@ -226,7 +236,9 @@ class CoordinatorAgent:
 
         memory,
 
-        consensus
+        consensus,
+
+        retraining                                            
 
     ):
 
@@ -270,6 +282,12 @@ class CoordinatorAgent:
 
             "memory_risk": memory["risk"],
 
-            "memory_recommendation": memory["recommendation"]
+            "memory_recommendation": memory["recommendation"],
+
+            "retraining_triggered":  retraining["retraining_triggered"],
+
+            "model_updated":         retraining["model_updated"],
+            
+            "retraining_recommendation": retraining["recommendation"],
 
         }
