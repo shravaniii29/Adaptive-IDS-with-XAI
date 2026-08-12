@@ -9,7 +9,10 @@ const friendlyFeature: Record<string, { name: string; meaning: string }> = {
   "Init Bwd Win Byts": { name: "Incoming connection capacity", meaning: "how much data the remote side was ready to receive" },
   "iat variation": { name: "Timing variation", meaning: "whether the gaps between packets were unusually irregular" },
 };
-const fallback = (feature: string) => ({ name: feature.replace(/_/g, " "), meaning: "a network traffic measurement" });
+const fallback = (feature?: string | null) => ({
+  name: (feature ?? "Unknown feature").replace(/_/g, " "),
+  meaning: "a network traffic measurement",
+});
 
 export default function ExplanationCard({ explanation }: { explanation: ShapExplanation | null }) {
   return <Card className="h-full"><div className="mb-5"><p className="text-sm text-slate-400">Why the system made this decision</p><h2 className="mt-1 text-xl font-semibold text-white">What the AI noticed</h2></div>
