@@ -32,8 +32,17 @@ MIN_F1_DELTA = -0.03
 class RetrainingAgent:
     """Create a candidate only; it never replaces the deployed model artifacts."""
 
+ 
+
     def __init__(self):
         self._last_retrain_time = None
+
+    def _no_retrain_result(self, drift_status):
+        return self._result(
+            False,
+            "NO_RETRAIN",
+            f"Retraining not required - drift status is {drift_status}."
+        )
 
     def analyze(self, drift_result):
         drift_status = drift_result["status"]

@@ -94,11 +94,10 @@ class Flow:
 
     @property
     def duration(self):
+        if self.start_time is None or self.end_time is None:
+         return 0.0
 
-        if self.start_time is None:
-            return 0
-
-        return self.end_time - self.start_time
+        return max(0.0, self.end_time - self.start_time)
 
     @property
     def bytes_per_second(self):
