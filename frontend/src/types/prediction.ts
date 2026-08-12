@@ -5,3 +5,7 @@ export interface Prediction {
   isolation_prediction: string | number;
   hybrid_prediction: string | number;
 }
+
+export interface PredictionHistoryEntry extends Prediction {
+  observedAt: string;
+}
