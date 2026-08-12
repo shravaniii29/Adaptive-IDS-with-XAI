@@ -1,351 +1,192 @@
-import os
-import shutil
-import pickle
+"""Safe, provenance-recorded prototype retraining for the CIC-IDS2018 model."""
+
+import json
 import logging
+import os
+import pickle
+from datetime import datetime, timezone
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from datetime import datetime
-from pathlib import Path
-from xgboost import XGBClassifier
 from sklearn.ensemble import IsolationForest
-from sklearn.metrics import (
-    accuracy_score, precision_score,
-    recall_score, f1_score, roc_auc_score
-)
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
+from xgboost import XGBClassifier
 
 log = logging.getLogger(__name__)
 
-PROJECT_ROOT      = Path(__file__).resolve().parent.parent
-MODELS_DIR        = PROJECT_ROOT / "models"
-DATA_DIR          = PROJECT_ROOT / "data"
-
-MODEL_PATH        = MODELS_DIR / "xgb_model.pkl"
-BACKUP_PATH       = MODELS_DIR / "xgb_model_backup.pkl"
-ISO_PATH          = MODELS_DIR / "isolation_forest.pkl"
-ISO_BACKUP_PATH   = MODELS_DIR / "isolation_forest_backup.pkl"
-SCALER_PATH       = MODELS_DIR / "scaler.pkl"
-THRESHOLD_PATH    = MODELS_DIR / "threshold.pkl"
-TOP_FEATURES_PATH = MODELS_DIR / "top_features.pkl"
-RETRAIN_DATA_PATH = DATA_DIR   / "retrain_buffer.csv"
-
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+MODELS_DIR = PROJECT_ROOT / "models"
+CANDIDATES_DIR = MODELS_DIR / "candidates"
+DATASET_DIR = Path(os.environ.get("CIC_IDS2018_DATA_DIR", PROJECT_ROOT / "data" / "cicids2018"))
+TRAINING_FILES = (
+    "02-14-2018.csv", "02-15-2018.csv", "02-16-2018.csv", "02-20-2018.csv",
+    "02-21-2018.csv", "02-22-2018.csv", "02-23-2018.csv",
+)
+ROWS_PER_FILE = int(os.environ.get("CIC_IDS2018_RETRAIN_ROWS_PER_FILE", "8000"))
 COOLDOWN_SECONDS = 300
 MIN_RECALL_DELTA = -0.05
-MIN_F1_DELTA     = -0.03
+MIN_F1_DELTA = -0.03
 
 
 class RetrainingAgent:
-    """
-    Retraining Agent
-
-    Monitors drift severity from the Drift Agent
-    and triggers adaptive retraining when the model
-    is degrading. Evaluates the candidate before
-    replacing the deployed model.
-    """
+    """Create a candidate only; it never replaces the deployed model artifacts."""
 
     def __init__(self):
         self._last_retrain_time = None
 
     def analyze(self, drift_result):
-
         drift_status = drift_result["status"]
-        drift_ratio  = drift_result["drift_ratio"]
-
-        # -----------------------------------------
-        # Decide whether to retrain
-        # -----------------------------------------
-
-        should_retrain = drift_status == "MODEL DEGRADING"
-
-        if not should_retrain:
+        if drift_status != "MODEL DEGRADING":
             return self._no_retrain_result(drift_status)
 
-        # -----------------------------------------
-        # Cooldown guard
-        # -----------------------------------------
-
-        now = datetime.now()
-        if self._last_retrain_time is not None:
-            elapsed = (now - self._last_retrain_time).total_seconds()
-            if elapsed < COOLDOWN_SECONDS:
-                log.info(
-                    f"[RETRAINING] Cooldown active "
-                    f"({elapsed:.0f}s / {COOLDOWN_SECONDS}s). Skipping."
-                )
-                return {
-                    "retraining_triggered": False,
-                    "status": "COOLDOWN",
-                    "model_updated": False,
-                    "recommendation":
-                        "Retraining skipped — cooldown period active.",
-                    "agent_confidence": 0.5
-                }
-
-        log.info("[DRIFT] Drift detected")
-        log.info("[RETRAINING] Starting retraining...")
-
-        # -----------------------------------------
-        # Load artifacts
-        # -----------------------------------------
+        now = datetime.now(timezone.utc)
+        if self._last_retrain_time and (now - self._last_retrain_time).total_seconds() < COOLDOWN_SECONDS:
+            return self._result(False, "COOLDOWN", "Retraining skipped - cooldown period active.")
 
         try:
-            scaler, threshold, top_features, \
-                current_xgb, current_iso = self._load_artifacts()
-        except Exception as e:
-            log.error(f"[RETRAINING] Failed to load artifacts: {e}")
-            return self._failed_result(str(e))
+            scaler, threshold, top_features, current_xgb = self._load_deployed_artifacts()
+            prepared = self._prepare_data(top_features, scaler)
+            X_train, X_train_scaled, y_train, X_val, X_val_scaled, y_val, provenance = prepared
+        except Exception as exc:
+            log.exception("[RETRAINING] Candidate preparation failed")
+            return self._result(True, "FAILED", "Candidate preparation failed.", reason=str(exc))
 
-        # -----------------------------------------
-        # Prepare data
-        # -----------------------------------------
-
+        current_metrics = self._evaluate_xgb(current_xgb, X_val, y_val, threshold)
         try:
-            X_tr_raw, X_tr_scaled, y_tr, \
-                X_val_raw, X_val_scaled, y_val = \
-                self._prepare_data(top_features, scaler)
-        except Exception as e:
-            log.error(f"[RETRAINING] Data preparation failed: {e}")
-            return self._failed_result(str(e))
+            candidate_xgb, candidate_threshold = self._train_xgb(X_train, y_train, X_val, y_val)
+            candidate_iso = self._train_iso(X_train_scaled, y_train)
+            candidate_metrics = self._evaluate_xgb(candidate_xgb, X_val, y_val, candidate_threshold)
+            accepted = self._should_accept(current_metrics, candidate_metrics)
+            paths = self._write_candidate(candidate_xgb, candidate_iso, candidate_threshold, provenance, current_metrics, candidate_metrics, accepted, now)
+        except Exception as exc:
+            log.exception("[RETRAINING] Candidate training failed")
+            return self._result(True, "FAILED", "Candidate training failed.", reason=str(exc))
 
-        log.info(
-            f"[RETRAINING] Training data prepared — "
-            f"{len(X_tr_raw)} train / {len(X_val_raw)} val rows"
+        self._last_retrain_time = now
+        status = "CANDIDATE_READY" if accepted else "CANDIDATE_REJECTED"
+        recommendation = (
+            "Candidate artifacts were saved separately for manual review; deployed artifacts were not changed. "
+            "Promotion requires an explicit review and a process restart/model reload."
+            if accepted else "Candidate was saved for audit but did not meet acceptance criteria; deployed artifacts were not changed."
         )
+        return self._result(True, status, recommendation, current_metrics=current_metrics,
+                            candidate_metrics=candidate_metrics, candidate_accepted=accepted,
+                            candidate_artifacts=paths, provenance=provenance)
 
-        # -----------------------------------------
-        # Evaluate current model
-        # -----------------------------------------
-
-        current_metrics = self._evaluate_xgb(
-            current_xgb, X_val_raw, y_val,
-            threshold, label="Current"
-        )
-
-        # -----------------------------------------
-        # Train candidate
-        # -----------------------------------------
-
-        try:
-            candidate_xgb, candidate_threshold = \
-                self._train_xgb(X_tr_raw, y_tr)
-        except Exception as e:
-            log.error(f"[RETRAINING] Candidate training failed: {e}")
-            return self._failed_result(str(e))
-
-        log.info("[RETRAINING] Candidate model trained")
-
-        # -----------------------------------------
-        # Evaluate candidate
-        # -----------------------------------------
-
-        candidate_metrics = self._evaluate_xgb(
-            candidate_xgb, X_val_raw, y_val,
-            candidate_threshold, label="Candidate"
-        )
-
-        # -----------------------------------------
-        # Accept / Reject
-        # -----------------------------------------
-
-        accepted = self._should_accept(
-            current_metrics, candidate_metrics
-        )
-
-        if accepted:
-            candidate_iso = self._train_iso(X_tr_scaled, y_tr)
-            self._replace_artifacts(
-                candidate_xgb, candidate_threshold, candidate_iso
-            )
-            self._last_retrain_time = now
-            log.info("[MODEL] Candidate accepted")
-            log.info("[MODEL] Updated successfully")
-
-            return {
-                "retraining_triggered": True,
-                "status": "COMPLETED",
-                "model_updated": True,
-                "old_model_metrics": current_metrics,
-                "new_model_metrics": candidate_metrics,
-                "recommendation":
-                    "Model successfully retrained and deployed. "
-                    "Monitor for continued stability.",
-                "agent_confidence": 0.95
-            }
-
-        else:
-            self._last_retrain_time = now
-            log.info("[MODEL] Candidate rejected")
-            log.info("[MODEL] Existing model retained")
-
-            return {
-                "retraining_triggered": True,
-                "status": "REJECTED",
-                "model_updated": False,
-                "old_model_metrics": current_metrics,
-                "new_model_metrics": candidate_metrics,
-                "recommendation":
-                    "Candidate model did not meet quality threshold. "
-                    "Existing model retained. Collect more data.",
-                "agent_confidence": 0.70
-            }
-
-    # =====================================================
-    # Internal helpers
-    # =====================================================
-
-    def _no_retrain_result(self, drift_status):
-        return {
-            "retraining_triggered": False,
-            "status": "NOT_REQUIRED",
-            "model_updated": False,
-            "recommendation":
-                f"Drift status is '{drift_status}'. "
-                "Retraining not required at this time.",
-            "agent_confidence": 0.90
-        }
-
-    def _failed_result(self, reason):
-        return {
-            "retraining_triggered": True,
-            "status": "FAILED",
-            "model_updated": False,
-            "reason": reason,
-            "recommendation":
-                "Retraining failed. Check logs and data buffer.",
-            "agent_confidence": 0.0
-        }
-
-    def _load_artifacts(self):
-        def load(path):
-            with open(path, "rb") as f:
-                return pickle.load(f)
-        return (
-            load(SCALER_PATH),
-            load(THRESHOLD_PATH),
-            load(TOP_FEATURES_PATH),
-            load(MODEL_PATH),
-            load(ISO_PATH),
-        )
+    def _load_deployed_artifacts(self):
+        def load(name):
+            with open(MODELS_DIR / name, "rb") as handle:
+                return pickle.load(handle)
+        return load("scaler.pkl"), load("threshold.pkl"), load("top_features.pkl"), load("xgb_model.pkl")
 
     def _prepare_data(self, top_features, scaler):
-        if not RETRAIN_DATA_PATH.exists():
-            raise FileNotFoundError(
-                f"Retraining buffer not found at {RETRAIN_DATA_PATH}. "
-                "Populate it with labelled data before retraining."
-            )
-
-        df = pd.read_csv(RETRAIN_DATA_PATH)
-        df.columns = df.columns.str.strip()
-
-        missing = [f for f in top_features if f not in df.columns]
+        source_files = [DATASET_DIR / name for name in TRAINING_FILES]
+        missing = [str(path) for path in source_files if not path.is_file()]
         if missing:
-            raise ValueError(f"Buffer missing features: {missing}")
-        if "label" not in df.columns:
-            raise ValueError(
-                "Buffer must contain a 'label' column (0=benign, 1=attack)."
-            )
+            raise FileNotFoundError("CIC-IDS2018 training files missing: " + ", ".join(missing))
 
-        df = df.replace([np.inf, -np.inf], np.nan)
-        df = df.dropna(subset=top_features + ["label"])
-
-        X_raw = df[top_features].values
-        y     = df["label"].astype(int).values
-
-        split        = int(len(X_raw) * 0.8)
-        X_tr_raw     = X_raw[:split];   y_tr  = y[:split]
-        X_val_raw    = X_raw[split:];   y_val = y[split:]
-        X_tr_scaled  = scaler.transform(X_tr_raw)
-        X_val_scaled = scaler.transform(X_val_raw)
-
-        return X_tr_raw, X_tr_scaled, y_tr, X_val_raw, X_val_scaled, y_val
-
-    def _train_xgb(self, X_raw, y):
-        scale_pos_weight = (y == 0).sum() / max((y == 1).sum(), 1)
-        model = XGBClassifier(
-            objective="binary:logistic",
-            eval_metric="aucpr",
-            scale_pos_weight=scale_pos_weight,
-            max_depth=10,
-            n_estimators=400,
-            learning_rate=0.03,
-            subsample=0.8,
-            colsample_bytree=0.8,
-            gamma=5,
-            min_child_weight=5,
-            random_state=42,
-            n_jobs=-1,
-        )
-        model.fit(X_raw, y)
-        probs     = model.predict_proba(X_raw)[:, 1]
-        threshold = float(np.percentile(probs, 80))
-        return model, threshold
-
-    def _train_iso(self, X_scaled, y):
-        X_benign     = X_scaled[y == 0]
-        attack_ratio = max((y == 1).sum() / len(y), 0.01)
-        iso = IsolationForest(
-            n_estimators=300,
-            contamination=attack_ratio,
-            max_samples=256,
-            max_features=0.8,
-            random_state=42,
-            n_jobs=-1,
-        )
-        iso.fit(X_benign)
-        return iso
-
-    def _evaluate_xgb(self, model, X_val_raw, y_val, threshold, label="Model"):
-        probs  = model.predict_proba(X_val_raw)[:, 1]
-        y_pred = (probs >= threshold).astype(int)
-        try:
-            auc = round(roc_auc_score(y_val, probs), 4)
-        except Exception:
-            auc = None
-        metrics = {
-            "accuracy":  round(accuracy_score(y_val, y_pred), 4),
-            "precision": round(precision_score(y_val, y_pred, zero_division=0), 4),
-            "recall":    round(recall_score(y_val, y_pred, zero_division=0), 4),
-            "f1":        round(f1_score(y_val, y_pred, zero_division=0), 4),
-            "roc_auc":   auc,
+        frames = []
+        source_rows = {}
+        for path in source_files:
+            chunk = next(pd.read_csv(path, chunksize=50000, low_memory=False))
+            chunk.columns = chunk.columns.str.strip()
+            chunk = chunk[chunk["Label"].astype(str).str.strip().str.lower() != "label"].head(ROWS_PER_FILE)
+            frames.append(chunk)
+            source_rows[path.name] = len(chunk)
+        raw = pd.concat(frames, ignore_index=True)
+        X, y = self._preprocess_v7(raw)
+        X = self._feature_engineering_v7(X).reindex(columns=top_features, fill_value=0)
+        X = X.replace([np.inf, -np.inf], np.nan).fillna(0).clip(-1e9, 1e9).astype(np.float64)
+        if len(X) < 10 or y.nunique() < 2:
+            raise ValueError("The CIC-IDS2018 retraining sample must contain sufficient benign and attack rows.")
+        # V7 sorts flows by timestamp.  Within the bounded pool, split each label
+        # in timestamp order so both the train and candidate-validation sets are valid.
+        train_indices, val_indices = [], []
+        for label in (0, 1):
+            indices = y[y == label].index.to_list()
+            split = int(len(indices) * 0.8)
+            if split == 0 or split == len(indices):
+                raise ValueError("The bounded CIC-IDS2018 subset lacks enough rows for each binary label.")
+            train_indices.extend(indices[:split])
+            val_indices.extend(indices[split:])
+        X_train, X_val = X.loc[train_indices], X.loc[val_indices]
+        y_train, y_val = y.loc[train_indices], y.loc[val_indices]
+        provenance = {
+            "dataset": "CIC-IDS2018",
+            "source_directory": str(DATASET_DIR),
+            "source_files": list(source_rows),
+            "rows_per_file": source_rows,
+            "total_rows_after_v7_preprocessing": int(len(X)),
+            "training_rows": int(len(X_train)),
+            "validation_rows": int(len(X_val)),
+            "preprocessing": "V7: timestamp sort, duplicate removal, NaN/Inf handling, binary labels, feature engineering, deployed top_features, RobustScaler",
+            "excluded_final_test_files": ["02-28-2018.csv", "03-01-2018.csv", "03-02-2018.csv"],
         }
-        log.info(
-            f"[EVALUATION] {label} — "
-            f"Accuracy: {metrics['accuracy']} | "
-            f"Precision: {metrics['precision']} | "
-            f"Recall: {metrics['recall']} | "
-            f"F1: {metrics['f1']} | "
-            f"ROC-AUC: {metrics['roc_auc']}"
-        )
-        return metrics
+        return X_train, scaler.transform(X_train), y_train, X_val, scaler.transform(X_val), y_val, provenance
 
-    def _should_accept(self, current, candidate):
-        recall_delta = candidate["recall"] - current["recall"]
-        f1_delta     = candidate["f1"]     - current["f1"]
-        if recall_delta < MIN_RECALL_DELTA:
-            log.info(
-                f"[EVALUATION] Recall dropped {recall_delta:.4f} "
-                f"(limit {MIN_RECALL_DELTA}). Rejecting."
-            )
-            return False
-        if f1_delta < MIN_F1_DELTA:
-            log.info(
-                f"[EVALUATION] F1 dropped {f1_delta:.4f} "
-                f"(limit {MIN_F1_DELTA}). Rejecting."
-            )
-            return False
-        return True
+    @staticmethod
+    def _preprocess_v7(df):
+        df = df.copy()
+        df["Timestamp"] = pd.to_datetime(df["Timestamp"], errors="coerce")
+        df = df.dropna(subset=["Timestamp"]).sort_values("Timestamp").drop_duplicates()
+        df = df.replace([np.inf, -np.inf], np.nan).drop(columns=["Flow ID", "Src IP", "Dst IP", "Src Port"], errors="ignore")
+        df["Label"] = df["Label"].apply(lambda value: 0 if str(value).strip().lower() == "benign" else 1)
+        return df.drop(columns=["Label", "Timestamp"], errors="ignore").apply(pd.to_numeric, errors="coerce").fillna(0), df["Label"]
 
-    def _replace_artifacts(self, xgb_model, threshold, iso_model):
-        if MODEL_PATH.exists():
-            shutil.copy(MODEL_PATH, BACKUP_PATH)
-            log.info(f"[MODEL] XGBoost backup → {BACKUP_PATH}")
-        if ISO_PATH.exists():
-            shutil.copy(ISO_PATH, ISO_BACKUP_PATH)
-            log.info(f"[MODEL] IsoForest backup → {ISO_BACKUP_PATH}")
-        for path, obj in [
-            (MODEL_PATH, xgb_model),
-            (THRESHOLD_PATH, threshold),
-            (ISO_PATH, iso_model),
-        ]:
-            with open(path, "wb") as f:
-                pickle.dump(obj, f)
+    @staticmethod
+    def _feature_engineering_v7(X):
+        X = X.copy()
+        if {"TotLen Fwd Pkts", "Total Fwd Packets"} <= set(X):
+            X["bytes_per_pkt"] = X["TotLen Fwd Pkts"] / (X["Total Fwd Packets"] + 1)
+        if {"Fwd Pkts/s", "Flow Pkts/s"} <= set(X):
+            X["pkt_rate_ratio"] = X["Fwd Pkts/s"] / (X["Flow Pkts/s"] + 1)
+        if {"Flow IAT Std", "Flow IAT Mean"} <= set(X):
+            X["iat_variation"] = X["Flow IAT Std"] / (X["Flow IAT Mean"] + 1)
+        return X
+
+    @staticmethod
+    def _train_xgb(X_train, y_train, X_val, y_val):
+        model = XGBClassifier(n_estimators=300, max_depth=6, learning_rate=0.08, subsample=0.8,
+                              colsample_bytree=0.8, gamma=0.1, reg_alpha=0.1, reg_lambda=1.0,
+                              eval_metric="logloss", n_jobs=-1, random_state=42)
+        model.fit(X_train, y_train)
+        probabilities = model.predict_proba(X_val)[:, 1]
+        threshold = max(np.linspace(0, 1, 100), key=lambda value: f1_score(y_val, probabilities >= value, zero_division=0))
+        return model, float(threshold)
+
+    @staticmethod
+    def _train_iso(X_train_scaled, y_train):
+        model = IsolationForest(n_estimators=500, max_samples=512, contamination=0.12,
+                                max_features=0.8, random_state=42, n_jobs=-1)
+        model.fit(X_train_scaled[np.asarray(y_train) == 0])
+        return model
+
+    @staticmethod
+    def _evaluate_xgb(model, X_val, y_val, threshold):
+        probabilities = model.predict_proba(X_val)[:, 1]
+        predictions = (probabilities >= threshold).astype(int)
+        try:
+            auc = round(roc_auc_score(y_val, probabilities), 4)
+        except ValueError:
+            auc = None
+        return {"accuracy": round(accuracy_score(y_val, predictions), 4), "precision": round(precision_score(y_val, predictions, zero_division=0), 4), "recall": round(recall_score(y_val, predictions, zero_division=0), 4), "f1": round(f1_score(y_val, predictions, zero_division=0), 4), "roc_auc": auc}
+
+    @staticmethod
+    def _should_accept(current, candidate):
+        return candidate["recall"] - current["recall"] >= MIN_RECALL_DELTA and candidate["f1"] - current["f1"] >= MIN_F1_DELTA
+
+    @staticmethod
+    def _write_candidate(xgb_model, iso_model, threshold, provenance, current_metrics, candidate_metrics, accepted, created_at):
+        CANDIDATES_DIR.mkdir(parents=True, exist_ok=True)
+        candidate_id = created_at.strftime("%Y%m%dT%H%M%SZ")
+        paths = {"xgb": CANDIDATES_DIR / f"xgb_candidate_{candidate_id}.pkl", "isolation_forest": CANDIDATES_DIR / f"isolation_forest_candidate_{candidate_id}.pkl", "threshold": CANDIDATES_DIR / f"threshold_candidate_{candidate_id}.pkl", "metadata": CANDIDATES_DIR / f"candidate_{candidate_id}.json"}
+        for key, artifact in (("xgb", xgb_model), ("isolation_forest", iso_model), ("threshold", threshold)):
+            with open(paths[key], "wb") as handle:
+                pickle.dump(artifact, handle)
+        paths["metadata"].write_text(json.dumps({"candidate_id": candidate_id, "created_at": created_at.isoformat(), "candidate_accepted": accepted, "current_metrics": current_metrics, "candidate_metrics": candidate_metrics, "provenance": provenance, "deployment": "Prototype-only: manually promote after review; restart/reload required."}, indent=2), encoding="utf-8")
+        return {key: str(path) for key, path in paths.items()}
+
+    @staticmethod
+    def _result(triggered, status, recommendation, **extra):
+        return {"retraining_triggered": triggered, "status": status, "model_updated": False, "recommendation": recommendation, "agent_confidence": 0.95 if status == "CANDIDATE_READY" else 0.7, **extra}
