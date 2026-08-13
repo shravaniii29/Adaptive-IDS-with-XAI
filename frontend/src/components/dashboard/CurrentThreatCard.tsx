@@ -55,7 +55,13 @@ export default function CurrentThreatCard({
           </p>
 
           <h1 className="text-4xl font-bold mt-2">
-            {(probability * 100).toFixed(1)}%
+            {(() => {
+              if (probability === undefined || probability === null || isNaN(probability)) return "0.0%";
+              const pct = probability * 100;
+              if (pct === 0) return "0.0%";
+              if (pct < 0.1) return `${pct.toFixed(3)}%`;
+              return `${pct.toFixed(1)}%`;
+            })()}
           </h1>
         </div>
 
