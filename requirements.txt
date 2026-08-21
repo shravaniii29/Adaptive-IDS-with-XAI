@@ -45,6 +45,11 @@ slicer==0.0.8
 starlette==1.3.1
 termcolor==3.3.0
 threadpoolctl==3.6.0
+# CPU build deliberately - the live app only ever runs single-sample
+# inference for the CNN+LSTM experimental variant, so there's no benefit
+# to a CUDA build in production. Install with:
+#   pip install torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+torch==2.13.0
 tqdm==4.68.4
 typing-inspection==0.4.2
 typing_extensions==4.16.0

@@ -9,6 +9,7 @@ import DriftCard from "../../components/dashboard/DriftCard";
 import FlowHistoryChart from "../../components/dashboard/FlowHistoryChart";
 import AgentInsightsCard from "../../components/dashboard/AgentInsightsCard";
 import ModelConsensusCard from "../../components/dashboard/ModelConsensusCard";
+import ExperimentalModelCard from "../../components/dashboard/ExperimentalModelCard";
 import LiveLogTable from "../../components/dashboard/LiveLogTable";
 import ExplanationCard from "../../components/explainability/ExplanationCard";
 import StatCard from "../../components/dashboard/StatCard";
@@ -20,6 +21,7 @@ import { usePrediction } from "../../hooks/usePrediction";
 import { useShap } from "../../hooks/useShap";
 import { useSystemStatus } from "../../hooks/useSystemStatus";
 import { useAgentAnalysis } from "../../hooks/useAgentAnalysis";
+import { useExperimentalModels } from "../../hooks/useExperimentalModels";
 
 const duration = (seconds: number) => `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
 const isAttack = (value: string | number) => value === 1 || String(value).toLowerCase() === "attack";
@@ -30,6 +32,7 @@ export default function Dashboard() {
   const { explanation } = useShap();
   const { system, stats, error, loading } = useSystemStatus();
   const { analysis } = useAgentAnalysis(prediction?.flow_id);
+  const { predictions: experimental } = useExperimentalModels();
   const attack = prediction ? isAttack(prediction.hybrid_prediction) : false;
   return <PageContainer><PageHeader title="Security Overview" subtitle="Live explainable AI network threat monitoring" />
     {error && <div className="mb-6"><ErrorState message={`Backend unavailable: ${error}`} /></div>}
@@ -38,6 +41,11 @@ export default function Dashboard() {
     <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4"><ConnectionStatus connected={Boolean(system) && !error} backend="FastAPI" /><DriftCard detected={drift?.drift_detected ?? false} /><SystemHealthCard uptime={system ? duration(system.uptime_seconds) : "—"} status={system?.status === "ok" ? "Healthy" : "Warning"} /><ThreatSummary attacks={stats?.positive_flows ?? 0} normal={stats?.normal_flows ?? 0} /></div>
     <div className="mt-6 grid gap-6 xl:grid-cols-2"><FlowHistoryChart entries={history} /><ExplanationCard explanation={explanation} /></div>
     <div className="mt-6 grid gap-6 xl:grid-cols-2"><ModelConsensusCard prediction={prediction} /><AgentInsightsCard result={analysis} prediction={prediction} /></div>
+    <div className="mt-6 grid gap-6 xl:grid-cols-3">
+      <ExperimentalModelCard result={experimental?.variant1_xgb_single_flow} fallbackLabel="XGBoost (single-flow)" disclaimer={experimental?.disclaimer ?? "Experimental research model."} />
+      <ExperimentalModelCard result={experimental?.variant2_xgb_temporal} fallbackLabel="XGBoost (+ temporal history)" disclaimer={experimental?.disclaimer ?? "Experimental research model."} />
+      <ExperimentalModelCard result={experimental?.variant3_cnn_lstm} fallbackLabel="CNN+LSTM (raw sequence)" disclaimer={experimental?.disclaimer ?? "Experimental research model."} />
+    </div>
     <LiveLogTable entries={history} driftDetected={drift?.drift_detected} latestAnalysis={analysis} />
     {loading && !stats && <Loader label="Connecting to backend..." />}
   </PageContainer>;

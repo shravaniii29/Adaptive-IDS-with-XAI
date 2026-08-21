@@ -1,0 +1,163 @@
+{
+  "created_at": "2026-08-21T17:23:36.800563+00:00",
+  "dataset": "CIC-IDS2018, 10 days (7 partial samples + 3 full days: 02-28/03-01/03-02)",
+  "total_rows": 2712279,
+  "train_rows": 2066516,
+  "test_rows": 645763,
+  "attack_types": [
+    "Bot",
+    "Brute Force -Web",
+    "Brute Force -XSS",
+    "DDOS attack-HOIC",
+    "DDOS attack-LOIC-UDP",
+    "DDoS attacks-LOIC-HTTP",
+    "DoS attacks-GoldenEye",
+    "DoS attacks-Hulk",
+    "DoS attacks-SlowHTTPTest",
+    "DoS attacks-Slowloris",
+    "FTP-BruteForce",
+    "Infilteration",
+    "SQL Injection"
+  ],
+  "split": "per-day chronological, cutoff at 70th percentile of that day's own attack timestamps",
+  "trained_on_device": "cuda",
+  "note": "Experimental models. Known limitation: Min Pkt Size feature has concentrated-but-real cross-attack-type reliance in variant 1 (investigated - not a degenerate single-value shortcut like an earlier single-day case, but disclosed here regardless).",
+  "variant1": {
+    "metrics": {
+      "accuracy": 0.891071492172825,
+      "precision": 0.884610879902554,
+      "recall": 0.847455978935715,
+      "f1": 0.865634920938122,
+      "threshold": 0.21999999999999997
+    },
+    "feature_importances": [
+      [
+        "Min Pkt Size",
+        0.3591490089893341
+      ],
+      [
+        "Avg Pkt Size",
+        0.21089859306812286
+      ],
+      [
+        "Flow Duration",
+        0.14156125485897064
+      ],
+      [
+        "Tot Fwd Pkts",
+        0.11090504378080368
+      ],
+      [
+        "Flow Pkts/s",
+        0.08828799426555634
+      ],
+      [
+        "TotLen Fwd Pkts",
+        0.05114302784204483
+      ],
+      [
+        "Flow Byts/s",
+        0.028003977611660957
+      ],
+      [
+        "Protocol",
+        0.010051071643829346
+      ]
+    ],
+    "shortcut_warning": false
+  },
+  "variant2": {
+    "metrics": {
+      "accuracy": 0.9104810898115873,
+      "precision": 0.9805411602843385,
+      "recall": 0.7996611462681208,
+      "f1": 0.8809118663760604,
+      "threshold": 0.3999999999999999
+    },
+    "feature_importances": [
+      [
+        "hist_std_Flow_Duration",
+        0.2327663153409958
+      ],
+      [
+        "hist_std_TotLen_Fwd_Pkts",
+        0.1459604948759079
+      ],
+      [
+        "hist_flow_count",
+        0.1140630692243576
+      ],
+      [
+        "hist_mean_Flow_Pkts_s",
+        0.1056927740573883
+      ],
+      [
+        "hist_mean_Flow_Byts_s",
+        0.0784091055393219
+      ],
+      [
+        "Min Pkt Size",
+        0.06242074817419052
+      ],
+      [
+        "hist_mean_Flow_Duration",
+        0.06210174411535263
+      ],
+      [
+        "time_since_last",
+        0.035043977200984955
+      ],
+      [
+        "hist_std_Flow_Pkts_s",
+        0.03332606330513954
+      ],
+      [
+        "TotLen Fwd Pkts",
+        0.025037597864866257
+      ],
+      [
+        "Tot Fwd Pkts",
+        0.024625087156891823
+      ],
+      [
+        "Avg Pkt Size",
+        0.015103560872375965
+      ],
+      [
+        "hist_std_Flow_Byts_s",
+        0.014970515854656696
+      ],
+      [
+        "Flow Duration",
+        0.012154479511082172
+      ],
+      [
+        "hist_mean_TotLen_Fwd_Pkts",
+        0.012069597840309143
+      ],
+      [
+        "Flow Pkts/s",
+        0.010314436629414558
+      ],
+      [
+        "Flow Byts/s",
+        0.009746413677930832
+      ],
+      [
+        "Protocol",
+        0.006194095127284527
+      ]
+    ],
+    "shortcut_warning": false
+  },
+  "variant3": {
+    "metrics": {
+      "accuracy": 0.9046244520048377,
+      "precision": 0.9489919706755106,
+      "recall": 0.8133648998399234,
+      "f1": 0.8759596561752314,
+      "threshold": 0.41999999999999993
+    },
+    "architecture": "Conv1d(8->32,k=3) + LSTM(32->64) + Linear(64->1)"
+  }
+}

@@ -1,13 +1,20 @@
-from scapy.layers.inet import IP, TCP
+from scapy.layers.inet import IP, TCP, UDP
 
 
 class Flow:
 
-    def __init__(self, src_ip=None, dst_ip=None):
+    def __init__(self, src_ip=None, dst_ip=None, protocol=None, dst_port=None):
 
         # Flow identity
         self.src_ip = src_ip
         self.dst_ip = dst_ip
+
+        # IP protocol number (6=TCP, 17=UDP, 1=ICMP, ...) and destination
+        # port of the flow, taken from the first packet. Used by the
+        # experimental-models rolling history, which groups by
+        # (Dst Port, Protocol) - not used by the deployed 25-feature model.
+        self.protocol = protocol
+        self.dst_port = dst_port
 
         # Basic statistics
         self.packet_count = 0
@@ -25,6 +32,13 @@ class Flow:
         self.forward_packet_lengths = []
         self.forward_timestamps = []
         self.forward_header_lengths = []
+
+        # Forward PAYLOAD lengths (frame length minus IP/TCP/UDP headers).
+        # This is what CICFlowMeter's "Fwd Pkt Len Min" etc. actually
+        # measure - distinct from forward_packet_lengths above, which is
+        # full frame length and was previously (incorrectly) reused for
+        # the experimental models' "Min Pkt Size" feature.
+        self.forward_payload_lengths = []
 
         # Backward direction
         self.backward_packet_lengths = []
@@ -77,7 +91,15 @@ class Flow:
 
                     header_length += tcp_header_length * 4
 
+                elif UDP in packet:
+
+                    header_length += 8
+
                 self.forward_header_lengths.append(header_length)
+
+                payload_length = max(0, packet_length - header_length)
+
+                self.forward_payload_lengths.append(payload_length)
 
             else:
 
