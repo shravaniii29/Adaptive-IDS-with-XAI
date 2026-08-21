@@ -1,0 +1,44 @@
+{
+  "name": "HTTP flood",
+  "is_attack": true,
+  "start_time": 1787337961.7990232,
+  "end_time": 1787337971.7995675,
+  "duration_seconds": 10.000544309616089,
+  "flow_count": 1,
+  "model_scores": {
+    "deployed_hybrid": 0.0,
+    "variant1_xgb_single_flow": 0.0,
+    "variant2_xgb_temporal": 0.0,
+    "variant3_cnn_lstm": 0.0
+  },
+  "flows": [
+    {
+      "flow_id": 2069,
+      "source_ip": "172.188.155.25",
+      "destination_ip": "192.168.31.246",
+      "observed_at": 1787337991.2744324,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "name": "Benign baseline",
+  "is_attack": false,
+  "start_time": 1787337913.7253258,
+  "end_time": 1787337923.7572613,
+  "duration_seconds": 10.031935453414917,
+  "flow_count": 2,
+  "model_scores": {
+    "deployed_hybrid": 1.0,
+    "variant1_xgb_single_flow": 1.0,
+    "variant2_xgb_temporal": 0.0,
+    "variant3_cnn_lstm": 1.0
+  },
+  "flows": [
+    {
+      "flow_id": 1947,
+      "source_ip": "27.38.200.226",
+      "destination_ip": "192.168.31.246",
+      "observed_at": 1787337913.116696,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 1963,
+      "source_ip": "221.226.41.106",
+      "destination_ip": "192.168.31.246",
+      "observed_at": 1787337937.506321,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    }
+  ]
+}
