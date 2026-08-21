@@ -1,0 +1,72 @@
+{
+  "name": "SYN flood",
+  "is_attack": true,
+  "start_time": 1787338229.8429134,
+  "end_time": 1787338239.845203,
+  "duration_seconds": 10.002289533615112,
+  "flow_count": 2,
+  "model_scores": {
+    "deployed_hybrid": 0.0,
+    "variant1_xgb_single_flow": 0.0,
+    "variant2_xgb_temporal": 1.0,
+    "variant3_cnn_lstm": 0.0
+  },
+  "flows": [
+    {
+      "flow_id": 2498,
+      "source_ip": "112.201.234.212",
+      "destination_ip": "192.168.31.246",
+      "observed_at": 1787338258.4651139,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 2504,
+      "source_ip": "204.79.197.203",
+      "destination_ip": "192.168.31.246",
+      "observed_at": 1787338262.5763733,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    }
+  ]
+}

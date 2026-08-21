@@ -1,0 +1,78 @@
+{
+  "generated_at": 1787338303.0463903,
+  "target_ip": "192.168.31.246",
+  "scenarios": [
+    {
+      "name": "Benign baseline",
+      "is_attack": false,
+      "flow_count": 1,
+      "model_scores": {
+        "deployed_hybrid": 1.0,
+        "variant1_xgb_single_flow": 1.0,
+        "variant2_xgb_temporal": 1.0,
+        "variant3_cnn_lstm": 1.0
+      },
+      "file": "Benign baseline.json"
+    },
+    {
+      "name": "ICMP flood",
+      "is_attack": true,
+      "flow_count": 0,
+      "model_scores": {
+        "deployed_hybrid": null,
+        "variant1_xgb_single_flow": null,
+        "variant2_xgb_temporal": null,
+        "variant3_cnn_lstm": null
+      },
+      "file": "ICMP flood.json"
+    },
+    {
+      "name": "SYN flood",
+      "is_attack": true,
+      "flow_count": 2,
+      "model_scores": {
+        "deployed_hybrid": 0.0,
+        "variant1_xgb_single_flow": 0.0,
+        "variant2_xgb_temporal": 1.0,
+        "variant3_cnn_lstm": 0.0
+      },
+      "file": "SYN flood.json"
+    },
+    {
+      "name": "UDP flood",
+      "is_attack": true,
+      "flow_count": 0,
+      "model_scores": {
+        "deployed_hybrid": null,
+        "variant1_xgb_single_flow": null,
+        "variant2_xgb_temporal": null,
+        "variant3_cnn_lstm": null
+      },
+      "file": "UDP flood.json"
+    },
+    {
+      "name": "HTTP flood",
+      "is_attack": true,
+      "flow_count": 0,
+      "model_scores": {
+        "deployed_hybrid": null,
+        "variant1_xgb_single_flow": null,
+        "variant2_xgb_temporal": null,
+        "variant3_cnn_lstm": null
+      },
+      "file": "HTTP flood.json"
+    },
+    {
+      "name": "Port scan",
+      "is_attack": true,
+      "flow_count": 0,
+      "model_scores": {
+        "deployed_hybrid": null,
+        "variant1_xgb_single_flow": null,
+        "variant2_xgb_temporal": null,
+        "variant3_cnn_lstm": null
+      },
+      "file": "Port scan.json"
+    }
+  ]
+}

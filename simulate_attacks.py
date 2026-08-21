@@ -24,7 +24,10 @@ Usage:
 """
 
 import http.client
+import json
+import os
 import socket
+import sys
 import threading
 import time
 from dataclasses import dataclass, field
@@ -38,6 +41,7 @@ API_BASE = "http://127.0.0.1:8000"
 VICTIM_HTTP_PORT = 8899
 POLL_INTERVAL = 0.5
 DRAIN_SECONDS = 25  # >= FlowManager's active_timeout, so the last flow of a scenario has time to expire and get scored
+RESULTS_DIR = "simulation_results"  # one JSON file per attack type, for demo/visualization use
 
 
 def local_lan_ip():
@@ -348,10 +352,90 @@ def print_report(rows):
 
 
 # =====================================================
+# Per-attack-type export, one JSON file per scenario
+#
+# Splits the combined report into a separate file per attack type
+# (icmp_flood.json, syn_flood.json, ...) plus one summary.json
+# indexing all of them - so a demo/visualization step can load and
+# chart a single attack type without re-running the simulation or
+# parsing the combined report.
+# =====================================================
+
+def dump_results(rows, attributed, scenarios, out_dir=RESULTS_DIR):
+    os.makedirs(out_dir, exist_ok=True)
+
+    model_keys = ["deployed_hybrid", "variant1_xgb_single_flow", "variant2_xgb_temporal", "variant3_cnn_lstm"]
+    scenarios_by_name = {s.name: s for s in scenarios}
+    rows_by_name = {name: (is_attack, n_flows, results) for name, is_attack, n_flows, results in rows}
+
+    summary = {"generated_at": time.time(), "target_ip": TARGET_IP, "scenarios": []}
+
+    for name, s in scenarios_by_name.items():
+        is_attack, n_flows, results = rows_by_name[name]
+        expected = 1 if is_attack else 0
+
+        flow_details = []
+        for f in attributed[name]:
+            per_model = {}
+            for model in model_keys:
+                if model == "deployed_hybrid":
+                    pred = f.hybrid_prediction
+                    available = pred is not None
+                else:
+                    variant = {"variant1_xgb_single_flow": f.variant1,
+                               "variant2_xgb_temporal": f.variant2,
+                               "variant3_cnn_lstm": f.variant3}[model]
+                    available = variant.get("available", False)
+                    pred = variant.get("prediction") if available else None
+                per_model[model] = {
+                    "available": available,
+                    "prediction": pred,
+                    "correct": (pred == expected) if available else None
+                }
+            flow_details.append({
+                "flow_id": f.flow_id,
+                "source_ip": f.source_ip,
+                "destination_ip": f.destination_ip,
+                "observed_at": f.observed_at,
+                "models": per_model
+            })
+
+        scenario_record = {
+            "name": name,
+            "is_attack": is_attack,
+            "start_time": s.start_time,
+            "end_time": s.end_time,
+            "duration_seconds": s.end_time - s.start_time,
+            "flow_count": n_flows,
+            "model_scores": results,
+            "flows": flow_details
+        }
+
+        path = os.path.join(out_dir, f"{name}.json")
+        with open(path, "w") as fh:
+            json.dump(scenario_record, fh, indent=2)
+
+        summary["scenarios"].append({
+            "name": name,
+            "is_attack": is_attack,
+            "flow_count": n_flows,
+            "model_scores": results,
+            "file": f"{name}.json"
+        })
+
+    with open(os.path.join(out_dir, "summary.json"), "w") as fh:
+        json.dump(summary, fh, indent=2)
+
+    print(f"\nwrote {len(scenarios_by_name)} per-attack-type files + summary.json to {out_dir}/")
+
+
+# =====================================================
 # Main
 # =====================================================
 
 def main():
+    out_dir = sys.argv[1] if len(sys.argv) > 1 else RESULTS_DIR
+
     print(f"Target (this machine's real NIC IP): {TARGET_IP}")
     print("Checking backend is reachable ...")
     requests.get(f"{API_BASE}/status", timeout=5).raise_for_status()
@@ -380,6 +464,7 @@ def main():
 
     rows = score(attributed, scenarios)
     print_report(rows)
+    dump_results(rows, attributed, scenarios, out_dir=out_dir)
 
 
 if __name__ == "__main__":
