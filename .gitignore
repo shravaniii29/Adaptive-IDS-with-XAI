@@ -31,3 +31,9 @@ models/*.joblib
 
 # Generated prototype retraining candidates (may include local provenance paths)
 models/candidates/
+
+# Raw training datasets (large, fetched separately - not committed)
+data/cicids2018/
+data/ddos2019/
+data/cicids2018_full/
+data/ddos2019_full/

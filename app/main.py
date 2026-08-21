@@ -250,6 +250,12 @@ def get_predict():
         "flow_id":
             result.get("flow_id"),
 
+        "source_ip":
+            result.get("source_ip"),
+
+        "destination_ip":
+            result.get("destination_ip"),
+
         "xgb_probability":
             result.get("xgb_probability"),
 
@@ -469,6 +475,131 @@ def get_shap():
             explanation.get(
                 "detailed_report",
                 []
+            )
+    }
+
+
+# =====================================================
+# BULK HISTORY ENDPOINT
+#
+# /predict and /experimental only ever reflect the single
+# most recent flow. Under a burst of flows completing faster
+# than a client's poll interval (e.g. a flood, or automated
+# testing), polling only the "latest" silently misses most of
+# them. This returns every buffered flow (up to
+# AppState.max_history) with the same summary fields, so a
+# client can poll less often and still see everything.
+# =====================================================
+
+@app.get("/history")
+def get_history():
+
+    entries = state.get_history()
+
+    summaries = []
+
+    for result in entries:
+
+        agent = result.get(
+            "agent_analysis",
+            {}
+        )
+
+        experimental = result.get(
+            "experimental_models",
+            {}
+        )
+
+        summaries.append({
+
+            "flow_id":
+                result.get("flow_id"),
+
+            "recorded_at":
+                result.get("recorded_at"),
+
+            "source_ip":
+                result.get("source_ip"),
+
+            "destination_ip":
+                result.get("destination_ip"),
+
+            "hybrid_prediction":
+                result.get("hybrid_prediction"),
+
+            "variant1_xgb_single_flow":
+                experimental.get(
+                    "variant1_xgb_single_flow",
+                    {}
+                ),
+
+            "variant2_xgb_temporal":
+                experimental.get(
+                    "variant2_xgb_temporal",
+                    {}
+                ),
+
+            "variant3_cnn_lstm":
+                experimental.get(
+                    "variant3_cnn_lstm",
+                    {}
+                )
+        })
+
+    return {"flows": summaries}
+
+
+# =====================================================
+# EXPERIMENTAL MODELS ENDPOINT
+# =====================================================
+
+@app.get("/experimental")
+def get_experimental():
+
+    if state.last_result is None:
+
+        return {
+            "message":
+                "no flows processed yet"
+        }
+
+    result = state.last_result
+
+    experimental = result.get(
+        "experimental_models",
+        {}
+    )
+
+    return {
+
+        "flow_id":
+            result.get("flow_id"),
+
+        "source_ip":
+            result.get("source_ip"),
+
+        "destination_ip":
+            result.get("destination_ip"),
+
+        "disclaimer":
+            experimental.get("disclaimer"),
+
+        "variant1_xgb_single_flow":
+            experimental.get(
+                "variant1_xgb_single_flow",
+                {}
+            ),
+
+        "variant2_xgb_temporal":
+            experimental.get(
+                "variant2_xgb_temporal",
+                {}
+            ),
+
+        "variant3_cnn_lstm":
+            experimental.get(
+                "variant3_cnn_lstm",
+                {}
             )
     }
 

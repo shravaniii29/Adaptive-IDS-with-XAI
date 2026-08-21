@@ -2,6 +2,7 @@ from feature_extraction.feature_extractor import extract_features
 
 from detection.predictor import predict_flow
 from detection.drift_detector import DriftDetector
+from detection import experimental_models
 
 from explainability.shap_explainer import SHAPExplainer
 
@@ -170,7 +171,22 @@ class DetectionService:
             # -------------------------------------
 
             "shap_explanation":
-                shap_explanation
+                shap_explanation,
+
+            # -------------------------------------
+            # Experimental models (EXPERIMENTAL panel)
+            #
+            # Isolated in its own try/except: a bug here
+            # must never take down the real detection
+            # result the way an unhandled exception from
+            # detect() as a whole would (the caller in
+            # app/main.py::_handle_completed_flow catches
+            # any exception from detect() and discards
+            # the entire result).
+            # -------------------------------------
+
+            "experimental_models":
+                self._safe_experimental_predict(flow)
         }
 
         # -----------------------------------------
@@ -190,6 +206,24 @@ class DetectionService:
         result["agent_analysis"] = agent_analysis
 
         return result
+
+    def _safe_experimental_predict(self, flow):
+        """Never let a failure in the experimental panel propagate - a
+        raised exception here would be caught by this class's own caller
+        (app/main.py::_handle_completed_flow), which discards the ENTIRE
+        detect() result on any exception. That must not happen just
+        because the experimental models had a bad day."""
+
+        try:
+
+            return experimental_models.predict_all(flow)
+
+        except Exception as exc:
+
+            return {
+                "disclaimer": experimental_models.DISCLAIMER,
+                "error": str(exc),
+            }
 
     def get_statistics(self):
 
