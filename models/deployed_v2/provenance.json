@@ -1,0 +1,159 @@
+{
+  "created_at": "2026-08-24T03:53:32.903925+00:00",
+  "dataset": "CIC-IDS2018 (10 days, full) + CIC-DDoS2019 (17 files, own-benign-only)",
+  "cicids2018_day_tags": [
+    "02-14-2018",
+    "02-15-2018",
+    "02-16-2018",
+    "02-20-2018",
+    "02-21-2018",
+    "02-22-2018",
+    "02-23-2018",
+    "02-28-2018",
+    "03-01-2018",
+    "03-02-2018"
+  ],
+  "ddos2019_day_tags": [
+    "2019_01-12_DrDoS_DNS",
+    "2019_01-12_DrDoS_LDAP",
+    "2019_01-12_DrDoS_MSSQL",
+    "2019_01-12_DrDoS_NTP",
+    "2019_01-12_DrDoS_NetBIOS",
+    "2019_01-12_DrDoS_SNMP",
+    "2019_01-12_DrDoS_SSDP",
+    "2019_01-12_DrDoS_UDP",
+    "2019_01-12_Syn",
+    "2019_01-12_TFTP",
+    "2019_01-12_UDPLag",
+    "2019_03-11_LDAP",
+    "2019_03-11_MSSQL",
+    "2019_03-11_NetBIOS",
+    "2019_03-11_Portmap",
+    "2019_03-11_Syn",
+    "2019_03-11_UDP",
+    "2019_03-11_UDPLag"
+  ],
+  "train_rows": 2574327,
+  "test_rows": 865030,
+  "fixes_vs_previous_deployed_model": [
+    "Previous model trained on only the first 8000 rows of each of 7 day-files (notebooks/v7_xgb_iso.ipynb) - a front-loaded, likely mostly-benign slice. This version uses the full available data.",
+    "Previous threshold.pkl was tuned against a blended score (0.3*isolation_forest_normalized + 0.7*xgb_probability) that detection/predictor.py never actually computes. This threshold is tuned against predictor.py's actual logic: xgb_probability >= threshold, OR'd with Isolation Forest."
+  ],
+  "hybrid_metrics_held_out": {
+    "accuracy": 0.8841439025236119,
+    "precision": 0.8766949653937254,
+    "recall": 0.9185947304493282,
+    "f1": 0.8971559044613766
+  },
+  "xgb_alone_metrics_held_out": {
+    "accuracy": 0.9337028773568546,
+    "precision": 0.9691274024288267,
+    "recall": 0.9084237999773045,
+    "f1": 0.9377942891233018
+  },
+  "isolation_alone_recall_held_out": 0.3238979040318073,
+  "feature_importances": [
+    [
+      "Bwd Seg Size Avg",
+      0.4093521237373352
+    ],
+    [
+      "Pkt Len Mean",
+      0.133872389793396
+    ],
+    [
+      "Bwd Pkt Len Std",
+      0.044416435062885284
+    ],
+    [
+      "Pkt Len Max",
+      0.04154109209775925
+    ],
+    [
+      "Subflow Bwd Byts",
+      0.03971705958247185
+    ],
+    [
+      "pkt_rate_ratio",
+      0.03498437628149986
+    ],
+    [
+      "TotLen Bwd Pkts",
+      0.03353629633784294
+    ],
+    [
+      "Bwd Pkt Len Mean",
+      0.03319696709513664
+    ],
+    [
+      "Bwd Pkt Len Max",
+      0.02612794004380703
+    ],
+    [
+      "Fwd Header Len",
+      0.022348303347826004
+    ],
+    [
+      "Flow IAT Max",
+      0.02022510953247547
+    ],
+    [
+      "Flow IAT Mean",
+      0.019963707774877548
+    ],
+    [
+      "Flow IAT Min",
+      0.01851850003004074
+    ],
+    [
+      "Fwd IAT Tot",
+      0.017618436366319656
+    ],
+    [
+      "Fwd Pkts/s",
+      0.01599172130227089
+    ],
+    [
+      "Fwd IAT Max",
+      0.014817697927355766
+    ],
+    [
+      "Fwd IAT Mean",
+      0.014762898907065392
+    ],
+    [
+      "Flow Duration",
+      0.011450842954218388
+    ],
+    [
+      "Init Bwd Win Byts",
+      0.010882804170250893
+    ],
+    [
+      "Pkt Size Avg",
+      0.010832752101123333
+    ],
+    [
+      "TotLen Fwd Pkts",
+      0.006858918350189924
+    ],
+    [
+      "Flow IAT Std",
+      0.005869197193533182
+    ],
+    [
+      "Flow Pkts/s",
+      0.005111212842166424
+    ],
+    [
+      "iat_variation",
+      0.004347233567386866
+    ],
+    [
+      "Subflow Fwd Byts",
+      0.0036559475120157003
+    ]
+  ],
+  "shortcut_warning": false,
+  "threshold": 0.30303030303030304
+}
