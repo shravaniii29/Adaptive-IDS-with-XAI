@@ -62,16 +62,19 @@ def resolve_target_ip():
     adapter's capture point on Windows (zero self-to-self flows captured
     across several runs, despite the correct real-NIC interface being
     watched) - Windows short-circuits it before it reaches a NIC driver.
-    Falls back to the real LAN IP if the loopback device isn't available
-    for some reason - same fragile behavior as before, but at least
-    explicit about why."""
-    from packet_capture.capture import has_npcap_loopback
-    if has_npcap_loopback():
+    On Linux, self-addressed traffic is always delivered on 'lo' at the
+    kernel level (no installer/adapter concept needed), so 127.0.0.1 is
+    preferred there too - see has_linux_loopback() in packet_capture.capture.
+
+    Falls back to the real LAN IP if neither loopback mechanism is
+    available - same fragile behavior as before, but at least explicit
+    about why."""
+    from packet_capture.capture import has_npcap_loopback, has_linux_loopback
+    if has_npcap_loopback() or has_linux_loopback():
         return "127.0.0.1"
-    print("WARNING: Npcap loopback capture not available - falling back to "
-          "this machine's real LAN IP, which has been unreliable for "
-          "self-targeted traffic capture. This is unusual for any Npcap "
-          "install from the last several years; see RUNNING.md.")
+    print("WARNING: reliable loopback capture not available on this platform - "
+          "falling back to this machine's real LAN IP, which has been unreliable "
+          "for self-targeted traffic capture. See RUNNING.md.")
     return local_lan_ip()
 
 

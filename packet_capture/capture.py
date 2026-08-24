@@ -1,3 +1,4 @@
+import platform
 import socket
 
 from scapy.all import sniff
@@ -39,6 +40,18 @@ def has_npcap_loopback():
     return bool(conf.use_npcap) and conf.loopback_name in conf.ifaces
 
 
+def has_linux_loopback():
+    """True on Linux, where self-addressed traffic (whether to 127.0.0.1
+    or to an interface's own assigned IP) is delivered on the 'lo'
+    interface at the kernel level rather than round-tripping through a
+    physical NIC - unlike Windows, there's no separate loopback device
+    to detect, 'lo' always exists. This is the Linux analogue of
+    has_npcap_loopback() above: both exist to answer "can self-targeted
+    test traffic be reliably captured on this platform," just via
+    different platform mechanisms."""
+    return platform.system() == "Linux"
+
+
 def _select_interface():
     """Finds the scapy/Npcap interface to sniff() on, instead of letting
     scapy fall back to its own automatic default-interface pick.
@@ -61,10 +74,13 @@ def _select_interface():
         from scapy.all import conf
         return conf.loopback_name
 
+    if has_linux_loopback():
+        return "lo"
+
     try:
         from scapy.arch.windows import get_windows_if_list
     except ImportError:
-        return None  # non-Windows: let scapy pick its own default
+        return None  # non-Windows, non-Linux: let scapy pick its own default
 
     target_ip = _local_lan_ip()
     for iface in get_windows_if_list():
