@@ -1,0 +1,212 @@
+{
+  "created_at": "2026-08-22T07:14:20.071019+00:00",
+  "dataset": "CIC-IDS2018, 10 days (7 partial samples + 3 full days: 02-28/03-01/03-02) + CIC-DDoS2019, 18 attack-type files (own benign only, no cross-dataset blending)",
+  "cicids2018_day_tags": [
+    "02-14-2018",
+    "02-15-2018",
+    "02-16-2018",
+    "02-20-2018",
+    "02-21-2018",
+    "02-22-2018",
+    "02-23-2018",
+    "02-28-2018",
+    "03-01-2018",
+    "03-02-2018"
+  ],
+  "ddos2019_day_tags": [
+    "2019_01-12_DrDoS_DNS",
+    "2019_01-12_DrDoS_LDAP",
+    "2019_01-12_DrDoS_MSSQL",
+    "2019_01-12_DrDoS_NTP",
+    "2019_01-12_DrDoS_NetBIOS",
+    "2019_01-12_DrDoS_SNMP",
+    "2019_01-12_DrDoS_SSDP",
+    "2019_01-12_DrDoS_UDP",
+    "2019_01-12_Syn",
+    "2019_01-12_TFTP",
+    "2019_01-12_UDPLag",
+    "2019_03-11_LDAP",
+    "2019_03-11_MSSQL",
+    "2019_03-11_NetBIOS",
+    "2019_03-11_Portmap",
+    "2019_03-11_Syn",
+    "2019_03-11_UDP",
+    "2019_03-11_UDPLag"
+  ],
+  "total_rows": 3439357,
+  "train_rows": 2574327,
+  "test_rows": 865030,
+  "attack_types": [
+    "Bot",
+    "Brute Force -Web",
+    "Brute Force -XSS",
+    "DDOS attack-HOIC",
+    "DDOS attack-LOIC-UDP",
+    "DDoS attacks-LOIC-HTTP",
+    "DoS attacks-GoldenEye",
+    "DoS attacks-Hulk",
+    "DoS attacks-SlowHTTPTest",
+    "DoS attacks-Slowloris",
+    "DrDoS_DNS",
+    "DrDoS_LDAP",
+    "DrDoS_MSSQL",
+    "DrDoS_NTP",
+    "DrDoS_NetBIOS",
+    "DrDoS_SNMP",
+    "DrDoS_SSDP",
+    "DrDoS_UDP",
+    "FTP-BruteForce",
+    "Infilteration",
+    "LDAP",
+    "MSSQL",
+    "NetBIOS",
+    "Portmap",
+    "SQL Injection",
+    "Syn",
+    "TFTP",
+    "UDP",
+    "UDP-lag",
+    "WebDDoS"
+  ],
+  "split": "per-day chronological, cutoff at 70th percentile of that day's own attack timestamps",
+  "trained_on_device": "cuda",
+  "note": "Experimental models, now including CIC-DDoS2019 alongside CIC-IDS2018. 2019 rows use only their own (sparse) benign traffic, never 2018's, to avoid a capture-session shortcut. See fetch_ddos2019_sample.py for the sampling method.",
+  "variant1": {
+    "metrics": {
+      "accuracy": 0.914290833843913,
+      "precision": 0.93562253168016,
+      "recall": 0.9065766413233978,
+      "f1": 0.9208706037297256,
+      "threshold": 0.29
+    },
+    "feature_importances": [
+      [
+        "Min Pkt Size",
+        0.4125908613204956
+      ],
+      [
+        "Avg Pkt Size",
+        0.17225204408168793
+      ],
+      [
+        "Flow Duration",
+        0.1380261778831482
+      ],
+      [
+        "TotLen Fwd Pkts",
+        0.13501884043216705
+      ],
+      [
+        "Flow Pkts/s",
+        0.058991797268390656
+      ],
+      [
+        "Protocol",
+        0.03881914168596268
+      ],
+      [
+        "Tot Fwd Pkts",
+        0.03243798017501831
+      ],
+      [
+        "Flow Byts/s",
+        0.011863145977258682
+      ]
+    ],
+    "shortcut_warning": false
+  },
+  "variant2": {
+    "metrics": {
+      "accuracy": 0.9308012438874952,
+      "precision": 0.9865567565923823,
+      "recall": 0.8862873161772432,
+      "f1": 0.9337378939013712,
+      "threshold": 0.3999999999999999
+    },
+    "feature_importances": [
+      [
+        "hist_std_Flow_Duration",
+        0.26539531350135803
+      ],
+      [
+        "Min Pkt Size",
+        0.21012359857559204
+      ],
+      [
+        "Avg Pkt Size",
+        0.09790603071451187
+      ],
+      [
+        "hist_std_Flow_Byts_s",
+        0.06616317480802536
+      ],
+      [
+        "hist_std_TotLen_Fwd_Pkts",
+        0.05251344293355942
+      ],
+      [
+        "time_since_last",
+        0.04401736333966255
+      ],
+      [
+        "Flow Duration",
+        0.0356810986995697
+      ],
+      [
+        "Flow Pkts/s",
+        0.03347191959619522
+      ],
+      [
+        "hist_flow_count",
+        0.03144768625497818
+      ],
+      [
+        "TotLen Fwd Pkts",
+        0.02537396177649498
+      ],
+      [
+        "Tot Fwd Pkts",
+        0.025083690881729126
+      ],
+      [
+        "hist_mean_Flow_Duration",
+        0.022578338161110878
+      ],
+      [
+        "hist_std_Flow_Pkts_s",
+        0.022413531318306923
+      ],
+      [
+        "hist_mean_Flow_Pkts_s",
+        0.02056879736483097
+      ],
+      [
+        "hist_mean_TotLen_Fwd_Pkts",
+        0.01773698441684246
+      ],
+      [
+        "Protocol",
+        0.012539757415652275
+      ],
+      [
+        "Flow Byts/s",
+        0.010718777775764465
+      ],
+      [
+        "hist_mean_Flow_Byts_s",
+        0.006266552954912186
+      ]
+    ],
+    "shortcut_warning": false
+  },
+  "variant3": {
+    "metrics": {
+      "accuracy": 0.9280279296671792,
+      "precision": 0.9782502116008122,
+      "recall": 0.8889330189591187,
+      "f1": 0.9314553597773384,
+      "threshold": 0.38999999999999996
+    },
+    "architecture": "Conv1d(8->32,k=3) + LSTM(32->64) + Linear(64->1)"
+  }
+}

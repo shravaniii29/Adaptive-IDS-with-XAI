@@ -1,4 +1,5 @@
 from scapy.layers.inet import IP, TCP, UDP
+from scapy.layers.l2 import Ether, Loopback
 
 
 class Flow:
@@ -80,7 +81,21 @@ class Flow:
                 if ip_header_length is None:
                     ip_header_length = 5
 
-                header_length = ip_header_length * 4
+                # L2 framing varies by capture medium and was previously
+                # never subtracted at all: Loopback-captured packets carry
+                # a 4-byte DLT_NULL header instead of Ethernet's 14 bytes
+                # (no Ether layer present), so the two capture paths leaked
+                # a different number of framing bytes into "payload length"
+                # - a capture-medium-dependent skew in Min Pkt Size, the
+                # single highest-importance feature in variant 1.
+                if Loopback in packet:
+                    l2_header_length = 4
+                elif Ether in packet:
+                    l2_header_length = 14
+                else:
+                    l2_header_length = 0
+
+                header_length = l2_header_length + ip_header_length * 4
 
                 if TCP in packet:
 

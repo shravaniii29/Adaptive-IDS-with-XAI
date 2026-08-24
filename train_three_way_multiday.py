@@ -50,7 +50,7 @@ BASE_FEATURES = [
     "Flow Byts/s", "Flow Pkts/s", "Avg Pkt Size", "Min Pkt Size", "Protocol",
 ]
 GROUP_KEYS = ["day", "Dst Port", "Protocol"]
-DEVICE = torch.device("cpu")
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def load_one_day(path):
@@ -183,7 +183,21 @@ class CNN_LSTM(nn.Module):
         return self.fc(h.squeeze(0))
 
 
-def train_cnn_lstm(X_train, y_train):
+def predict_in_batches(model, X, device=DEVICE, batch_size=2048):
+    """Chunked inference - a single unbatched forward pass over a large
+    test set can OOM a GPU (hit during this project's own GPU training:
+    a 34GB allocation attempt on a 6GB card evaluating hundreds of
+    thousands of sequences at once)."""
+    model.eval()
+    logits = []
+    with torch.no_grad():
+        for start in range(0, len(X), batch_size):
+            xb = torch.FloatTensor(X[start:start + batch_size]).to(device)
+            logits.append(model(xb).cpu())
+    return torch.cat(logits, dim=0).numpy().ravel()
+
+
+def train_cnn_lstm(X_train, y_train, device=DEVICE):
     idx = np.arange(len(X_train))
     rng = np.random.default_rng(0)
     rng.shuffle(idx)
@@ -198,24 +212,29 @@ def train_cnn_lstm(X_train, y_train):
     train_loader = DataLoader(TensorDataset(X_tr_t, y_tr_t), batch_size=512, shuffle=True)
     val_loader = DataLoader(TensorDataset(X_val_t, y_val_t), batch_size=512, shuffle=False)
 
-    model = CNN_LSTM(n_features=X_train.shape[2])
+    model = CNN_LSTM(n_features=X_train.shape[2]).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     pos = y_train[tr_idx].sum()
     neg = len(tr_idx) - pos
-    pos_weight = torch.tensor([neg / max(pos, 1)])
+    pos_weight = torch.tensor([neg / max(pos, 1)]).to(device)
     criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
     best_val_loss, patience, counter, best_state = float("inf"), 3, 0, None
     for epoch in range(1, 21):
         model.train()
         for xb, yb in train_loader:
+            xb, yb = xb.to(device), yb.to(device)
             optimizer.zero_grad()
             loss = criterion(model(xb), yb)
             loss.backward()
             optimizer.step()
         model.eval()
         with torch.no_grad():
-            val_loss = float(np.mean([criterion(model(xb), yb).item() for xb, yb in val_loader]))
+            val_losses = []
+            for xb, yb in val_loader:
+                xb, yb = xb.to(device), yb.to(device)
+                val_losses.append(criterion(model(xb), yb).item())
+            val_loss = float(np.mean(val_losses))
         print(f"    epoch {epoch}: val_loss={val_loss:.4f}")
         if val_loss < best_val_loss:
             best_val_loss, best_state, counter = val_loss, {k: v.clone() for k, v in model.state_dict().items()}, 0

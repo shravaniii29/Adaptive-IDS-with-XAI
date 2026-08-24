@@ -491,6 +491,96 @@ def get_shap():
 # client can poll less often and still see everything.
 # =====================================================
 
+@app.get("/history/{flow_id}")
+def get_history_flow(flow_id: int):
+
+    entries = state.get_history()
+
+    match = next(
+        (r for r in entries if r.get("flow_id") == flow_id),
+        None
+    )
+
+    if match is None:
+
+        return {
+            "message":
+                "flow not in history buffer"
+        }
+
+    agent = match.get(
+        "agent_analysis",
+        {}
+    )
+
+    explanation = agent.get(
+        "explanation",
+        {}
+    )
+
+    experimental = match.get(
+        "experimental_models",
+        {}
+    )
+
+    return {
+
+        "flow_id":
+            match.get("flow_id"),
+
+        "source_ip":
+            match.get("source_ip"),
+
+        "destination_ip":
+            match.get("destination_ip"),
+
+        "hybrid_prediction":
+            match.get("hybrid_prediction"),
+
+        "xgb_probability":
+            match.get("xgb_probability"),
+
+        "xgb_prediction":
+            match.get("xgb_prediction"),
+
+        "isolation_prediction":
+            match.get("isolation_prediction"),
+
+        "attack_hypothesis":
+            explanation.get("attack_hypothesis"),
+
+        "confidence":
+            explanation.get("confidence"),
+
+        "summary":
+            explanation.get("summary"),
+
+        "variant1_xgb_single_flow":
+            experimental.get(
+                "variant1_xgb_single_flow",
+                {}
+            ),
+
+        "variant2_xgb_temporal":
+            experimental.get(
+                "variant2_xgb_temporal",
+                {}
+            ),
+
+        "variant3_cnn_lstm":
+            experimental.get(
+                "variant3_cnn_lstm",
+                {}
+            ),
+
+        "top_features":
+            explanation.get(
+                "top_features",
+                []
+            )
+    }
+
+
 @app.get("/history")
 def get_history():
 

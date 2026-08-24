@@ -73,6 +73,26 @@ flows should start appearing within a few seconds of completing.
 
 ## 4. Run the attack simulator
 
+The simulator sends traffic to itself. Testing found that Windows does
+not reliably deliver traffic addressed to a machine's own real LAN IP to
+any physical adapter's capture point (zero self-to-self flows captured
+across several test runs, despite watching the correct interface) -
+Windows short-circuits it before it reaches a NIC driver. The fix:
+target `127.0.0.1` and capture on Npcap's loopback device instead, which
+**every Npcap install from the last several years already supports by
+default** (built in since 0.9983, no installer option, nothing to
+install or reconfigure). `simulate_attacks.py` and
+`packet_capture/capture.py` detect and use it automatically.
+
+Verify it's available:
+```
+python -c "from packet_capture.capture import has_npcap_loopback; print(has_npcap_loopback())"
+```
+Should print `True`. If it prints `False` (very old Npcap, or a
+non-Windows capture backend), the simulator falls back to the old,
+unreliable real-LAN-IP behavior with a printed warning - upgrading Npcap
+is the fix in that case, not any installer checkbox.
+
 With the backend already running (step 3), in a separate terminal:
 
 ```
@@ -82,7 +102,8 @@ python simulate_attacks.py
 This runs a fixed sequence of short (~10s), bounded, **self-targeted**
 scenarios — ICMP flood, SYN flood, UDP flood, HTTP flood, port scan, plus
 a benign baseline for measuring false positives — all aimed at this
-machine's own LAN IP, never an external host. It then polls the
+machine's own IP (127.0.0.1 if the loopback adapter is installed,
+otherwise the real LAN IP), never an external host. It then polls the
 backend's `/history` endpoint, attributes completed flows back to the
 scenario that generated them by timing + destination IP, and scores the
 deployed model plus all 3 experimental variants against each other.
