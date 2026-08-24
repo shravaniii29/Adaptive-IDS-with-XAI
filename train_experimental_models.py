@@ -44,7 +44,12 @@ from xgboost import XGBClassifier
 import train_three_way_multiday as base
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-OUT_DIR = PROJECT_ROOT / "models" / "experimental"
+# Separate from models/experimental/ (the currently-deployed 2018-only
+# artifacts) until this combined-dataset version is reviewed and
+# deliberately promoted - see VOTING_SYSTEM_ANALYSIS.md-adjacent
+# discussion for why silently overwriting a working deployment mid-review
+# is worth avoiding.
+OUT_DIR = PROJECT_ROOT / "models" / "experimental_2019"
 
 PARTIAL_DIR = PROJECT_ROOT / "data" / "cicids2018"
 PARTIAL_DAYS = [
@@ -55,6 +60,27 @@ PARTIAL_DAYS = [
 FULL_DIR = PROJECT_ROOT / "data" / "cicids2018_full"
 FULL_DAYS = ["02-28-2018.csv", "03-01-2018.csv", "03-02-2018.csv"]
 
+DDOS2019_SAMPLE = PROJECT_ROOT / "data" / "ddos2019_sample" / "combined_sample.csv"
+
+
+def load_ddos2019_sample():
+    """Loads fetch_ddos2019_sample.py's output: a bounded, chronologically
+    contiguous per-attack-type sample of CIC-DDoS2019, already using each
+    file's own benign rows (no blending with 2018 benign - see that
+    script's docstring for why) and already tagged with a `day` value
+    per source file, distinct from every 2018 day tag. Returns one frame
+    per day tag, matching load_all_days()'s existing per-day frame list
+    shape, so build_dataset()/build_temporal_features()/build_raw_sequences()
+    need no changes - the (day, Dst Port, Protocol) grouping they already
+    do keeps 2019 history/sequences from ever blending with 2018's."""
+    if not DDOS2019_SAMPLE.exists():
+        print(f"  (skipping 2019 data: {DDOS2019_SAMPLE} not found - run fetch_ddos2019_sample.py first)")
+        return []
+
+    df = pd.read_csv(DDOS2019_SAMPLE, low_memory=False)
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+    return [g.sort_values("Timestamp").reset_index(drop=True) for _, g in df.groupby("day")]
+
 
 def load_all_days():
     frames = []
@@ -62,6 +88,7 @@ def load_all_days():
         frames.append(base.load_one_day(PARTIAL_DIR / name))
     for name in FULL_DAYS:
         frames.append(base.load_one_day(FULL_DIR / name))
+    frames.extend(load_ddos2019_sample())
     return frames
 
 
@@ -123,9 +150,20 @@ def main():
     print(f"attack types present ({len(attack_types)}): {attack_types}")
 
     y = df["Binary_Label"].values
+    day_tags = sorted(df["day"].unique())
+    ddos2019_tags = [d for d in day_tags if d.startswith("2019_")]
+    cicids2018_tags = [d for d in day_tags if d not in ddos2019_tags]
+    dataset_desc = "CIC-IDS2018, 10 days (7 partial samples + 3 full days: 02-28/03-01/03-02)"
+    if ddos2019_tags:
+        dataset_desc += (f" + CIC-DDoS2019, {len(ddos2019_tags)} attack-type files "
+                          f"(own benign only, no cross-dataset blending - see "
+                          f"fetch_ddos2019_sample.py docstring)")
+
     provenance = {
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "dataset": "CIC-IDS2018, 10 days (7 partial samples + 3 full days: 02-28/03-01/03-02)",
+        "dataset": dataset_desc,
+        "cicids2018_day_tags": cicids2018_tags,
+        "ddos2019_day_tags": ddos2019_tags,
         "total_rows": int(len(df)),
         "train_rows": int(train_mask.sum()),
         "test_rows": int(test_mask.sum()),
@@ -185,17 +223,15 @@ def main():
     scaler = StandardScaler().fit(X3_seq[train_mask3].reshape(-1, n_feat))
     X3_scaled = scaler.transform(X3_seq.reshape(-1, n_feat)).reshape(n, seq_len, n_feat)
 
-    print("  training ...")
+    print(f"  training on device: {base.DEVICE} ...")
     model3 = base.train_cnn_lstm(X3_scaled[train_mask3], y3[train_mask3])
-    model3.eval()
-    with torch.no_grad():
-        logits = model3(torch.FloatTensor(X3_scaled[test_mask3]))
-        probs3 = torch.sigmoid(logits).numpy().ravel()
+    logits = base.predict_in_batches(model3, X3_scaled[test_mask3])
+    probs3 = 1 / (1 + np.exp(-logits))  # sigmoid
     thr3 = tune_threshold(y3[test_mask3], probs3)
     m3 = eval_at_threshold(y3[test_mask3], probs3, thr3)
     print("metrics:", m3)
 
-    torch.save(model3.state_dict(), OUT_DIR / "cnn_lstm_variant3.pt")
+    torch.save(model3.to("cpu").state_dict(), OUT_DIR / "cnn_lstm_variant3.pt")
     print(f"  saved {OUT_DIR / 'cnn_lstm_variant3.pt'}")
     save(thr3, OUT_DIR / "threshold_variant3.pkl")
     save(scaler, OUT_DIR / "scaler_variant3.pkl")

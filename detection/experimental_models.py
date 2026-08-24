@@ -20,6 +20,7 @@ others or the caller - every variant is wrapped in its own try/except
 and returns an error stub on failure instead of raising.
 """
 
+import os
 import pickle
 from pathlib import Path
 
@@ -32,7 +33,10 @@ from detection.experimental_history import RollingHistoryStore
 MICROSECONDS_PER_SECOND = 1_000_000
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-MODELS_DIR = PROJECT_ROOT / "models" / "experimental"
+# Overridable so a test run can point at e.g. models/experimental_2019
+# (a candidate artifact set under review) without touching the default
+# deployed-in-place artifacts under models/experimental.
+MODELS_DIR = Path(os.environ.get("EXPERIMENTAL_MODELS_DIR", PROJECT_ROOT / "models" / "experimental"))
 
 BASE_FEATURES = [
     "Flow Duration", "Tot Fwd Pkts", "TotLen Fwd Pkts",

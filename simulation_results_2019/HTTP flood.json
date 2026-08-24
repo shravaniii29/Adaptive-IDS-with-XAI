@@ -1,0 +1,2088 @@
+{
+  "name": "HTTP flood",
+  "is_attack": true,
+  "start_time": 1787389967.7365634,
+  "end_time": 1787389977.7368789,
+  "duration_seconds": 10.000315427780151,
+  "flow_count": 74,
+  "model_scores": {
+    "deployed_hybrid": 0.04054054054054054,
+    "variant1_xgb_single_flow": 0.06756756756756757,
+    "variant2_xgb_temporal": 0.0,
+    "variant3_cnn_lstm": 0.013513513513513514
+  },
+  "flows": [
+    {
+      "flow_id": 237,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389991.850917,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 238,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389992.0494175,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 239,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389992.2033634,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 240,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389992.3790371,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 241,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389992.5837069,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 242,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389992.7591052,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 243,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389992.9295118,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 244,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389993.11713,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 245,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389993.3019142,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 246,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389993.4649236,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 247,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389993.632978,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 248,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389993.836673,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 249,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389994.0059361,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 250,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389994.1657639,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 251,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389994.3689806,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 252,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389994.527711,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 253,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389994.6828072,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 254,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389994.8595433,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 255,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389995.011424,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 256,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389995.1608586,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 257,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389995.3025649,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 258,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389995.4779963,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 259,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389995.621871,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 260,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389995.8042157,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 261,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389995.9529161,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 262,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389996.1185555,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 263,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389996.2572987,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 264,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389996.3983319,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 265,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389996.5397327,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 266,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389996.7175405,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 267,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389996.881587,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 268,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389997.0407975,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 269,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389997.1991267,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 270,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389997.379628,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 271,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389997.5437794,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 272,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389997.7049363,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 273,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389997.8604848,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 274,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389998.0570686,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 275,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389998.222847,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 276,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389998.381641,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 277,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389998.561072,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 278,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389998.7044933,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 279,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389998.8462293,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 280,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389998.9909317,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 281,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389999.161454,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 282,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389999.2977366,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 283,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389999.434874,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 284,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389999.5828109,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 285,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389999.7541194,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 286,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787389999.8899746,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 287,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390000.0359309,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 288,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390000.1818483,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 289,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390000.383087,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 290,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390000.5316842,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 291,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390000.676757,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 292,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390000.8213851,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 293,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390000.9955988,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 294,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390001.1372855,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 295,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390001.2792053,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 296,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390001.4222734,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 297,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390001.5962594,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 298,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390001.7454104,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 299,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390001.8894076,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 300,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390002.030321,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 301,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390002.2036657,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 302,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390002.369689,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 303,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390002.526198,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 304,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390002.700607,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 305,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390002.8853676,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 306,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390003.0297585,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 307,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390003.1760156,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 308,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390003.3503149,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 309,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390003.4940922,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 310,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787390003.6330607,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    }
+  ]
+}

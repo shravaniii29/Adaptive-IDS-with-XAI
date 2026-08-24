@@ -45,7 +45,7 @@ RESULTS_DIR = "simulation_results"  # one JSON file per attack type, for demo/vi
 
 
 def local_lan_ip():
-    """This machine's real NIC IP - the one that actually gets captured."""
+    """This machine's real NIC IP."""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         s.connect(("8.8.8.8", 80))
@@ -54,7 +54,28 @@ def local_lan_ip():
         s.close()
 
 
-TARGET_IP = local_lan_ip()
+def resolve_target_ip():
+    """Prefers 127.0.0.1, captured via Npcap's loopback device
+    (\\Device\\NPF_Loopback, built in since Npcap 0.9983 - no installer
+    option needed). Confirmed by testing that self-targeted traffic to
+    this machine's real LAN IP is NOT reliably delivered to any physical
+    adapter's capture point on Windows (zero self-to-self flows captured
+    across several runs, despite the correct real-NIC interface being
+    watched) - Windows short-circuits it before it reaches a NIC driver.
+    Falls back to the real LAN IP if the loopback device isn't available
+    for some reason - same fragile behavior as before, but at least
+    explicit about why."""
+    from packet_capture.capture import has_npcap_loopback
+    if has_npcap_loopback():
+        return "127.0.0.1"
+    print("WARNING: Npcap loopback capture not available - falling back to "
+          "this machine's real LAN IP, which has been unreliable for "
+          "self-targeted traffic capture. This is unusual for any Npcap "
+          "install from the last several years; see RUNNING.md.")
+    return local_lan_ip()
+
+
+TARGET_IP = resolve_target_ip()
 
 
 # =====================================================
