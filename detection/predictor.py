@@ -1,3 +1,4 @@
+import os
 import pickle
 from pathlib import Path
 
@@ -11,7 +12,10 @@ import pandas as pd
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-MODELS_DIR = PROJECT_ROOT / "models"
+# Overridable so a candidate artifact set (e.g. models/deployed_v2, under
+# review before promotion) can be tested without touching the deployed
+# default at models/.
+MODELS_DIR = Path(os.environ.get("DEPLOYED_MODELS_DIR", PROJECT_ROOT / "models"))
 
 
 # -------------------------------------------------

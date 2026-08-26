@@ -220,6 +220,9 @@ SCENARIOS = [
 # /predict + /experimental while scenarios run
 # =====================================================
 
+CANDIDATE_KEYS = ["xgboost", "random_forest", "histgradientboosting"]
+
+
 @dataclass
 class ObservedFlow:
     flow_id: object
@@ -230,6 +233,24 @@ class ObservedFlow:
     variant1: dict
     variant2: dict
     variant3: dict
+    candidates: dict = field(default_factory=dict)  # classifier_comparison.ipynb models, keyed by CANDIDATE_KEYS
+
+
+def _model_result(flow, model_key):
+    """Single lookup path for every model key (the 4 original + the 3
+    classifier_comparison candidates), used by scoring/reporting/dump so
+    they don't each need their own if/elif chain over model kinds."""
+    if model_key == "deployed_hybrid":
+        pred = flow.hybrid_prediction
+        return pred is not None, pred
+    if model_key in CANDIDATE_KEYS:
+        entry = flow.candidates.get(model_key, {})
+    else:
+        entry = {"variant1_xgb_single_flow": flow.variant1,
+                 "variant2_xgb_temporal": flow.variant2,
+                 "variant3_cnn_lstm": flow.variant3}[model_key]
+    available = entry.get("available", False)
+    return available, (entry.get("prediction") if available else None)
 
 
 class Poller:
@@ -274,6 +295,7 @@ class Poller:
                 variant1=entry.get("variant1_xgb_single_flow", {}),
                 variant2=entry.get("variant2_xgb_temporal", {}),
                 variant3=entry.get("variant3_cnn_lstm", {}),
+                candidates=entry.get("candidate_models", {}),
             ))
 
     def _run(self):
@@ -311,30 +333,33 @@ def attribute_flows(flows, scenarios, active_timeout=20, flow_timeout=5):
 # Scoring
 # =====================================================
 
+MODEL_KEYS = ["deployed_hybrid", "variant1_xgb_single_flow", "variant2_xgb_temporal", "variant3_cnn_lstm"] + CANDIDATE_KEYS
+MODEL_LABELS = {
+    "deployed_hybrid": "Deployed hybrid",
+    "variant1_xgb_single_flow": "Var1 XGB single-flow",
+    "variant2_xgb_temporal": "Var2 XGB temporal",
+    "variant3_cnn_lstm": "Var3 CNN+LSTM",
+    "xgboost": "Candidate: XGBoost",
+    "random_forest": "Candidate: Random Forest",
+    "histgradientboosting": "Candidate: HistGradientBoosting",
+}
+
+
 def score(attributed, scenarios):
-    model_names = ["deployed_hybrid", "variant1_xgb_single_flow", "variant2_xgb_temporal", "variant3_cnn_lstm"]
     rows = []
 
     for s in scenarios:
         flows = attributed[s.name]
         if not flows:
-            rows.append((s.name, s.is_attack, len(flows), {m: None for m in model_names}))
+            rows.append((s.name, s.is_attack, len(flows), {m: None for m in MODEL_KEYS}))
             continue
 
         results = {}
-        for model in model_names:
+        for model in MODEL_KEYS:
             correct = 0
             total = 0
             for f in flows:
-                if model == "deployed_hybrid":
-                    pred = f.hybrid_prediction
-                    available = pred is not None
-                else:
-                    variant = {"variant1_xgb_single_flow": f.variant1,
-                               "variant2_xgb_temporal": f.variant2,
-                               "variant3_cnn_lstm": f.variant3}[model]
-                    available = variant.get("available", False)
-                    pred = variant.get("prediction") if available else None
+                available, pred = _model_result(f, model)
                 if not available:
                     continue
                 total += 1
@@ -348,14 +373,79 @@ def score(attributed, scenarios):
     return rows
 
 
-def print_report(rows):
-    model_labels = ["Deployed hybrid", "Var1 XGB single-flow", "Var2 XGB temporal", "Var3 CNN+LSTM"]
-    model_keys = ["deployed_hybrid", "variant1_xgb_single_flow", "variant2_xgb_temporal", "variant3_cnn_lstm"]
+def aggregate_metrics(attributed, scenarios):
+    """Pools every attributed flow across all scenarios into one
+    confusion matrix per model, so a single run reports overall
+    accuracy/precision/recall/F1 - not just per-scenario recall/specificity.
+    Ground truth for each flow comes from the scenario that generated it
+    (attribute_flows already matched them by dst_ip/port/time window)."""
+    scenarios_by_name = {s.name: s for s in scenarios}
 
+    metrics = {}
+    for model in MODEL_KEYS:
+        tp = fp = tn = fn = 0
+        for name, flows in attributed.items():
+            expected = 1 if scenarios_by_name[name].is_attack else 0
+            for f in flows:
+                available, pred = _model_result(f, model)
+                if not available:
+                    continue
+                if expected == 1 and pred == 1:
+                    tp += 1
+                elif expected == 1 and pred == 0:
+                    fn += 1
+                elif expected == 0 and pred == 1:
+                    fp += 1
+                elif expected == 0 and pred == 0:
+                    tn += 1
+
+        total = tp + fp + tn + fn
+        accuracy = (tp + tn) / total if total else None
+        precision = tp / (tp + fp) if (tp + fp) else None
+        recall = tp / (tp + fn) if (tp + fn) else None
+        f1 = (2 * precision * recall / (precision + recall)) if (precision and recall and (precision + recall)) else None
+        specificity = tn / (tn + fp) if (tn + fp) else None
+
+        metrics[model] = {
+            "confusion_matrix": {"tp": tp, "fp": fp, "tn": tn, "fn": fn},
+            "accuracy": accuracy,
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+            "specificity": specificity,
+            "total_flows": total,
+        }
+
+    return metrics
+
+
+def print_aggregate_metrics(metrics):
+    print("\n" + "=" * 100)
+    print("OVERALL METRICS (all scenarios pooled, per model)")
+    print("=" * 100)
+    for model in MODEL_KEYS:
+        label = MODEL_LABELS[model]
+        m = metrics[model]
+        cm = m["confusion_matrix"]
+        if m["total_flows"] == 0:
+            print(f"{label}: no scored flows")
+            continue
+
+        def fmt(v):
+            return f"{v*100:.1f}%" if v is not None else "n/a"
+
+        print(f"\n{label}  ({m['total_flows']} flows)")
+        print(f"  confusion matrix: TP={cm['tp']}  FP={cm['fp']}  TN={cm['tn']}  FN={cm['fn']}")
+        print(f"  accuracy={fmt(m['accuracy'])}  precision={fmt(m['precision'])}  "
+              f"recall={fmt(m['recall'])}  f1={fmt(m['f1'])}  specificity={fmt(m['specificity'])}")
+    print("=" * 100)
+
+
+def print_report(rows):
     print("\n" + "=" * 100)
     print("ATTACK SIMULATION - PER-MODEL ACCURACY REPORT")
     print("=" * 100)
-    header = f"{'Scenario':<20}{'Type':<10}{'Flows':<8}" + "".join(f"{lbl:<22}" for lbl in model_labels)
+    header = f"{'Scenario':<20}{'Type':<10}{'Flows':<8}" + "".join(f"{MODEL_LABELS[k]:<25}" for k in MODEL_KEYS)
     print(header)
     print("-" * len(header))
 
@@ -363,9 +453,9 @@ def print_report(rows):
         kind = "ATTACK" if is_attack else "BENIGN"
         metric = "recall" if is_attack else "specificity"
         line = f"{name:<20}{kind:<10}{n_flows:<8}"
-        for key in model_keys:
+        for key in MODEL_KEYS:
             val = results[key]
-            line += f"{(f'{val*100:.1f}% ' + metric) if val is not None else 'no flows':<22}"
+            line += f"{(f'{val*100:.1f}% ' + metric) if val is not None else 'no flows':<25}"
         print(line)
 
     print("=" * 100)
@@ -382,14 +472,14 @@ def print_report(rows):
 # parsing the combined report.
 # =====================================================
 
-def dump_results(rows, attributed, scenarios, out_dir=RESULTS_DIR):
+def dump_results(rows, attributed, scenarios, out_dir=RESULTS_DIR, aggregate=None):
     os.makedirs(out_dir, exist_ok=True)
 
-    model_keys = ["deployed_hybrid", "variant1_xgb_single_flow", "variant2_xgb_temporal", "variant3_cnn_lstm"]
     scenarios_by_name = {s.name: s for s in scenarios}
     rows_by_name = {name: (is_attack, n_flows, results) for name, is_attack, n_flows, results in rows}
 
-    summary = {"generated_at": time.time(), "target_ip": TARGET_IP, "scenarios": []}
+    summary = {"generated_at": time.time(), "target_ip": TARGET_IP, "scenarios": [],
+               "aggregate_metrics": aggregate or {}}
 
     for name, s in scenarios_by_name.items():
         is_attack, n_flows, results = rows_by_name[name]
@@ -398,16 +488,8 @@ def dump_results(rows, attributed, scenarios, out_dir=RESULTS_DIR):
         flow_details = []
         for f in attributed[name]:
             per_model = {}
-            for model in model_keys:
-                if model == "deployed_hybrid":
-                    pred = f.hybrid_prediction
-                    available = pred is not None
-                else:
-                    variant = {"variant1_xgb_single_flow": f.variant1,
-                               "variant2_xgb_temporal": f.variant2,
-                               "variant3_cnn_lstm": f.variant3}[model]
-                    available = variant.get("available", False)
-                    pred = variant.get("prediction") if available else None
+            for model in MODEL_KEYS:
+                available, pred = _model_result(f, model)
                 per_model[model] = {
                     "available": available,
                     "prediction": pred,
@@ -485,7 +567,11 @@ def main():
 
     rows = score(attributed, scenarios)
     print_report(rows)
-    dump_results(rows, attributed, scenarios, out_dir=out_dir)
+
+    metrics = aggregate_metrics(attributed, scenarios)
+    print_aggregate_metrics(metrics)
+
+    dump_results(rows, attributed, scenarios, out_dir=out_dir, aggregate=metrics)
 
 
 if __name__ == "__main__":

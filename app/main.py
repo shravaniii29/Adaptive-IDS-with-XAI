@@ -444,9 +444,18 @@ def get_shap():
         "flow_id":
             result.get("flow_id"),
 
+        # NOTE: intentionally sends detailed_report here, not
+        # explanation's own "top_features" key. "top_features" there is
+        # a list of bare feature-name strings (used internally by
+        # ExplainabilityAgent for hypothesis generation); the frontend's
+        # ShapExplanation.top_features type expects the rich
+        # {feature, value, impact} objects, which live in
+        # detailed_report. Sending the bare-string list here made every
+        # card show "Unknown feature" (item.feature/.impact undefined on
+        # a plain string).
         "top_features":
             explanation.get(
-                "top_features",
+                "detailed_report",
                 []
             ),
 
@@ -575,7 +584,7 @@ def get_history_flow(flow_id: int):
 
         "top_features":
             explanation.get(
-                "top_features",
+                "detailed_report",
                 []
             )
     }
@@ -632,6 +641,12 @@ def get_history():
             "variant3_cnn_lstm":
                 experimental.get(
                     "variant3_cnn_lstm",
+                    {}
+                ),
+
+            "candidate_models":
+                experimental.get(
+                    "candidate_models",
                     {}
                 )
         })

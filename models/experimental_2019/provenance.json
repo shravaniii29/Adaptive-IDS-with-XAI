@@ -1,14 +1,35 @@
 {
-  "created_at": "2026-08-22T07:14:20.071019+00:00",
+  "created_at": "2026-08-24T06:12:11.215110+00:00",
   "dataset": "CIC-IDS2018, 10 days (7 partial samples + 3 full days: 02-28/03-01/03-02) + CIC-DDoS2019, 18 attack-type files (own benign only, no cross-dataset blending)",
   "cicids2018_day_tags": [
-    "02-14-2018",
-    "02-15-2018",
-    "02-16-2018",
-    "02-20-2018",
-    "02-21-2018",
-    "02-22-2018",
-    "02-23-2018",
+    "02-14-2018_off0",
+    "02-14-2018_off1",
+    "02-14-2018_off2",
+    "02-14-2018_off3",
+    "02-15-2018_off0",
+    "02-15-2018_off1",
+    "02-15-2018_off2",
+    "02-15-2018_off3",
+    "02-16-2018_off0",
+    "02-16-2018_off1",
+    "02-16-2018_off2",
+    "02-16-2018_off3",
+    "02-20-2018_off0",
+    "02-20-2018_off1",
+    "02-20-2018_off2",
+    "02-20-2018_off3",
+    "02-21-2018_off0",
+    "02-21-2018_off1",
+    "02-21-2018_off2",
+    "02-21-2018_off3",
+    "02-22-2018_off0",
+    "02-22-2018_off1",
+    "02-22-2018_off2",
+    "02-22-2018_off3",
+    "02-23-2018_off0",
+    "02-23-2018_off1",
+    "02-23-2018_off2",
+    "02-23-2018_off3",
     "02-28-2018",
     "03-01-2018",
     "03-02-2018"
@@ -33,9 +54,9 @@
     "2019_03-11_UDP",
     "2019_03-11_UDPLag"
   ],
-  "total_rows": 3439357,
-  "train_rows": 2574327,
-  "test_rows": 865030,
+  "total_rows": 3821984,
+  "train_rows": 2919482,
+  "test_rows": 902502,
   "attack_types": [
     "Bot",
     "Brute Force -Web",
@@ -62,6 +83,7 @@
     "NetBIOS",
     "Portmap",
     "SQL Injection",
+    "SSH-Bruteforce",
     "Syn",
     "TFTP",
     "UDP",
@@ -73,139 +95,139 @@
   "note": "Experimental models, now including CIC-DDoS2019 alongside CIC-IDS2018. 2019 rows use only their own (sparse) benign traffic, never 2018's, to avoid a capture-session shortcut. See fetch_ddos2019_sample.py for the sampling method.",
   "variant1": {
     "metrics": {
-      "accuracy": 0.914290833843913,
-      "precision": 0.93562253168016,
-      "recall": 0.9065766413233978,
-      "f1": 0.9208706037297256,
-      "threshold": 0.29
+      "accuracy": 0.9209907568071871,
+      "precision": 0.9393212949317832,
+      "recall": 0.9031426774244802,
+      "f1": 0.920876784561064,
+      "threshold": 0.26999999999999996
     },
     "feature_importances": [
       [
         "Min Pkt Size",
-        0.4125908613204956
+        0.5889974236488342
       ],
       [
         "Avg Pkt Size",
-        0.17225204408168793
-      ],
-      [
-        "Flow Duration",
-        0.1380261778831482
+        0.15029984712600708
       ],
       [
         "TotLen Fwd Pkts",
-        0.13501884043216705
+        0.09697973728179932
       ],
       [
         "Flow Pkts/s",
-        0.058991797268390656
+        0.05884898081421852
       ],
       [
-        "Protocol",
-        0.03881914168596268
+        "Flow Duration",
+        0.04350494220852852
       ],
       [
         "Tot Fwd Pkts",
-        0.03243798017501831
+        0.026111328974366188
+      ],
+      [
+        "Protocol",
+        0.02093135006725788
       ],
       [
         "Flow Byts/s",
-        0.011863145977258682
+        0.01432640478014946
       ]
     ],
-    "shortcut_warning": false
+    "shortcut_warning": true
   },
   "variant2": {
     "metrics": {
-      "accuracy": 0.9308012438874952,
-      "precision": 0.9865567565923823,
-      "recall": 0.8862873161772432,
-      "f1": 0.9337378939013712,
-      "threshold": 0.3999999999999999
+      "accuracy": 0.9377297778841487,
+      "precision": 0.9800663819006938,
+      "recall": 0.8959035714518913,
+      "f1": 0.9360970523388099,
+      "threshold": 0.3499999999999999
     },
     "feature_importances": [
       [
-        "hist_std_Flow_Duration",
-        0.26539531350135803
-      ],
-      [
         "Min Pkt Size",
-        0.21012359857559204
+        0.5129745602607727
       ],
       [
-        "Avg Pkt Size",
-        0.09790603071451187
-      ],
-      [
-        "hist_std_Flow_Byts_s",
-        0.06616317480802536
+        "hist_std_Flow_Duration",
+        0.1146198958158493
       ],
       [
         "hist_std_TotLen_Fwd_Pkts",
-        0.05251344293355942
+        0.09150191396474838
       ],
       [
-        "time_since_last",
-        0.04401736333966255
-      ],
-      [
-        "Flow Duration",
-        0.0356810986995697
-      ],
-      [
-        "Flow Pkts/s",
-        0.03347191959619522
+        "Avg Pkt Size",
+        0.05753111466765404
       ],
       [
         "hist_flow_count",
-        0.03144768625497818
+        0.03758489340543747
+      ],
+      [
+        "Flow Duration",
+        0.025461705401539803
+      ],
+      [
+        "time_since_last",
+        0.023548876866698265
+      ],
+      [
+        "Flow Pkts/s",
+        0.021472392603754997
       ],
       [
         "TotLen Fwd Pkts",
-        0.02537396177649498
+        0.02041483111679554
       ],
       [
         "Tot Fwd Pkts",
-        0.025083690881729126
+        0.01837126351892948
       ],
       [
         "hist_mean_Flow_Duration",
-        0.022578338161110878
+        0.017175063490867615
       ],
       [
         "hist_std_Flow_Pkts_s",
-        0.022413531318306923
-      ],
-      [
-        "hist_mean_Flow_Pkts_s",
-        0.02056879736483097
-      ],
-      [
-        "hist_mean_TotLen_Fwd_Pkts",
-        0.01773698441684246
-      ],
-      [
-        "Protocol",
-        0.012539757415652275
-      ],
-      [
-        "Flow Byts/s",
-        0.010718777775764465
+        0.012661772780120373
       ],
       [
         "hist_mean_Flow_Byts_s",
-        0.006266552954912186
+        0.010596532374620438
+      ],
+      [
+        "hist_std_Flow_Byts_s",
+        0.010171491652727127
+      ],
+      [
+        "hist_mean_Flow_Pkts_s",
+        0.009225396439433098
+      ],
+      [
+        "hist_mean_TotLen_Fwd_Pkts",
+        0.006079073064029217
+      ],
+      [
+        "Flow Byts/s",
+        0.0055832890793681145
+      ],
+      [
+        "Protocol",
+        0.005025893449783325
       ]
     ],
-    "shortcut_warning": false
+    "shortcut_warning": true
   },
   "variant3": {
     "metrics": {
-      "accuracy": 0.9280279296671792,
-      "precision": 0.9782502116008122,
-      "recall": 0.8889330189591187,
-      "f1": 0.9314553597773384,
-      "threshold": 0.38999999999999996
+      "accuracy": 0.9340023623216347,
+      "precision": 0.9682637451169588,
+      "recall": 0.8998539554988693,
+      "f1": 0.9328062795212745,
+      "threshold": 0.36999999999999994
     },
     "architecture": "Conv1d(8->32,k=3) + LSTM(32->64) + Linear(64->1)"
   }

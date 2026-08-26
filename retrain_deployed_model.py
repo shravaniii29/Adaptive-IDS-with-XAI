@@ -54,9 +54,22 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 OUT_DIR = PROJECT_ROOT / "models" / "deployed_v2"
 
 PARTIAL_DIR = PROJECT_ROOT / "data" / "cicids2018"
+# 4 spread-out offset windows per day (0%/25%/50%/75%, via
+# fetch_cicids2018_multiday_v2.py) rather than one contiguous block from
+# byte 0 - see train_experimental_models.py's PARTIAL_DAYS comment for
+# why (checked directly: 4 of the original 7 single-block days were
+# severely skewed, e.g. 02-14-2018 was 142,358 attack rows vs only 124
+# benign). Each offset window is its own file/day tag, so no loader
+# changes needed - concatenating them would fabricate false temporal
+# adjacency at chunk seams.
 PARTIAL_DAYS = [
-    "02-14-2018.csv", "02-15-2018.csv", "02-16-2018.csv", "02-20-2018.csv",
-    "02-21-2018.csv", "02-22-2018.csv", "02-23-2018.csv",
+    "02-14-2018_off0.csv", "02-14-2018_off1.csv", "02-14-2018_off2.csv", "02-14-2018_off3.csv",
+    "02-15-2018_off0.csv", "02-15-2018_off1.csv", "02-15-2018_off2.csv", "02-15-2018_off3.csv",
+    "02-16-2018_off0.csv", "02-16-2018_off1.csv", "02-16-2018_off2.csv", "02-16-2018_off3.csv",
+    "02-20-2018_off0.csv", "02-20-2018_off1.csv", "02-20-2018_off2.csv", "02-20-2018_off3.csv",
+    "02-21-2018_off0.csv", "02-21-2018_off1.csv", "02-21-2018_off2.csv", "02-21-2018_off3.csv",
+    "02-22-2018_off0.csv", "02-22-2018_off1.csv", "02-22-2018_off2.csv", "02-22-2018_off3.csv",
+    "02-23-2018_off0.csv", "02-23-2018_off1.csv", "02-23-2018_off2.csv", "02-23-2018_off3.csv",
 ]
 FULL_DIR = PROJECT_ROOT / "data" / "cicids2018_full"
 FULL_DAYS = ["02-28-2018.csv", "03-01-2018.csv", "03-02-2018.csv"]

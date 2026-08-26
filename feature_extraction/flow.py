@@ -1,4 +1,4 @@
-from scapy.layers.inet import IP, TCP, UDP
+from scapy.layers.inet import ICMP, IP, TCP, UDP
 from scapy.layers.l2 import Ether, Loopback
 
 
@@ -108,6 +108,15 @@ class Flow:
 
                 elif UDP in packet:
 
+                    header_length += 8
+
+                elif ICMP in packet:
+
+                    # Fixed 8-byte header (type, code, checksum, id, seq) -
+                    # without this, the ICMP header itself was being counted
+                    # as forward payload, inflating Min Pkt Size (the
+                    # single highest-importance experimental-model feature)
+                    # by a constant 8 bytes for every ICMP flow.
                     header_length += 8
 
                 self.forward_header_lengths.append(header_length)

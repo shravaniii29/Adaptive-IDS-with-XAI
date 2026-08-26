@@ -52,9 +52,23 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 OUT_DIR = PROJECT_ROOT / "models" / "experimental_2019"
 
 PARTIAL_DIR = PROJECT_ROOT / "data" / "cicids2018"
+# 4 spread-out offset windows per day (0%/25%/50%/75% of the file, via
+# fetch_cicids2018_multiday_v2.py) rather than one contiguous block from
+# byte 0 - a single contiguous prefix can land entirely inside one
+# attack burst or one quiet period (checked directly: 4 of the original
+# 7 single-block days were severely skewed, e.g. 02-14-2018 was 142,358
+# attack rows vs only 124 benign). Each offset window is its own file so
+# it gets its own `day` tag - concatenating them instead would fabricate
+# false temporal adjacency at the seams for the (day, Dst Port, Protocol)
+# grouping used by rolling/sequence features.
 PARTIAL_DAYS = [
-    "02-14-2018.csv", "02-15-2018.csv", "02-16-2018.csv", "02-20-2018.csv",
-    "02-21-2018.csv", "02-22-2018.csv", "02-23-2018.csv",
+    "02-14-2018_off0.csv", "02-14-2018_off1.csv", "02-14-2018_off2.csv", "02-14-2018_off3.csv",
+    "02-15-2018_off0.csv", "02-15-2018_off1.csv", "02-15-2018_off2.csv", "02-15-2018_off3.csv",
+    "02-16-2018_off0.csv", "02-16-2018_off1.csv", "02-16-2018_off2.csv", "02-16-2018_off3.csv",
+    "02-20-2018_off0.csv", "02-20-2018_off1.csv", "02-20-2018_off2.csv", "02-20-2018_off3.csv",
+    "02-21-2018_off0.csv", "02-21-2018_off1.csv", "02-21-2018_off2.csv", "02-21-2018_off3.csv",
+    "02-22-2018_off0.csv", "02-22-2018_off1.csv", "02-22-2018_off2.csv", "02-22-2018_off3.csv",
+    "02-23-2018_off0.csv", "02-23-2018_off1.csv", "02-23-2018_off2.csv", "02-23-2018_off3.csv",
 ]
 
 FULL_DIR = PROJECT_ROOT / "data" / "cicids2018_full"

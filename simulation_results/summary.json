@@ -1,78 +1,136 @@
 {
-  "generated_at": 1787338011.3470862,
-  "target_ip": "192.168.31.246",
+  "generated_at": 1787550562.490511,
+  "target_ip": "127.0.0.1",
   "scenarios": [
     {
       "name": "Benign baseline",
       "is_attack": false,
-      "flow_count": 2,
+      "flow_count": 41,
       "model_scores": {
-        "deployed_hybrid": 1.0,
-        "variant1_xgb_single_flow": 1.0,
-        "variant2_xgb_temporal": 0.0,
-        "variant3_cnn_lstm": 1.0
+        "deployed_hybrid": 0.07317073170731707,
+        "variant1_xgb_single_flow": 0.8048780487804879,
+        "variant2_xgb_temporal": 0.9512195121951219,
+        "variant3_cnn_lstm": 0.975609756097561
       },
       "file": "Benign baseline.json"
     },
     {
       "name": "ICMP flood",
       "is_attack": true,
-      "flow_count": 8,
+      "flow_count": 21,
       "model_scores": {
-        "deployed_hybrid": 0.0,
-        "variant1_xgb_single_flow": 0.5,
-        "variant2_xgb_temporal": 0.5,
-        "variant3_cnn_lstm": 0.125
+        "deployed_hybrid": 0.8571428571428571,
+        "variant1_xgb_single_flow": 0.0,
+        "variant2_xgb_temporal": 0.0,
+        "variant3_cnn_lstm": 0.0
       },
       "file": "ICMP flood.json"
     },
     {
       "name": "SYN flood",
       "is_attack": true,
-      "flow_count": 0,
+      "flow_count": 22,
       "model_scores": {
-        "deployed_hybrid": null,
-        "variant1_xgb_single_flow": null,
-        "variant2_xgb_temporal": null,
-        "variant3_cnn_lstm": null
+        "deployed_hybrid": 0.9090909090909091,
+        "variant1_xgb_single_flow": 0.0,
+        "variant2_xgb_temporal": 0.0,
+        "variant3_cnn_lstm": 0.0
       },
       "file": "SYN flood.json"
     },
     {
       "name": "UDP flood",
       "is_attack": true,
-      "flow_count": 0,
+      "flow_count": 24,
       "model_scores": {
-        "deployed_hybrid": null,
-        "variant1_xgb_single_flow": null,
-        "variant2_xgb_temporal": null,
-        "variant3_cnn_lstm": null
+        "deployed_hybrid": 0.9583333333333334,
+        "variant1_xgb_single_flow": 0.0,
+        "variant2_xgb_temporal": 0.0,
+        "variant3_cnn_lstm": 0.041666666666666664
       },
       "file": "UDP flood.json"
     },
     {
       "name": "HTTP flood",
       "is_attack": true,
-      "flow_count": 1,
+      "flow_count": 28,
       "model_scores": {
-        "deployed_hybrid": 0.0,
+        "deployed_hybrid": 0.8571428571428571,
         "variant1_xgb_single_flow": 0.0,
         "variant2_xgb_temporal": 0.0,
-        "variant3_cnn_lstm": 0.0
+        "variant3_cnn_lstm": 0.07142857142857142
       },
       "file": "HTTP flood.json"
     },
     {
       "name": "Port scan",
       "is_attack": true,
-      "flow_count": 0,
+      "flow_count": 33,
       "model_scores": {
-        "deployed_hybrid": null,
-        "variant1_xgb_single_flow": null,
-        "variant2_xgb_temporal": null,
-        "variant3_cnn_lstm": null
+        "deployed_hybrid": 1.0,
+        "variant1_xgb_single_flow": 0.0,
+        "variant2_xgb_temporal": 0.0,
+        "variant3_cnn_lstm": 0.0
       },
       "file": "Port scan.json"
     }
-  ]
+  ],
+  "aggregate_metrics": {
+    "deployed_hybrid": {
+      "confusion_matrix": {
+        "tp": 118,
+        "fp": 38,
+        "tn": 3,
+        "fn": 10
+      },
+      "accuracy": 0.7159763313609467,
+      "precision": 0.7564102564102564,
+      "recall": 0.921875,
+      "f1": 0.8309859154929576,
+      "specificity": 0.07317073170731707,
+      "total_flows": 169
+    },
+    "variant1_xgb_single_flow": {
+      "confusion_matrix": {
+        "tp": 0,
+        "fp": 8,
+        "tn": 33,
+        "fn": 128
+      },
+      "accuracy": 0.1952662721893491,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": null,
+      "specificity": 0.8048780487804879,
+      "total_flows": 169
+    },
+    "variant2_xgb_temporal": {
+      "confusion_matrix": {
+        "tp": 0,
+        "fp": 2,
+        "tn": 39,
+        "fn": 128
+      },
+      "accuracy": 0.23076923076923078,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": null,
+      "specificity": 0.9512195121951219,
+      "total_flows": 169
+    },
+    "variant3_cnn_lstm": {
+      "confusion_matrix": {
+        "tp": 3,
+        "fp": 1,
+        "tn": 40,
+        "fn": 125
+      },
+      "accuracy": 0.25443786982248523,
+      "precision": 0.75,
+      "recall": 0.0234375,
+      "f1": 0.045454545454545456,
+      "specificity": 0.975609756097561,
+      "total_flows": 169
+    }
+  }
 }
