@@ -44,13 +44,25 @@ in any model). Change RAW_FLOOD_LABELS_*, REFLECTION_LABELS_*, and
 CONNECTION_LABELS_* below to adjust the split - every label appearing
 in the data should be in exactly one of the six lists.
 
-Each source file/day still contributes only its own benign rows (the
-project's established "own benign only per file" convention, avoiding a
-capture-session shortcut) - a 2018 day whose attack rows get split
-across multiple families contributes its own benign rows to EACH
-derived dataset it appears in (this is reusing that day's own authentic
-benign traffic for separate binary tasks, not cross-session blending,
-since every dataset pulls from the exact same source rows).
+Every source file/day can contribute its own benign rows to EVERY
+family's dataset, not just the family whose attack labels happen to
+appear in that file (the project's established "own benign only per
+file" convention, avoiding a capture-session shortcut, extended here to
+mean "own benign only, but shareable across every family" rather than
+"own benign only, and only where that file's attacks also apply"). This
+is reusing each day's own authentic benign traffic for separate binary
+tasks, not cross-session blending, since every dataset pulls from the
+exact same source rows.
+
+Two prior versions of this got the BALANCE of that sharing wrong in
+opposite directions - see BENIGN_ATTACK_RATIO and
+_native_frames/_borrowed_benign_frames/build_family_dataset below for
+the full history and the current fix: cap how much "borrowed" benign
+(from files without this family's own attack type) gets pulled in,
+targeting a fixed benign:attack ratio per family, rather than either
+skipping non-matching files entirely (v1, benign-starved) or including
+100% of every non-matching file's benign unconditionally (v2,
+benign-flooded).
 
 Architecture/hyperparameters, scaling, and threshold-tuning logic are
 otherwise unchanged from retrain_deployed_model.py, for continuity and
@@ -192,45 +204,93 @@ def per_day_split(day_df):
 # rows) from both loaded datasets.
 # ---------------------------------------------------------------------
 
-def select_2019_frames(all_2019_frames, labels):
-    """Each 2019 file is single-attack-type + its own sparse benign rows
-    (fetch_ddos2019_sample_25feature.py's own-benign-only convention) -
-    keep the whole file if its one attack label belongs to this family,
-    skip it entirely otherwise (its benign rows go with whichever family
-    its attack label was assigned to, not both - a WebDDoS file's benign
-    rows have no reason to represent "normal" traffic for the volumetric
-    family too, they're the same handful of rows either way)."""
-    kept = []
+# Target ratio of total benign rows to total attack rows per family, after
+# adding "borrowed" benign from files that aren't this family's own attack
+# source. Two prior versions of this dataset-construction logic each
+# failed in opposite directions:
+#   v1: only a family's own attack-source files contributed benign at all
+#       -> family_raw_flood starved to ~1,760 benign rows, an Isolation
+#       Forest couldn't learn a reliable boundary in 25 dimensions, and it
+#       degenerated to flagging 100% of live traffic as attack.
+#   v2: every family drew the ENTIRE pooled benign set unconditionally
+#       (2,303,571 rows) regardless of its own attack volume -> raw_flood
+#       and reflection flipped to the opposite degenerate extreme (recall
+#       collapsed toward 0%, specificity toward 100%) - confirmed via a
+#       rigorous 5-trial live re-test (346-468 pooled flows per model).
+# v3 (this version) caps "borrowed" benign (from files without this
+# family's own attack type) so the family's TOTAL benign:attack ratio
+# lands near BENIGN_ATTACK_RATIO, sampled proportionally across every
+# contributing environment to keep v1's cross-environment diversity fix
+# without v2's overwhelming volume.
+BENIGN_ATTACK_RATIO = 2.0
+BALANCE_SEED = 42
+
+
+def _native_frames(all_2018_frames, all_2019_frames, labels_2018, labels_2019):
+    """Files/days that ARE this family's own attack source - kept whole
+    (own benign + this family's attack rows), uncapped, same as before."""
+    native = []
     for day_df in all_2019_frames:
         file_labels = set(day_df.loc[day_df["Binary_Label"] == 1, "Label"].unique())
-        if file_labels & set(labels):
-            kept.append(day_df)
-    return kept
-
-
-def select_2018_frames(all_2018_frames, labels):
-    """2018 days mix many attack types - keep that day's own benign rows
-    plus only the attack rows whose label is in this family; drop the
-    rest of that day's attack rows (they belong to the other family, not
-    absent from the data - selected separately via the other label
-    list). A day contributing nothing to this family (no benign counted
-    since Binary_Label==0 rows always pass, so only skip if literally no
-    rows survive) is skipped."""
-    kept = []
+        if file_labels & set(labels_2019):
+            native.append(day_df)
     for day_df in all_2018_frames:
-        keep_mask = (day_df["Binary_Label"] == 0) | (day_df["Label"].isin(labels))
-        filtered = day_df[keep_mask].reset_index(drop=True)
-        if filtered.empty or (filtered["Binary_Label"] == 1).sum() == 0:
-            continue
-        kept.append(filtered)
-    return kept
+        has_native_attack = ((day_df["Label"].isin(labels_2018)) & (day_df["Binary_Label"] == 1)).any()
+        if has_native_attack:
+            keep_mask = (day_df["Binary_Label"] == 0) | (day_df["Label"].isin(labels_2018))
+            native.append(day_df[keep_mask].reset_index(drop=True))
+    return native
 
 
-def build_family_dataset(all_2018_frames, all_2019_frames, labels_2018, labels_2019):
-    frames = select_2019_frames(all_2019_frames, labels_2019) + select_2018_frames(all_2018_frames, labels_2018)
+def _borrowed_benign_frames(all_2018_frames, all_2019_frames, labels_2018, labels_2019):
+    """Benign-only rows from files that are NOT this family's own attack
+    source - the cross-environment diversity contribution, capped by
+    build_family_dataset below rather than included in full."""
+    borrowed = []
+    for day_df in all_2019_frames:
+        file_labels = set(day_df.loc[day_df["Binary_Label"] == 1, "Label"].unique())
+        if not (file_labels & set(labels_2019)):
+            benign_only = day_df[day_df["Binary_Label"] == 0]
+            if not benign_only.empty:
+                borrowed.append(benign_only)
+    for day_df in all_2018_frames:
+        has_native_attack = ((day_df["Label"].isin(labels_2018)) & (day_df["Binary_Label"] == 1)).any()
+        if not has_native_attack:
+            benign_only = day_df[day_df["Binary_Label"] == 0]
+            if not benign_only.empty:
+                borrowed.append(benign_only)
+    return borrowed
 
-    if not frames:
+
+def build_family_dataset(all_2018_frames, all_2019_frames, labels_2018, labels_2019,
+                          benign_attack_ratio=BENIGN_ATTACK_RATIO, seed=BALANCE_SEED):
+    native = _native_frames(all_2018_frames, all_2019_frames, labels_2018, labels_2019)
+    borrowed = _borrowed_benign_frames(all_2018_frames, all_2019_frames, labels_2018, labels_2019)
+
+    if not native:
         raise ValueError(f"no rows matched labels_2018={labels_2018} or labels_2019={labels_2019}")
+
+    n_attack = sum(int((df["Binary_Label"] == 1).sum()) for df in native)
+    n_native_benign = sum(int((df["Binary_Label"] == 0).sum()) for df in native)
+    n_borrowed_available = sum(len(df) for df in borrowed)
+
+    target_borrowed = max(0, int(n_attack * benign_attack_ratio) - n_native_benign)
+    frac = min(1.0, target_borrowed / n_borrowed_available) if n_borrowed_available and target_borrowed else 0.0
+
+    print(f"  attack={n_attack} native_benign={n_native_benign} borrowed_available={n_borrowed_available} "
+          f"target_borrowed={target_borrowed} sample_frac={frac:.4f}")
+
+    sampled_borrowed = []
+    if frac > 0:
+        rng = np.random.default_rng(seed)
+        for df in borrowed:
+            n_sample = int(round(len(df) * frac))
+            if n_sample <= 0:
+                continue
+            idx = rng.choice(len(df), size=min(n_sample, len(df)), replace=False)
+            sampled_borrowed.append(df.iloc[sorted(idx)].reset_index(drop=True))
+
+    frames = native + sampled_borrowed
 
     train_parts, test_parts = [], []
     for day_df in frames:

@@ -38,3 +38,19 @@ data/ddos2019/
 data/cicids2018_full/
 data/ddos2019_full/
 data/ddos2019_sample/
+
+# LSNM2024 raw per-packet CSVs (77-535MB each, several exceed GitHub's
+# 100MB limit) - the derived data/lsnm2024/*_25feature.csv and
+# *_8feature.csv (flow/packet-level reconstructions, a few MB each) are
+# tracked normally, only the raw source files are excluded.
+data/lsnm2024/syn_flood.csv
+data/lsnm2024/icmp_flood.csv
+data/lsnm2024/ddos_icmp.csv
+data/lsnm2024/ddos_udp.csv
+data/lsnm2024/ddos_raw.csv
+data/lsnm2024/normal_data.csv
+
+# Pre-fix attack-family model backup, kept locally for A/B comparison
+# testing - already recoverable from git history (commit c97eee0), no
+# need to track a second copy.
+models_prefix_backup/

@@ -1,0 +1,83 @@
+{
+  "created_at": "2026-08-26T21:12:39.061769+00:00",
+  "dataset": "LSNM2024 only, packet-level (no flow reconstruction) - Syn/ICMP-Flood/DDOS-ICMP/DDOS-UDP/DDOS-RAW + own-benign-chunk per file",
+  "days": [
+    "ddos_icmp",
+    "ddos_raw",
+    "ddos_udp",
+    "icmp_flood",
+    "syn_flood"
+  ],
+  "total_packets": 2391218,
+  "train_packets": 1615030,
+  "test_packets": 776188,
+  "temporal_xgb": {
+    "metrics": {
+      "accuracy": 0.9988443521414915,
+      "precision": 0.9986242043001833,
+      "recall": 0.9999717886910267,
+      "f1": 0.9992975421807517,
+      "threshold": 0.08
+    },
+    "feature_importances": [
+      [
+        "hist_std_delta_t_us",
+        0.9561876654624939
+      ],
+      [
+        "hist_mean_delta_t_us",
+        0.043125223368406296
+      ],
+      [
+        "protocol_num",
+        0.00030860997503623366
+      ],
+      [
+        "hist_mean_frame_length",
+        0.0002520981361158192
+      ],
+      [
+        "hist_std_frame_length",
+        3.688764991238713e-05
+      ],
+      [
+        "delta_t_us",
+        3.0689770937897265e-05
+      ],
+      [
+        "frame_length",
+        1.8754304619506e-05
+      ],
+      [
+        "hist_std_payload",
+        1.3536543519876432e-05
+      ],
+      [
+        "hist_pkt_count",
+        1.313878055952955e-05
+      ],
+      [
+        "hist_mean_payload",
+        7.98891323938733e-06
+      ],
+      [
+        "payload",
+        5.425359631772153e-06
+      ]
+    ],
+    "shortcut_warning": true
+  },
+  "cnn_lstm_packet": {
+    "metrics": {
+      "accuracy": 0.9989242324688543,
+      "precision": 0.999474818734078,
+      "recall": 0.9992163500720957,
+      "f1": 0.9993455676906376,
+      "threshold": 0.58
+    },
+    "sequence_length": 10,
+    "stride": 5,
+    "architecture": "Conv1d(4->32,k=3) + LSTM(32->64) + Linear(64->1)"
+  },
+  "note": "Packet-level models - each timestep/row is one raw packet (frame_length, payload, protocol_num, delta_t_us [+ rolling history for the XGB]), not a reconstructed flow. No dependency on feature_extraction/flow.py or detection/experimental_history.py - not wired into the live serving path."
+}
