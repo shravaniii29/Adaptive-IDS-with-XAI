@@ -1,0 +1,230 @@
+{
+  "created_at": "2026-08-26T08:57:49.526754+00:00",
+  "family": "reflection",
+  "dataset": "CIC-DDoS2019 UDP, UDP-lag, DrDoS_DNS, DrDoS_LDAP, DrDoS_MSSQL, DrDoS_NTP, DrDoS_NetBIOS, DrDoS_SNMP, DrDoS_SSDP, DrDoS_UDP, LDAP, MSSQL, NetBIOS, Portmap - own benign only per file/day",
+  "day_tags": [
+    "2019_01-12_DrDoS_DNS",
+    "2019_01-12_DrDoS_LDAP",
+    "2019_01-12_DrDoS_MSSQL",
+    "2019_01-12_DrDoS_NTP",
+    "2019_01-12_DrDoS_NetBIOS",
+    "2019_01-12_DrDoS_SNMP",
+    "2019_01-12_DrDoS_SSDP",
+    "2019_01-12_DrDoS_UDP",
+    "2019_01-12_UDPLag",
+    "2019_03-11_LDAP",
+    "2019_03-11_MSSQL",
+    "2019_03-11_NetBIOS",
+    "2019_03-11_Portmap",
+    "2019_03-11_UDP",
+    "2019_03-11_UDPLag"
+  ],
+  "attack_labels": [
+    "DrDoS_DNS",
+    "DrDoS_LDAP",
+    "DrDoS_MSSQL",
+    "DrDoS_NTP",
+    "DrDoS_NetBIOS",
+    "DrDoS_SNMP",
+    "DrDoS_SSDP",
+    "DrDoS_UDP",
+    "LDAP",
+    "MSSQL",
+    "NetBIOS",
+    "Portmap",
+    "UDP",
+    "UDP-lag",
+    "WebDDoS"
+  ],
+  "train_rows": 430714,
+  "test_rows": 185355,
+  "hybrid_metrics_held_out": {
+    "accuracy": 0.9931105176553101,
+    "precision": 0.9931147336772191,
+    "recall": 0.9996523305253798,
+    "f1": 0.9963728082757916
+  },
+  "xgb_alone_metrics_held_out": {
+    "accuracy": 0.9994227293571795,
+    "precision": 0.9997378006030586,
+    "recall": 0.9996523305253798,
+    "f1": 0.9996950637373786
+  },
+  "isolation_alone_recall_held_out": 0.4097883205854526,
+  "per_attack_label_recall_held_out": [
+    {
+      "label": "DrDoS_DNS",
+      "n": 11718,
+      "recall": 0.9991466120498379
+    },
+    {
+      "label": "DrDoS_LDAP",
+      "n": 11721,
+      "recall": 0.9999146830475215
+    },
+    {
+      "label": "DrDoS_MSSQL",
+      "n": 11880,
+      "recall": 1.0
+    },
+    {
+      "label": "DrDoS_NTP",
+      "n": 11912,
+      "recall": 0.9972296843519141
+    },
+    {
+      "label": "DrDoS_NetBIOS",
+      "n": 11366,
+      "recall": 0.9999120183001936
+    },
+    {
+      "label": "DrDoS_SNMP",
+      "n": 11838,
+      "recall": 1.0
+    },
+    {
+      "label": "DrDoS_SSDP",
+      "n": 11988,
+      "recall": 0.9989155822489156
+    },
+    {
+      "label": "DrDoS_UDP",
+      "n": 11769,
+      "recall": 1.0
+    },
+    {
+      "label": "MSSQL",
+      "n": 11598,
+      "recall": 1.0
+    },
+    {
+      "label": "NetBIOS",
+      "n": 22806,
+      "recall": 0.9999123037797071
+    },
+    {
+      "label": "Portmap",
+      "n": 11286,
+      "recall": 0.9999113946482368
+    },
+    {
+      "label": "UDP",
+      "n": 23646,
+      "recall": 1.0
+    },
+    {
+      "label": "UDP-lag",
+      "n": 11922,
+      "recall": 1.0
+    },
+    {
+      "label": "WebDDoS",
+      "n": 4,
+      "recall": 1.0
+    }
+  ],
+  "feature_importances": [
+    [
+      "Pkt Size Avg",
+      0.5806800127029419
+    ],
+    [
+      "Pkt Len Mean",
+      0.1926582306623459
+    ],
+    [
+      "TotLen Bwd Pkts",
+      0.05110353231430054
+    ],
+    [
+      "pkt_rate_ratio",
+      0.04143306985497475
+    ],
+    [
+      "Bwd Pkt Len Max",
+      0.01972128264605999
+    ],
+    [
+      "Pkt Len Max",
+      0.019164254888892174
+    ],
+    [
+      "Bwd Seg Size Avg",
+      0.011961426585912704
+    ],
+    [
+      "Bwd Pkt Len Mean",
+      0.009947220794856548
+    ],
+    [
+      "Init Bwd Win Byts",
+      0.008740395307540894
+    ],
+    [
+      "Fwd Header Len",
+      0.008659250102937222
+    ],
+    [
+      "Bwd Pkt Len Std",
+      0.007860560901463032
+    ],
+    [
+      "Subflow Bwd Byts",
+      0.007319988217204809
+    ],
+    [
+      "TotLen Fwd Pkts",
+      0.00620115315541625
+    ],
+    [
+      "Flow IAT Max",
+      0.005765772890299559
+    ],
+    [
+      "Flow IAT Std",
+      0.00504947267472744
+    ],
+    [
+      "Subflow Fwd Byts",
+      0.003512395080178976
+    ],
+    [
+      "Fwd IAT Mean",
+      0.002768120961263776
+    ],
+    [
+      "iat_variation",
+      0.002591123105958104
+    ],
+    [
+      "Flow IAT Min",
+      0.0025865777861326933
+    ],
+    [
+      "Fwd IAT Max",
+      0.002318254904821515
+    ],
+    [
+      "Fwd IAT Tot",
+      0.0022131395526230335
+    ],
+    [
+      "Flow Pkts/s",
+      0.002191574079915881
+    ],
+    [
+      "Fwd Pkts/s",
+      0.001989093841984868
+    ],
+    [
+      "Flow Duration",
+      0.0018812990747392178
+    ],
+    [
+      "Flow IAT Mean",
+      0.0016827363288030028
+    ]
+  ],
+  "shortcut_warning": true,
+  "threshold": 0.888888888888889
+}

@@ -1,42 +1,56 @@
 """
-Trains TWO separate hybrid models (XGBoost + Isolation Forest, same
+Trains THREE separate hybrid models (XGBoost + Isolation Forest, same
 25-feature set as the deployed model), one per structural attack family,
 instead of one generalist model covering everything:
 
-1. VOLUMETRIC FLOODS (models/family_volumetric/) - single repeated packet
-   type at high rate, no completed connection, minimal-to-no payload; the
-   goal is raw exhaustion, not interaction. Matches this project's live
-   ICMP/SYN/UDP flood simulator scenarios. Built from CIC-DDoS2019's
-   non-reflection flood types: Syn, TFTP (day tags ending "_Syn"/"_TFTP"
-   in data/ddos2019_sample/combined_sample_25feature.csv). Reflection/
-   amplification types (DrDoS_*, plain UDP, UDPLag, Portmap) are
-   deliberately excluded - their traffic shape differs (spoofed source,
-   real response payloads from a reflector), and only Syn/TFTP were
-   named as the intended fit.
+1. RAW FLOODS (models/family_raw_flood/) - connectionless, near-zero
+   forward payload: raw crafted packets thrown at the victim with no
+   real content. Matches this project's live ICMP/SYN/UDP flood
+   simulator scenarios most closely. CIC-DDoS2019's Syn + TFTP, plus
+   CIC-IDS2018's "DDOS attack-LOIC-UDP" (LOIC's UDP-flood mode -
+   connectionless, unlike LOIC's HTTP mode which is family 3).
 
-2. CONNECTION / APPLICATION-LAYER ATTACKS (models/family_connection/) -
-   real connection attempts producing genuine bidirectional traffic:
-   full TCP handshake for HTTP-style DoS, per-port connect attempts for
-   scanning. Matches this project's live HTTP flood / port scan
-   scenarios. Built from CIC-IDS2018's HTTP-based DoS family (Hulk,
-   GoldenEye, Slowloris, SlowHTTPTest - all one structural family, "-
-   style" per the definition this was built from) plus Infilteration as
-   the closest available reconnaissance/infiltration analogue (CIC-
-   IDS2018 has no standalone PortScan label). Every other 2018 attack
-   type (brute force, web/XSS, SQL injection, Bot) is excluded - neither
-   a flood nor a recon/connection behavior, so it doesn't belong in
-   either family and would just be label noise if lumped in.
+2. REFLECTION / AMPLIFICATION FLOODS (models/family_reflection/) -
+   also connectionless (no handshake), but structurally different from
+   family 1: large forward payload, because these packets carry a real
+   server response from a spoofed reflector (DNS/NTP/SSDP/LDAP/SNMP/
+   NetBIOS/MSSQL/Portmap answering a forged request). This is exactly
+   the feature profile that dominated Min Pkt Size importance (51-59%,
+   tripping the shortcut-warning threshold) when this data was earlier
+   pooled with family 1 under one "volumetric" label - splitting it out
+   removes that internal heterogeneity instead of disclosing and
+   tolerating it. All 14 of CIC-DDoS2019's reflection-style labels:
+   UDP, UDP-lag, DrDoS_DNS, DrDoS_LDAP, DrDoS_MSSQL, DrDoS_NTP,
+   DrDoS_NetBIOS, DrDoS_SNMP, DrDoS_SSDP, DrDoS_UDP, LDAP, MSSQL,
+   NetBIOS, Portmap.
 
-These are the two literal attack-type mappings named when this dataset
-split was specified; nothing broader was inferred. If that turns out to
-be too narrow (e.g. DrDoS_* reflection floods should also count as
-"volumetric"), the ALLOWED_* constants below are the only place to
-change - everything else is generic.
+3. CONNECTION / APPLICATION-LAYER ATTACKS (models/family_connection/) -
+   a real connection or session actually forms: full TCP handshake for
+   HTTP-style DoS/brute-force/injection attacks, or scan/infiltration
+   behavior. Matches this project's live HTTP flood / port scan
+   scenarios. All 13 remaining CIC-IDS2018 attack types (Hulk,
+   GoldenEye, Slowloris, SlowHTTPTest, Infilteration, DDOS attack-HOIC,
+   DDoS attacks-LOIC-HTTP, Bot, Brute Force -Web, Brute Force -XSS, SQL
+   Injection, FTP-BruteForce, SSH-Bruteforce) plus CIC-DDoS2019's
+   WebDDoS.
 
-Deliberately excludes benign rows from days/files that don't belong to
-either family's source set (no cross-family or cross-dataset benign
-blending, extending this project's established "own benign only per
-file" convention from fetch_ddos2019_sample_25feature.py to this split).
+Together these three families cover EVERY attack label present in the
+local CIC-IDS2018 (28 offset windows + 3 full days) and CIC-DDoS2019 (18
+attack-type files) data - nothing is dropped as "doesn't fit any
+family" the way an earlier, narrower version of this split did (only
+Syn/TFTP + Hulk/GoldenEye/Slowloris/SlowHTTPTest/Infilteration, leaving
+~85% of 2019's attack rows and several 2018 attack types unrepresented
+in any model). Change RAW_FLOOD_LABELS_*, REFLECTION_LABELS_*, and
+CONNECTION_LABELS_* below to adjust the split - every label appearing
+in the data should be in exactly one of the six lists.
+
+Each source file/day still contributes only its own benign rows (the
+project's established "own benign only per file" convention, avoiding a
+capture-session shortcut) - a 2018 day whose attack rows get split
+across multiple families contributes its own benign rows to EACH
+derived dataset it appears in (this is reusing that day's own authentic
+benign traffic for separate binary tasks, not cross-session blending,
+since every dataset pulls from the exact same source rows).
 
 Architecture/hyperparameters, scaling, and threshold-tuning logic are
 otherwise unchanged from retrain_deployed_model.py, for continuity and
@@ -70,9 +84,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 # ---------------------------------------------------------------------
 # Same 10-day CIC-IDS2018 source set as retrain_deployed_model.py
 # (28 spread-out offset windows for the 7 "partial" days, via
-# fetch_cicids2018_multiday_v2.py, + 3 full days) - reused so the
-# connection/app-layer family draws from the same underlying captures
-# the deployed model does, just filtered to a different label subset.
+# fetch_cicids2018_multiday_v2.py, + 3 full days).
 # ---------------------------------------------------------------------
 
 PARTIAL_DIR = PROJECT_ROOT / "data" / "cicids2018"
@@ -97,19 +109,35 @@ DERIVED = {"pkt_rate_ratio", "iat_variation"}
 RAW_NEEDED_2018 = [c for c in TOP_FEATURES if c not in DERIVED]
 
 # ---------------------------------------------------------------------
-# The two family definitions - see module docstring for why each list
-# is what it is. Change these, and only these, to adjust the split.
+# The three family definitions - every attack label found in the local
+# data should appear in exactly one of these six lists. See module
+# docstring for the reasoning behind each placement.
 # ---------------------------------------------------------------------
 
-VOLUMETRIC_DAY_TAG_SUFFIXES = ("_Syn", "_TFTP")
+RAW_FLOOD_LABELS_2019 = ["Syn", "TFTP"]
+RAW_FLOOD_LABELS_2018 = ["DDOS attack-LOIC-UDP"]
 
-CONNECTION_2018_LABELS = [
-    "DoS attacks-Hulk",
-    "DoS attacks-GoldenEye",
-    "DoS attacks-Slowloris",
-    "DoS attacks-SlowHTTPTest",
-    "Infilteration",  # CIC-IDS2018's own spelling
+REFLECTION_LABELS_2019 = [
+    "UDP", "UDP-lag",
+    "DrDoS_DNS", "DrDoS_LDAP", "DrDoS_MSSQL", "DrDoS_NTP", "DrDoS_NetBIOS",
+    "DrDoS_SNMP", "DrDoS_SSDP", "DrDoS_UDP",
+    "LDAP", "MSSQL", "NetBIOS", "Portmap",
 ]
+REFLECTION_LABELS_2018 = []
+
+CONNECTION_LABELS_2019 = ["WebDDoS"]
+CONNECTION_LABELS_2018 = [
+    "DoS attacks-Hulk", "DoS attacks-GoldenEye", "DoS attacks-Slowloris", "DoS attacks-SlowHTTPTest",
+    "Infilteration", "DDOS attack-HOIC", "DDoS attacks-LOIC-HTTP",
+    "Bot", "Brute Force -Web", "Brute Force -XSS", "SQL Injection",
+    "FTP-BruteForce", "SSH-Bruteforce",
+]
+
+FAMILIES = {
+    "raw_flood": (RAW_FLOOD_LABELS_2018, RAW_FLOOD_LABELS_2019),
+    "reflection": (REFLECTION_LABELS_2018, REFLECTION_LABELS_2019),
+    "connection_application_layer": (CONNECTION_LABELS_2018, CONNECTION_LABELS_2019),
+}
 
 
 # ---------------------------------------------------------------------
@@ -120,6 +148,7 @@ def load_one_2018_day(path):
     df = pd.read_csv(path, low_memory=False)
     df.columns = df.columns.str.strip()
     df = df[df["Label"] != "Label"].reset_index(drop=True)
+    df["Label"] = df["Label"].str.strip()
 
     df["Timestamp"] = pd.to_datetime(df["Timestamp"], format="%d/%m/%Y %H:%M:%S", errors="coerce")
     df = df.dropna(subset=["Timestamp"])
@@ -143,6 +172,7 @@ def load_ddos2019_sample():
         )
     df = pd.read_csv(DDOS2019_SAMPLE, low_memory=False)
     df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+    df["Label"] = df["Label"].str.strip()
     return [g.sort_values("Timestamp").reset_index(drop=True) for _, g in df.groupby("day")]
 
 
@@ -157,30 +187,50 @@ def per_day_split(day_df):
 
 
 # ---------------------------------------------------------------------
-# Family-specific dataset construction
+# Family-agnostic dataset construction: given the label sets for one
+# family, pull matching attack rows (+ that same file/day's own benign
+# rows) from both loaded datasets.
 # ---------------------------------------------------------------------
 
-def build_volumetric_dataset():
-    """Syn + TFTP files only, each contributing its own benign + attack
-    rows (already own-benign-only per fetch_ddos2019_sample_25feature.py)
-    - no further label filtering needed, the day-tag selection already
-    restricts to exactly these two attack types."""
-    all_frames = load_ddos2019_sample()
-    frames = [f for f in all_frames if f["day"].iloc[0].endswith(VOLUMETRIC_DAY_TAG_SUFFIXES)]
+def select_2019_frames(all_2019_frames, labels):
+    """Each 2019 file is single-attack-type + its own sparse benign rows
+    (fetch_ddos2019_sample_25feature.py's own-benign-only convention) -
+    keep the whole file if its one attack label belongs to this family,
+    skip it entirely otherwise (its benign rows go with whichever family
+    its attack label was assigned to, not both - a WebDDoS file's benign
+    rows have no reason to represent "normal" traffic for the volumetric
+    family too, they're the same handful of rows either way)."""
+    kept = []
+    for day_df in all_2019_frames:
+        file_labels = set(day_df.loc[day_df["Binary_Label"] == 1, "Label"].unique())
+        if file_labels & set(labels):
+            kept.append(day_df)
+    return kept
+
+
+def select_2018_frames(all_2018_frames, labels):
+    """2018 days mix many attack types - keep that day's own benign rows
+    plus only the attack rows whose label is in this family; drop the
+    rest of that day's attack rows (they belong to the other family, not
+    absent from the data - selected separately via the other label
+    list). A day contributing nothing to this family (no benign counted
+    since Binary_Label==0 rows always pass, so only skip if literally no
+    rows survive) is skipped."""
+    kept = []
+    for day_df in all_2018_frames:
+        keep_mask = (day_df["Binary_Label"] == 0) | (day_df["Label"].isin(labels))
+        filtered = day_df[keep_mask].reset_index(drop=True)
+        if filtered.empty or (filtered["Binary_Label"] == 1).sum() == 0:
+            continue
+        kept.append(filtered)
+    return kept
+
+
+def build_family_dataset(all_2018_frames, all_2019_frames, labels_2018, labels_2019):
+    frames = select_2019_frames(all_2019_frames, labels_2019) + select_2018_frames(all_2018_frames, labels_2018)
 
     if not frames:
-        raise ValueError(
-            "no Syn/TFTP day tags found in combined_sample_25feature.csv - "
-            "check fetch_ddos2019_sample_25feature.py's output log; one of "
-            "these two attack-type files may have produced zero usable rows."
-        )
-
-    found_tags = sorted(f["day"].iloc[0] for f in frames)
-    print(f"  volumetric source files: {found_tags}")
-    if not any(t.endswith("_Syn") for t in found_tags):
-        print("  WARNING: no Syn file found")
-    if not any(t.endswith("_TFTP") for t in found_tags):
-        print("  WARNING: no TFTP file found")
+        raise ValueError(f"no rows matched labels_2018={labels_2018} or labels_2019={labels_2019}")
 
     train_parts, test_parts = [], []
     for day_df in frames:
@@ -188,43 +238,9 @@ def build_volumetric_dataset():
         train_parts.append(day_df[tr])
         test_parts.append(day_df[te])
         atk = day_df["Binary_Label"]
-        print(f"  {day_df['day'].iloc[0]}: {len(day_df)} rows, "
+        found_labels = sorted(day_df.loc[atk == 1, "Label"].unique())
+        print(f"  {day_df['day'].iloc[0]}: {len(day_df)} rows {found_labels}, "
               f"train={tr.sum()} (attack={atk[tr].sum()}), test={te.sum()} (attack={atk[te].sum()})")
-
-    return pd.concat(train_parts, ignore_index=True), pd.concat(test_parts, ignore_index=True)
-
-
-def build_connection_dataset():
-    """All 10 CIC-IDS2018 days, each contributing its own benign rows
-    unchanged, but attack rows restricted to CONNECTION_2018_LABELS -
-    every other attack type (brute force, web/XSS, SQL injection, Bot)
-    is dropped entirely, not relabeled, so it never leaks into either
-    class."""
-    frames = [load_one_2018_day(PARTIAL_DIR / n) for n in PARTIAL_DAYS]
-    frames += [load_one_2018_day(FULL_DIR / n) for n in FULL_DAYS]
-
-    train_parts, test_parts = [], []
-    total_kept_attacks = 0
-    for day_df in frames:
-        keep = (day_df["Label"].str.strip() == "Benign") | (day_df["Label"].isin(CONNECTION_2018_LABELS))
-        day_df = day_df[keep].reset_index(drop=True)
-        if day_df.empty:
-            continue
-
-        tr, te = per_day_split(day_df)
-        train_parts.append(day_df[tr])
-        test_parts.append(day_df[te])
-        atk = day_df["Binary_Label"]
-        total_kept_attacks += int(atk.sum())
-        if atk.sum() > 0:
-            print(f"  {day_df['day'].iloc[0]}: {len(day_df)} rows kept, "
-                  f"train={tr.sum()} (attack={atk[tr].sum()}), test={te.sum()} (attack={atk[te].sum()})")
-
-    if total_kept_attacks == 0:
-        raise ValueError(
-            f"no rows matched CONNECTION_2018_LABELS={CONNECTION_2018_LABELS} across any "
-            f"loaded day - check the exact Label spellings in your local CSVs."
-        )
 
     return pd.concat(train_parts, ignore_index=True), pd.concat(test_parts, ignore_index=True)
 
@@ -256,6 +272,22 @@ def feature_importance_report(names, importances):
     return report, shortcut_warning
 
 
+def per_label_recall(test_df, xgb_probs, isolation_preds, threshold):
+    """Breaks recall down by the original (non-binary) attack Label, so
+    heterogeneity within a family (e.g. Syn vs DrDoS_DNS inside
+    volumetric) is visible rather than averaged away."""
+    xgb_pred = (xgb_probs >= threshold).astype(int)
+    hybrid_pred = ((xgb_pred == 1) | (isolation_preds == 1)).astype(int)
+    rows = []
+    for label in sorted(test_df.loc[test_df["Binary_Label"] == 1, "Label"].unique()):
+        mask = (test_df["Label"] == label).values
+        n = int(mask.sum())
+        if n == 0:
+            continue
+        rows.append({"label": label, "n": n, "recall": float(hybrid_pred[mask].mean())})
+    return rows
+
+
 def train_family_model(family_name, dataset_description, train_df, test_df, out_dir):
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -263,6 +295,7 @@ def train_family_model(family_name, dataset_description, train_df, test_df, out_
     print(f"train={len(train_df)} test={len(test_df)}")
     print(f"train attack ratio: {train_df['Binary_Label'].mean():.3f}")
     print(f"test attack ratio:  {test_df['Binary_Label'].mean():.3f}")
+    print(f"attack labels in this family: {sorted(train_df.loc[train_df.Binary_Label == 1, 'Label'].unique())}")
 
     X_train = train_df[TOP_FEATURES].replace([np.inf, -np.inf], np.nan).fillna(0)
     X_train = np.clip(X_train, -1e9, 1e9).astype(np.float64)
@@ -314,6 +347,11 @@ def train_family_model(family_name, dataset_description, train_df, test_df, out_
     print(f"xgb-alone metrics at tuned threshold: {xgb_only_metrics}")
     print(f"isolation-forest-alone recall: {isolation_only_recall}")
 
+    per_label = per_label_recall(test_df, xgb_probs_test, isolation_preds_test, threshold)
+    print("per-attack-label recall (held out):")
+    for row in per_label:
+        print(f"  {row['label']:<20} n={row['n']:<8} recall={row['recall']:.3f}")
+
     with open(out_dir / "xgb_model.pkl", "wb") as f:
         pickle.dump(xgb, f)
     with open(out_dir / "isolation_forest.pkl", "wb") as f:
@@ -330,11 +368,14 @@ def train_family_model(family_name, dataset_description, train_df, test_df, out_
         "family": family_name,
         "dataset": dataset_description,
         "day_tags": sorted(pd.concat([train_df, test_df])["day"].unique().tolist()),
+        "attack_labels": sorted(pd.concat([train_df, test_df]).loc[
+            pd.concat([train_df, test_df])["Binary_Label"] == 1, "Label"].unique().tolist()),
         "train_rows": int(len(train_df)),
         "test_rows": int(len(test_df)),
         "hybrid_metrics_held_out": metrics,
         "xgb_alone_metrics_held_out": xgb_only_metrics,
         "isolation_alone_recall_held_out": float(isolation_only_recall),
+        "per_attack_label_recall_held_out": per_label,
         "feature_importances": imp,
         "shortcut_warning": shortcut_warning,
         "threshold": threshold,
@@ -347,30 +388,49 @@ def train_family_model(family_name, dataset_description, train_df, test_df, out_
 
 
 def main():
-    print("building VOLUMETRIC FLOOD dataset (CIC-DDoS2019 Syn + TFTP) ...")
-    vol_train, vol_test = build_volumetric_dataset()
+    print("loading all CIC-IDS2018 day-frames (28 offset windows + 3 full days) ...")
+    all_2018_frames = [load_one_2018_day(PARTIAL_DIR / n) for n in PARTIAL_DAYS]
+    all_2018_frames += [load_one_2018_day(FULL_DIR / n) for n in FULL_DAYS]
+    print(f"  {len(all_2018_frames)} 2018 day-frames loaded")
 
-    print("\nbuilding CONNECTION/APPLICATION-LAYER dataset (CIC-IDS2018 Hulk/GoldenEye/Slowloris/SlowHTTPTest + Infilteration) ...")
-    conn_train, conn_test = build_connection_dataset()
+    print("loading all CIC-DDoS2019 day-frames (18 attack-type files) ...")
+    all_2019_frames = load_ddos2019_sample()
+    print(f"  {len(all_2019_frames)} 2019 day-frames loaded")
 
-    volumetric_prov = train_family_model(
-        "volumetric_floods",
-        "CIC-DDoS2019 Syn + TFTP (non-reflection flood types) - own benign only per file",
-        vol_train, vol_test,
-        PROJECT_ROOT / "models" / "family_volumetric",
-    )
+    # Sanity check: every label actually present in the data should be
+    # assigned to exactly one family. Anything left over here means the
+    # label lists above are out of date with the local data files.
+    all_2018_labels = {l for df in all_2018_frames for l in df.loc[df.Binary_Label == 1, "Label"].unique()}
+    all_2019_labels = {l for df in all_2019_frames for l in df.loc[df.Binary_Label == 1, "Label"].unique()}
+    assigned_2018 = set().union(*[labels_2018 for labels_2018, _ in FAMILIES.values()])
+    assigned_2019 = set().union(*[labels_2019 for _, labels_2019 in FAMILIES.values()])
+    unassigned_2018 = all_2018_labels - assigned_2018
+    unassigned_2019 = all_2019_labels - assigned_2019
+    if unassigned_2018 or unassigned_2019:
+        print(f"WARNING: labels present in the data but not assigned to any family: "
+              f"2018={sorted(unassigned_2018)} 2019={sorted(unassigned_2019)}")
+    else:
+        print("all attack labels found in the local data are covered by one of the three families.")
 
-    connection_prov = train_family_model(
-        "connection_application_layer",
-        "CIC-IDS2018 DoS-Hulk/GoldenEye/Slowloris/SlowHTTPTest + Infilteration - own benign per day, other attack types excluded",
-        conn_train, conn_test,
-        PROJECT_ROOT / "models" / "family_connection",
-    )
+    provenances = {}
+    for family_name, (labels_2018, labels_2019) in FAMILIES.items():
+        print(f"\nbuilding {family_name.upper()} dataset ...")
+        train_df, test_df = build_family_dataset(all_2018_frames, all_2019_frames, labels_2018, labels_2019)
+        dataset_description = (
+            ("CIC-IDS2018 " + ", ".join(labels_2018) if labels_2018 else "")
+            + (" + " if labels_2018 and labels_2019 else "")
+            + ("CIC-DDoS2019 " + ", ".join(labels_2019) if labels_2019 else "")
+            + " - own benign only per file/day"
+        )
+        provenances[family_name] = train_family_model(
+            family_name, dataset_description, train_df, test_df,
+            PROJECT_ROOT / "models" / f"family_{family_name.replace('_application_layer', '')}",
+        )
 
     print(f"\n{'=' * 70}\nSUMMARY\n{'=' * 70}")
-    for name, prov in [("volumetric_floods", volumetric_prov), ("connection_application_layer", connection_prov)]:
+    for family_name, prov in provenances.items():
         m = prov["hybrid_metrics_held_out"]
-        print(f"{name}: train={prov['train_rows']} test={prov['test_rows']} "
+        print(f"{family_name}: train={prov['train_rows']} test={prov['test_rows']} "
               f"acc={m['accuracy']:.3f} prec={m['precision']:.3f} rec={m['recall']:.3f} f1={m['f1']:.3f} "
               f"shortcut_warning={prov['shortcut_warning']}")
 

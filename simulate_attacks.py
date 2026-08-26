@@ -221,6 +221,7 @@ SCENARIOS = [
 # =====================================================
 
 CANDIDATE_KEYS = ["xgboost", "random_forest", "histgradientboosting"]
+FAMILY_KEYS = ["raw_flood", "reflection", "connection_application_layer"]
 
 
 @dataclass
@@ -234,17 +235,21 @@ class ObservedFlow:
     variant2: dict
     variant3: dict
     candidates: dict = field(default_factory=dict)  # classifier_comparison.ipynb models, keyed by CANDIDATE_KEYS
+    families: dict = field(default_factory=dict)  # train_attack_family_models.py models, keyed by FAMILY_KEYS
 
 
 def _model_result(flow, model_key):
     """Single lookup path for every model key (the 4 original + the 3
-    classifier_comparison candidates), used by scoring/reporting/dump so
-    they don't each need their own if/elif chain over model kinds."""
+    classifier_comparison candidates + the 3 attack-family models), used
+    by scoring/reporting/dump so they don't each need their own if/elif
+    chain over model kinds."""
     if model_key == "deployed_hybrid":
         pred = flow.hybrid_prediction
         return pred is not None, pred
     if model_key in CANDIDATE_KEYS:
         entry = flow.candidates.get(model_key, {})
+    elif model_key in FAMILY_KEYS:
+        entry = flow.families.get(model_key, {})
     else:
         entry = {"variant1_xgb_single_flow": flow.variant1,
                  "variant2_xgb_temporal": flow.variant2,
@@ -296,6 +301,7 @@ class Poller:
                 variant2=entry.get("variant2_xgb_temporal", {}),
                 variant3=entry.get("variant3_cnn_lstm", {}),
                 candidates=entry.get("candidate_models", {}),
+                families=entry.get("family_models", {}),
             ))
 
     def _run(self):
@@ -333,7 +339,8 @@ def attribute_flows(flows, scenarios, active_timeout=20, flow_timeout=5):
 # Scoring
 # =====================================================
 
-MODEL_KEYS = ["deployed_hybrid", "variant1_xgb_single_flow", "variant2_xgb_temporal", "variant3_cnn_lstm"] + CANDIDATE_KEYS
+MODEL_KEYS = (["deployed_hybrid", "variant1_xgb_single_flow", "variant2_xgb_temporal", "variant3_cnn_lstm"]
+              + CANDIDATE_KEYS + FAMILY_KEYS)
 MODEL_LABELS = {
     "deployed_hybrid": "Deployed hybrid",
     "variant1_xgb_single_flow": "Var1 XGB single-flow",
@@ -342,6 +349,9 @@ MODEL_LABELS = {
     "xgboost": "Candidate: XGBoost",
     "random_forest": "Candidate: Random Forest",
     "histgradientboosting": "Candidate: HistGradientBoosting",
+    "raw_flood": "Family: Raw Flood",
+    "reflection": "Family: Reflection",
+    "connection_application_layer": "Family: Connection",
 }
 
 
