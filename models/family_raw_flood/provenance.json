@@ -1,0 +1,152 @@
+{
+  "created_at": "2026-08-26T08:57:27.074973+00:00",
+  "family": "raw_flood",
+  "dataset": "CIC-IDS2018 DDOS attack-LOIC-UDP + CIC-DDoS2019 Syn, TFTP - own benign only per file/day",
+  "day_tags": [
+    "02-21-2018_off0",
+    "2019_01-12_Syn",
+    "2019_01-12_TFTP",
+    "2019_03-11_Syn"
+  ],
+  "attack_labels": [
+    "DDOS attack-LOIC-UDP",
+    "Syn",
+    "TFTP"
+  ],
+  "train_rows": 80040,
+  "test_rows": 34902,
+  "hybrid_metrics_held_out": {
+    "accuracy": 0.9763337344564781,
+    "precision": 0.9760339712640335,
+    "recall": 0.9999404052443385,
+    "f1": 0.9878425716051926
+  },
+  "xgb_alone_metrics_held_out": {
+    "accuracy": 0.9960174202051458,
+    "precision": 0.9960813418435506,
+    "recall": 0.9997914183551847,
+    "f1": 0.9979329318164919
+  },
+  "isolation_alone_recall_held_out": 0.8624553039332539,
+  "per_attack_label_recall_held_out": [
+    {
+      "label": "DDOS attack-LOIC-UDP",
+      "n": 520,
+      "recall": 1.0
+    },
+    {
+      "label": "Syn",
+      "n": 22252,
+      "recall": 0.9999101204386123
+    },
+    {
+      "label": "TFTP",
+      "n": 10788,
+      "recall": 1.0
+    }
+  ],
+  "feature_importances": [
+    [
+      "Flow IAT Min",
+      0.497153639793396
+    ],
+    [
+      "Pkt Size Avg",
+      0.3021017909049988
+    ],
+    [
+      "pkt_rate_ratio",
+      0.07309798151254654
+    ],
+    [
+      "Pkt Len Max",
+      0.03475802391767502
+    ],
+    [
+      "Fwd Pkts/s",
+      0.012995206750929356
+    ],
+    [
+      "Init Bwd Win Byts",
+      0.012257576920092106
+    ],
+    [
+      "Fwd IAT Tot",
+      0.010328562930226326
+    ],
+    [
+      "Flow IAT Mean",
+      0.009631519205868244
+    ],
+    [
+      "Fwd Header Len",
+      0.009007501415908337
+    ],
+    [
+      "Flow IAT Std",
+      0.006329627241939306
+    ],
+    [
+      "Flow IAT Max",
+      0.006292606238275766
+    ],
+    [
+      "Pkt Len Mean",
+      0.005523787811398506
+    ],
+    [
+      "iat_variation",
+      0.0046893274411559105
+    ],
+    [
+      "Flow Pkts/s",
+      0.0037789593916386366
+    ],
+    [
+      "Flow Duration",
+      0.002746762242168188
+    ],
+    [
+      "Subflow Bwd Byts",
+      0.0025182049721479416
+    ],
+    [
+      "Fwd IAT Mean",
+      0.0020018292125314474
+    ],
+    [
+      "TotLen Bwd Pkts",
+      0.0013170863967388868
+    ],
+    [
+      "Subflow Fwd Byts",
+      0.00110815919470042
+    ],
+    [
+      "Bwd Pkt Len Max",
+      0.0007667301688343287
+    ],
+    [
+      "TotLen Fwd Pkts",
+      0.0007583396509289742
+    ],
+    [
+      "Fwd IAT Max",
+      0.00069772033020854
+    ],
+    [
+      "Bwd Seg Size Avg",
+      0.00013902541832067072
+    ],
+    [
+      "Bwd Pkt Len Mean",
+      0.0
+    ],
+    [
+      "Bwd Pkt Len Std",
+      0.0
+    ]
+  ],
+  "shortcut_warning": false,
+  "threshold": 0.98989898989899
+}

@@ -1,0 +1,233 @@
+{
+  "created_at": "2026-08-26T09:00:20.501103+00:00",
+  "family": "connection_application_layer",
+  "dataset": "CIC-IDS2018 DoS attacks-Hulk, DoS attacks-GoldenEye, DoS attacks-Slowloris, DoS attacks-SlowHTTPTest, Infilteration, DDOS attack-HOIC, DDoS attacks-LOIC-HTTP, Bot, Brute Force -Web, Brute Force -XSS, SQL Injection, FTP-BruteForce, SSH-Bruteforce + CIC-DDoS2019 WebDDoS - own benign only per file/day",
+  "day_tags": [
+    "02-14-2018_off0",
+    "02-14-2018_off1",
+    "02-15-2018_off0",
+    "02-16-2018_off0",
+    "02-16-2018_off1",
+    "02-16-2018_off2",
+    "02-16-2018_off3",
+    "02-20-2018_off0",
+    "02-21-2018_off0",
+    "02-21-2018_off1",
+    "02-21-2018_off2",
+    "02-21-2018_off3",
+    "02-22-2018_off0",
+    "02-23-2018_off0",
+    "02-28-2018",
+    "03-01-2018",
+    "03-02-2018",
+    "2019_01-12_UDPLag"
+  ],
+  "attack_labels": [
+    "Bot",
+    "Brute Force -Web",
+    "Brute Force -XSS",
+    "DDOS attack-HOIC",
+    "DDoS attacks-LOIC-HTTP",
+    "DoS attacks-GoldenEye",
+    "DoS attacks-Hulk",
+    "DoS attacks-SlowHTTPTest",
+    "DoS attacks-Slowloris",
+    "FTP-BruteForce",
+    "Infilteration",
+    "SQL Injection",
+    "SSH-Bruteforce",
+    "UDP-lag",
+    "WebDDoS"
+  ],
+  "train_rows": 1993445,
+  "test_rows": 587434,
+  "hybrid_metrics_held_out": {
+    "accuracy": 0.8545555756050892,
+    "precision": 0.8203112297803615,
+    "recall": 0.864104496357699,
+    "f1": 0.841638570652748
+  },
+  "xgb_alone_metrics_held_out": {
+    "accuracy": 0.9160024785763167,
+    "precision": 0.9567016928114367,
+    "recall": 0.8507037214648367,
+    "f1": 0.9005945030128067
+  },
+  "isolation_alone_recall_held_out": 0.054094068035288836,
+  "per_attack_label_recall_held_out": [
+    {
+      "label": "Bot",
+      "n": 85859,
+      "recall": 0.999906823978849
+    },
+    {
+      "label": "Brute Force -Web",
+      "n": 276,
+      "recall": 0.7137681159420289
+    },
+    {
+      "label": "DDOS attack-HOIC",
+      "n": 35640,
+      "recall": 0.9989618406285073
+    },
+    {
+      "label": "DDoS attacks-LOIC-HTTP",
+      "n": 12020,
+      "recall": 1.0
+    },
+    {
+      "label": "DoS attacks-GoldenEye",
+      "n": 5403,
+      "recall": 1.0
+    },
+    {
+      "label": "DoS attacks-Hulk",
+      "n": 21135,
+      "recall": 1.0
+    },
+    {
+      "label": "DoS attacks-SlowHTTPTest",
+      "n": 11966,
+      "recall": 1.0
+    },
+    {
+      "label": "DoS attacks-Slowloris",
+      "n": 6310,
+      "recall": 0.8746434231378764
+    },
+    {
+      "label": "FTP-BruteForce",
+      "n": 11996,
+      "recall": 1.0
+    },
+    {
+      "label": "Infilteration",
+      "n": 48264,
+      "recall": 0.27923504060997845
+    },
+    {
+      "label": "SQL Injection",
+      "n": 3,
+      "recall": 0.0
+    },
+    {
+      "label": "SSH-Bruteforce",
+      "n": 11948,
+      "recall": 1.0
+    },
+    {
+      "label": "UDP-lag",
+      "n": 11922,
+      "recall": 1.0
+    },
+    {
+      "label": "WebDDoS",
+      "n": 4,
+      "recall": 0.75
+    }
+  ],
+  "feature_importances": [
+    [
+      "Bwd Seg Size Avg",
+      0.2447180449962616
+    ],
+    [
+      "Flow IAT Mean",
+      0.1260778307914734
+    ],
+    [
+      "TotLen Bwd Pkts",
+      0.0890728235244751
+    ],
+    [
+      "Fwd Pkts/s",
+      0.0789135992527008
+    ],
+    [
+      "Subflow Bwd Byts",
+      0.05501165613532066
+    ],
+    [
+      "Bwd Pkt Len Std",
+      0.044088948518037796
+    ],
+    [
+      "Flow IAT Max",
+      0.0409889779984951
+    ],
+    [
+      "TotLen Fwd Pkts",
+      0.03983405977487564
+    ],
+    [
+      "Fwd Header Len",
+      0.03491741418838501
+    ],
+    [
+      "pkt_rate_ratio",
+      0.03379179537296295
+    ],
+    [
+      "Pkt Len Mean",
+      0.03366130217909813
+    ],
+    [
+      "Subflow Fwd Byts",
+      0.029373206198215485
+    ],
+    [
+      "Fwd IAT Mean",
+      0.026206986978650093
+    ],
+    [
+      "Bwd Pkt Len Mean",
+      0.022490406408905983
+    ],
+    [
+      "Init Bwd Win Byts",
+      0.018595105037093163
+    ],
+    [
+      "Pkt Len Max",
+      0.011891089379787445
+    ],
+    [
+      "Flow IAT Min",
+      0.011350752785801888
+    ],
+    [
+      "Flow IAT Std",
+      0.011311528272926807
+    ],
+    [
+      "Fwd IAT Tot",
+      0.009990673512220383
+    ],
+    [
+      "Fwd IAT Max",
+      0.008845243602991104
+    ],
+    [
+      "Bwd Pkt Len Max",
+      0.007114084903150797
+    ],
+    [
+      "Pkt Size Avg",
+      0.0066312626004219055
+    ],
+    [
+      "Flow Duration",
+      0.006304590497165918
+    ],
+    [
+      "iat_variation",
+      0.0056732529774308205
+    ],
+    [
+      "Flow Pkts/s",
+      0.003145314520224929
+    ]
+  ],
+  "shortcut_warning": false,
+  "threshold": 0.29292929292929293
+}

@@ -29,6 +29,7 @@ import pandas as pd
 from xgboost import XGBClassifier  # noqa: F401 - ensures class is registered before unpickling
 
 from detection.experimental_history import RollingHistoryStore
+from feature_extraction.feature_extractor import extract_features as extract_deployed_features
 
 MICROSECONDS_PER_SECOND = 1_000_000
 
@@ -96,6 +97,31 @@ try:
     _variant2_ready = True
 except Exception as exc:  # noqa: BLE001
     _variant2_load_error = str(exc)
+
+# Attack-family-specific hybrid models from train_attack_family_models.py -
+# same 25-feature schema and XGBoost+IsolationForest architecture as the
+# deployed model (models/), just trained on a narrower per-family label
+# subset. Scored via extract_deployed_features (25 features), not the
+# 8-feature extract_experimental_features used by variants 1-3.
+FAMILY_MODEL_DIRS = {
+    "raw_flood": PROJECT_ROOT / "models" / "family_raw_flood",
+    "reflection": PROJECT_ROOT / "models" / "family_reflection",
+    "connection_application_layer": PROJECT_ROOT / "models" / "family_connection",
+}
+family_models = {}
+_family_load_errors = {}
+
+for _fname, _fdir in FAMILY_MODEL_DIRS.items():
+    try:
+        family_models[_fname] = {
+            "xgb": _load_pickle_from(_fdir, "xgb_model.pkl"),
+            "isolation": _load_pickle_from(_fdir, "isolation_forest.pkl"),
+            "scaler": _load_pickle_from(_fdir, "scaler.pkl"),
+            "threshold": _load_pickle_from(_fdir, "threshold.pkl"),
+            "top_features": _load_pickle_from(_fdir, "top_features.pkl"),
+        }
+    except Exception as exc:  # noqa: BLE001 - a missing family model just isn't available, not fatal
+        _family_load_errors[_fname] = str(exc)
 
 candidate_models = {}
 candidate_thresholds = {}
@@ -267,6 +293,43 @@ def _predict_candidates(features):
     return result
 
 
+def _predict_family_models(flow):
+    """Scores the 3 attack-family models (train_attack_family_models.py)
+    against the same 25-feature vector the deployed model uses - mirrors
+    detection/predictor.py::predict_flow's exact logic (scale -> XGBoost
+    -> Isolation Forest -> OR-combine), just parameterized per family."""
+    result = {}
+    try:
+        features_25 = extract_deployed_features(flow)
+    except Exception as exc:  # noqa: BLE001
+        return {fname: {"available": False, "error": f"feature extraction failed: {exc}"} for fname in FAMILY_MODEL_DIRS}
+
+    for fname in FAMILY_MODEL_DIRS:
+        if fname not in family_models:
+            result[fname] = {"available": False, "error": _family_load_errors.get(fname, "not loaded")}
+            continue
+        try:
+            m = family_models[fname]
+            top_features = m["top_features"]
+            row = pd.DataFrame([[features_25[f] for f in top_features]], columns=top_features)
+            scaled = m["scaler"].transform(row)
+
+            xgb_probability = float(m["xgb"].predict_proba(row)[0][1])
+            xgb_prediction = int(xgb_probability >= m["threshold"])
+            isolation_prediction = int(m["isolation"].predict(scaled)[0] == -1)
+            hybrid_prediction = int(xgb_prediction == 1 or isolation_prediction == 1)
+
+            result[fname] = {
+                "available": True,
+                "probability": xgb_probability,
+                "prediction": hybrid_prediction,
+                "threshold": m["threshold"],
+            }
+        except Exception as exc:  # noqa: BLE001 - one bad family model must never affect the others
+            result[fname] = {"available": False, "error": str(exc)}
+    return result
+
+
 def predict_all(flow):
     """Run all 3 experimental variants against one completed flow.
     Never raises - each variant is independently isolated, and this
@@ -282,6 +345,7 @@ def predict_all(flow):
         "variant2_xgb_temporal": _predict_variant2(features, dst_port, protocol),
         "variant3_cnn_lstm": _predict_variant3(features, dst_port, protocol),
         "candidate_models": _predict_candidates(features),
+        "family_models": _predict_family_models(flow),
     }
 
     # Record this flow's own features as history for FUTURE flows in this

@@ -648,6 +648,12 @@ def get_history():
                 experimental.get(
                     "candidate_models",
                     {}
+                ),
+
+            "family_models":
+                experimental.get(
+                    "family_models",
+                    {}
                 )
         })
 
