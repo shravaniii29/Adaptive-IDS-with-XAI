@@ -103,10 +103,14 @@ except Exception as exc:  # noqa: BLE001
 # deployed model (models/), just trained on a narrower per-family label
 # subset. Scored via extract_deployed_features (25 features), not the
 # 8-feature extract_experimental_features used by variants 1-3.
+# Overridable base dir so a prior version of the 3 family models (e.g. a
+# git-recovered pre-fix backup) can be live-tested for comparison without
+# touching the current models/family_*/ artifacts.
+FAMILY_MODELS_BASE_DIR = Path(os.environ.get("FAMILY_MODELS_BASE_DIR", PROJECT_ROOT / "models"))
 FAMILY_MODEL_DIRS = {
-    "raw_flood": PROJECT_ROOT / "models" / "family_raw_flood",
-    "reflection": PROJECT_ROOT / "models" / "family_reflection",
-    "connection_application_layer": PROJECT_ROOT / "models" / "family_connection",
+    "raw_flood": FAMILY_MODELS_BASE_DIR / "family_raw_flood",
+    "reflection": FAMILY_MODELS_BASE_DIR / "family_reflection",
+    "connection_application_layer": FAMILY_MODELS_BASE_DIR / "family_connection",
 }
 family_models = {}
 _family_load_errors = {}

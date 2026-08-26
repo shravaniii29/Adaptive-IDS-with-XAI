@@ -1,26 +1,52 @@
 {
-  "created_at": "2026-08-26T09:00:20.501103+00:00",
+  "created_at": "2026-08-26T19:50:06.736843+00:00",
   "family": "connection_application_layer",
   "dataset": "CIC-IDS2018 DoS attacks-Hulk, DoS attacks-GoldenEye, DoS attacks-Slowloris, DoS attacks-SlowHTTPTest, Infilteration, DDOS attack-HOIC, DDoS attacks-LOIC-HTTP, Bot, Brute Force -Web, Brute Force -XSS, SQL Injection, FTP-BruteForce, SSH-Bruteforce + CIC-DDoS2019 WebDDoS - own benign only per file/day",
   "day_tags": [
     "02-14-2018_off0",
     "02-14-2018_off1",
+    "02-14-2018_off2",
+    "02-14-2018_off3",
     "02-15-2018_off0",
+    "02-15-2018_off1",
+    "02-15-2018_off2",
+    "02-15-2018_off3",
     "02-16-2018_off0",
     "02-16-2018_off1",
     "02-16-2018_off2",
     "02-16-2018_off3",
     "02-20-2018_off0",
+    "02-20-2018_off1",
+    "02-20-2018_off2",
+    "02-20-2018_off3",
     "02-21-2018_off0",
     "02-21-2018_off1",
     "02-21-2018_off2",
     "02-21-2018_off3",
     "02-22-2018_off0",
+    "02-22-2018_off1",
+    "02-22-2018_off2",
+    "02-22-2018_off3",
     "02-23-2018_off0",
+    "02-23-2018_off1",
+    "02-23-2018_off2",
+    "02-23-2018_off3",
     "02-28-2018",
     "03-01-2018",
     "03-02-2018",
-    "2019_01-12_UDPLag"
+    "2019_01-12_DrDoS_DNS",
+    "2019_01-12_DrDoS_MSSQL",
+    "2019_01-12_DrDoS_NTP",
+    "2019_01-12_DrDoS_NetBIOS",
+    "2019_01-12_DrDoS_SSDP",
+    "2019_01-12_DrDoS_UDP",
+    "2019_01-12_TFTP",
+    "2019_01-12_UDPLag",
+    "2019_03-11_LDAP",
+    "2019_03-11_MSSQL",
+    "2019_03-11_Portmap",
+    "2019_03-11_UDP",
+    "2019_03-11_UDPLag"
   ],
   "attack_labels": [
     "Bot",
@@ -39,26 +65,26 @@
     "UDP-lag",
     "WebDDoS"
   ],
-  "train_rows": 1993445,
-  "test_rows": 587434,
+  "train_rows": 1996268,
+  "test_rows": 588156,
   "hybrid_metrics_held_out": {
-    "accuracy": 0.8545555756050892,
-    "precision": 0.8203112297803615,
-    "recall": 0.864104496357699,
-    "f1": 0.841638570652748
+    "accuracy": 0.8541900448180415,
+    "precision": 0.8181537100885503,
+    "recall": 0.8661102357409818,
+    "f1": 0.8414492330276043
   },
   "xgb_alone_metrics_held_out": {
-    "accuracy": 0.9160024785763167,
-    "precision": 0.9567016928114367,
-    "recall": 0.8507037214648367,
-    "f1": 0.9005945030128067
+    "accuracy": 0.915690735111093,
+    "precision": 0.9533735180639864,
+    "recall": 0.8529911016723375,
+    "f1": 0.9003931084493207
   },
-  "isolation_alone_recall_held_out": 0.054094068035288836,
+  "isolation_alone_recall_held_out": 0.054017948893608274,
   "per_attack_label_recall_held_out": [
     {
       "label": "Bot",
       "n": 85859,
-      "recall": 0.999906823978849
+      "recall": 0.9998951769762052
     },
     {
       "label": "Brute Force -Web",
@@ -68,7 +94,7 @@
     {
       "label": "DDOS attack-HOIC",
       "n": 35640,
-      "recall": 0.9989618406285073
+      "recall": 0.9984006734006734
     },
     {
       "label": "DDoS attacks-LOIC-HTTP",
@@ -93,7 +119,7 @@
     {
       "label": "DoS attacks-Slowloris",
       "n": 6310,
-      "recall": 0.8746434231378764
+      "recall": 0.8564183835182251
     },
     {
       "label": "FTP-BruteForce",
@@ -103,7 +129,7 @@
     {
       "label": "Infilteration",
       "n": 48264,
-      "recall": 0.27923504060997845
+      "recall": 0.2929719874026189
     },
     {
       "label": "SQL Injection",
@@ -129,105 +155,105 @@
   "feature_importances": [
     [
       "Bwd Seg Size Avg",
-      0.2447180449962616
+      0.22981297969818115
     ],
     [
       "Flow IAT Mean",
-      0.1260778307914734
+      0.13846014440059662
     ],
     [
       "TotLen Bwd Pkts",
-      0.0890728235244751
+      0.09046408534049988
     ],
     [
       "Fwd Pkts/s",
-      0.0789135992527008
-    ],
-    [
-      "Subflow Bwd Byts",
-      0.05501165613532066
+      0.08305943757295609
     ],
     [
       "Bwd Pkt Len Std",
-      0.044088948518037796
-    ],
-    [
-      "Flow IAT Max",
-      0.0409889779984951
+      0.04835260659456253
     ],
     [
       "TotLen Fwd Pkts",
-      0.03983405977487564
+      0.044377464801073074
     ],
     [
-      "Fwd Header Len",
-      0.03491741418838501
+      "Flow IAT Max",
+      0.04078907519578934
+    ],
+    [
+      "Subflow Bwd Byts",
+      0.040039096027612686
     ],
     [
       "pkt_rate_ratio",
-      0.03379179537296295
+      0.03597946837544441
     ],
     [
-      "Pkt Len Mean",
-      0.03366130217909813
+      "Fwd Header Len",
+      0.03589500114321709
     ],
     [
       "Subflow Fwd Byts",
-      0.029373206198215485
+      0.03237403556704521
     ],
     [
       "Fwd IAT Mean",
-      0.026206986978650093
+      0.026976391673088074
     ],
     [
       "Bwd Pkt Len Mean",
-      0.022490406408905983
+      0.023862682282924652
+    ],
+    [
+      "Pkt Len Mean",
+      0.022368015721440315
     ],
     [
       "Init Bwd Win Byts",
-      0.018595105037093163
+      0.018283722922205925
     ],
     [
       "Pkt Len Max",
-      0.011891089379787445
-    ],
-    [
-      "Flow IAT Min",
-      0.011350752785801888
+      0.01438368670642376
     ],
     [
       "Flow IAT Std",
-      0.011311528272926807
+      0.013127590529620647
+    ],
+    [
+      "Flow IAT Min",
+      0.012027147226035595
     ],
     [
       "Fwd IAT Tot",
-      0.009990673512220383
+      0.009958973154425621
     ],
     [
       "Fwd IAT Max",
-      0.008845243602991104
-    ],
-    [
-      "Bwd Pkt Len Max",
-      0.007114084903150797
+      0.00983013492077589
     ],
     [
       "Pkt Size Avg",
-      0.0066312626004219055
+      0.007538716308772564
+    ],
+    [
+      "Bwd Pkt Len Max",
+      0.0073159001767635345
     ],
     [
       "Flow Duration",
-      0.006304590497165918
+      0.006060030311346054
     ],
     [
       "iat_variation",
-      0.0056732529774308205
+      0.005862911231815815
     ],
     [
       "Flow Pkts/s",
-      0.003145314520224929
+      0.0028006620705127716
     ]
   ],
   "shortcut_warning": false,
-  "threshold": 0.29292929292929293
+  "threshold": 0.2828282828282829
 }

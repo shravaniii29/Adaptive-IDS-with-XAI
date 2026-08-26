@@ -19,8 +19,19 @@ Requires: the FastAPI backend (app/main.py) already running with live
 packet capture active, e.g.:
     python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 
+Runs 3 trials of all 6 scenarios by default (not 1) - each scenario only
+produces 12-40 flows per trial, and this project has seen the same
+model/scenario swing by 20+ percentage points between single-trial runs
+purely from that sample size (not because the model changed). Multiple
+trials give both a pooled combined-N result (more flows -> tighter
+percentages) and an explicit trial-to-trial consistency report (mean +/-
+std per model/scenario, flagging std > 15 percentage points) - so a
+single lucky/unlucky run can't be mistaken for a stable finding.
+
 Usage:
-    python simulate_attacks.py
+    python simulate_attacks.py [out_dir] [trials]
+    python simulate_attacks.py                      # 3 trials, default out dir
+    python simulate_attacks.py my_results 5          # 5 trials, custom out dir
 """
 
 import http.client
@@ -40,7 +51,10 @@ from scapy.sendrecv import send
 API_BASE = "http://127.0.0.1:8000"
 VICTIM_HTTP_PORT = 8899
 POLL_INTERVAL = 0.5
-DRAIN_SECONDS = 25  # >= FlowManager's active_timeout, so the last flow of a scenario has time to expire and get scored
+DRAIN_SECONDS = 35  # >= FlowManager's active_timeout + margin - raised from 25s since scoring now runs
+                     # 10 models per flow (was 4), and slower per-flow processing under load was
+                     # observed to shrink the number of flows captured per run
+TRIAL_COOLDOWN = 5   # gap between trials, so one trial's tail flows don't bleed into the next trial's window
 RESULTS_DIR = "simulation_results"  # one JSON file per attack type, for demo/visualization use
 
 
@@ -117,6 +131,7 @@ class Scenario:
     dst_ports: set = field(default_factory=set)  # empty set = any port matches
     start_time: float = 0.0
     end_time: float = 0.0
+    trial: int = 1  # which repeated trial produced this scenario instance
 
 
 # =====================================================
@@ -356,9 +371,15 @@ MODEL_LABELS = {
 
 
 def score(attributed, scenarios):
+    """scenarios may contain multiple trials' worth of Scenario objects
+    sharing the same name (attribute_flows already pools their flows
+    together by name) - iterate unique names only, or this prints the
+    same pooled row once per trial instead of once per scenario."""
     rows = []
+    seen = set()
+    unique_scenarios = [s for s in scenarios if not (s.name in seen or seen.add(s.name))]
 
-    for s in scenarios:
+    for s in unique_scenarios:
         flows = attributed[s.name]
         if not flows:
             rows.append((s.name, s.is_attack, len(flows), {m: None for m in MODEL_KEYS}))
@@ -451,6 +472,150 @@ def print_aggregate_metrics(metrics):
     print("=" * 100)
 
 
+# Which live scenarios fall inside each attack-family model's own trained
+# specialty (see train_attack_family_models.py). aggregate_metrics() above
+# pools every model against every scenario - correct for the generalist
+# models (deployed hybrid, variants, classifier candidates), but unfair to
+# the family models: Raw Flood was never trained to recognize HTTP floods
+# or port scans, so being tested against them and missing isn't a
+# meaningful measure of whether it does ITS job well.
+#
+# Caveat, kept visible rather than hidden: none of the 6 live scenarios are
+# a true reflection/amplification attack (spoofed request, large real
+# response from a reflector) - the simulator only generates raw crafted
+# packets. ICMP/SYN/UDP flood is the closest available proxy for BOTH
+# raw_flood and reflection (both are connectionless floods at the packet
+# level), so reflection's family-aware score below still isn't a fair test
+# of its actual intended use case - it just removes the doubly-unfair
+# penalty of also being scored against HTTP flood/port scan.
+FAMILY_SCENARIO_SPECIALTY = {
+    "raw_flood": {"ICMP flood", "SYN flood", "UDP flood"},
+    "reflection": {"ICMP flood", "SYN flood", "UDP flood"},
+    "connection_application_layer": {"HTTP flood", "Port scan"},
+}
+
+
+def family_aware_metrics(attributed, scenarios):
+    """Same confusion-matrix/metrics computation as aggregate_metrics, but
+    for each family model, attack scenarios outside FAMILY_SCENARIO_SPECIALTY
+    are excluded entirely (not counted as misses) rather than pooled in.
+    The benign baseline is never excluded - specificity is scenario-
+    independent (falsely flagging benign traffic is a miss regardless of
+    which family "should" have caught it)."""
+    scenarios_by_name = {s.name: s for s in scenarios}
+    metrics = {}
+
+    for model, specialty in FAMILY_SCENARIO_SPECIALTY.items():
+        tp = fp = tn = fn = 0
+        for name, flows in attributed.items():
+            is_attack = scenarios_by_name[name].is_attack
+            if is_attack and name not in specialty:
+                continue
+            expected = 1 if is_attack else 0
+            for f in flows:
+                available, pred = _model_result(f, model)
+                if not available:
+                    continue
+                if expected == 1 and pred == 1:
+                    tp += 1
+                elif expected == 1 and pred == 0:
+                    fn += 1
+                elif expected == 0 and pred == 1:
+                    fp += 1
+                elif expected == 0 and pred == 0:
+                    tn += 1
+
+        total = tp + fp + tn + fn
+        accuracy = (tp + tn) / total if total else None
+        precision = tp / (tp + fp) if (tp + fp) else None
+        recall = tp / (tp + fn) if (tp + fn) else None
+        f1 = (2 * precision * recall / (precision + recall)) if (precision and recall and (precision + recall)) else None
+        specificity = tn / (tn + fp) if (tn + fp) else None
+
+        metrics[model] = {
+            "confusion_matrix": {"tp": tp, "fp": fp, "tn": tn, "fn": fn},
+            "accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1,
+            "specificity": specificity, "total_flows": total,
+            "specialty_scenarios": sorted(specialty),
+        }
+
+    return metrics
+
+
+def print_family_aware_metrics(metrics):
+    print("\n" + "=" * 100)
+    print("FAMILY-SPECIALTY-AWARE METRICS (each family scored only on its own trained attack types)")
+    print("=" * 100)
+    for model, specialty in FAMILY_SCENARIO_SPECIALTY.items():
+        label = MODEL_LABELS[model]
+        m = metrics[model]
+        cm = m["confusion_matrix"]
+
+        def fmt(v):
+            return f"{v * 100:.1f}%" if v is not None else "n/a"
+
+        print(f"\n{label}  ({m['total_flows']} flows; scenarios counted: {', '.join(m['specialty_scenarios'])} + Benign baseline)")
+        print(f"  confusion matrix: TP={cm['tp']}  FP={cm['fp']}  TN={cm['tn']}  FN={cm['fn']}")
+        print(f"  accuracy={fmt(m['accuracy'])}  precision={fmt(m['precision'])}  "
+              f"recall={fmt(m['recall'])}  f1={fmt(m['f1'])}  specificity={fmt(m['specificity'])}")
+    print("=" * 100)
+    print("reflection has no true reflection/amplification scenario available (simulator only generates raw")
+    print("packets) - ICMP/SYN/UDP flood is the closest connectionless-flood proxy, not a fair test of its")
+    print("actual intended use case. Non-family models (deployed hybrid, variants, candidates) are intentionally")
+    print("excluded here - they're generalists and should be judged by the OVERALL METRICS above, not a subset.")
+
+
+def per_trial_scores(poller_flows, scenarios, n_trials):
+    """Scores each trial independently (not pooled) so run-to-run spread
+    is visible, not just the combined N-trials-pooled numbers. Returns
+    {scenario_name: {model_key: [recall/specificity per trial that had
+    any attributed flows]}}."""
+    by_name = {s.name: {mk: [] for mk in MODEL_KEYS} for s in scenarios}
+    for trial in range(1, n_trials + 1):
+        trial_scenarios = [s for s in scenarios if s.trial == trial]
+        if not trial_scenarios:
+            continue
+        attributed = attribute_flows(poller_flows, trial_scenarios)
+        rows = score(attributed, trial_scenarios)
+        for name, _is_attack, _n_flows, results in rows:
+            for mk in MODEL_KEYS:
+                if results[mk] is not None:
+                    by_name[name][mk].append(results[mk])
+    return by_name
+
+
+def print_trial_consistency(poller_flows, scenarios, n_trials):
+    """A single trial's percentages can look decisive purely from a small
+    sample (12-40 flows per scenario) - this reports mean +/- population
+    std across trials PLUS the raw per-trial values, so a swing that's
+    actually just noise (e.g. 94.5% specificity one run, 82.2% the next,
+    on the same model/scenario) is visible instead of silently trusted."""
+    if n_trials < 2:
+        print("\n(single trial run - see RUNNING.md / pass a trial count as the 2nd argument "
+              "to check run-to-run stability, e.g. `python simulate_attacks.py out_dir 5`)")
+        return
+
+    by_name = per_trial_scores(poller_flows, scenarios, n_trials)
+    print("\n" + "=" * 100)
+    print(f"TRIAL-TO-TRIAL CONSISTENCY ({n_trials} trials, scored independently - not pooled)")
+    print("=" * 100)
+    for name, per_model in by_name.items():
+        print(f"\n{name}:")
+        for mk in MODEL_KEYS:
+            vals = per_model[mk]
+            if not vals:
+                print(f"  {MODEL_LABELS[mk]:<28} no flows in any trial")
+                continue
+            mean = sum(vals) / len(vals)
+            std = (sum((v - mean) ** 2 for v in vals) / len(vals)) ** 0.5 if len(vals) > 1 else 0.0
+            per_trial_str = ", ".join(f"{v * 100:.0f}%" for v in vals)
+            flag = "  <-- high variance" if std > 0.15 else ""
+            print(f"  {MODEL_LABELS[mk]:<28} {mean * 100:5.1f}% +/- {std * 100:4.1f}%  "
+                  f"(trials: {per_trial_str}){flag}")
+    print("=" * 100)
+    print("high variance (std > 15pp) means don't trust a single-trial percentage for that model/scenario.")
+
+
 def print_report(rows):
     print("\n" + "=" * 100)
     print("ATTACK SIMULATION - PER-MODEL ACCURACY REPORT")
@@ -482,17 +647,31 @@ def print_report(rows):
 # parsing the combined report.
 # =====================================================
 
-def dump_results(rows, attributed, scenarios, out_dir=RESULTS_DIR, aggregate=None):
+def dump_results(rows, attributed, scenarios, out_dir=RESULTS_DIR, aggregate=None, family_aware=None):
+    """Scenario names repeat across trials (attribute_flows already pools
+    same-named scenarios' flows together by design - see its docstring) -
+    so a plain {s.name: s} dict here would silently keep only the LAST
+    trial's start/end window and drop every earlier trial's. Track the
+    full list of trial windows per name instead."""
     os.makedirs(out_dir, exist_ok=True)
 
-    scenarios_by_name = {s.name: s for s in scenarios}
+    windows_by_name = {}
+    is_attack_by_name = {}
+    for s in scenarios:
+        windows_by_name.setdefault(s.name, []).append(
+            {"trial": s.trial, "start_time": s.start_time, "end_time": s.end_time,
+             "duration_seconds": s.end_time - s.start_time}
+        )
+        is_attack_by_name[s.name] = s.is_attack
+
     rows_by_name = {name: (is_attack, n_flows, results) for name, is_attack, n_flows, results in rows}
 
-    summary = {"generated_at": time.time(), "target_ip": TARGET_IP, "scenarios": [],
-               "aggregate_metrics": aggregate or {}}
+    summary = {"generated_at": time.time(), "target_ip": TARGET_IP, "trials": max(s.trial for s in scenarios),
+               "scenarios": [], "aggregate_metrics": aggregate or {}, "family_aware_metrics": family_aware or {}}
 
-    for name, s in scenarios_by_name.items():
-        is_attack, n_flows, results = rows_by_name[name]
+    for name, windows in windows_by_name.items():
+        is_attack = is_attack_by_name[name]
+        _, n_flows, results = rows_by_name[name]
         expected = 1 if is_attack else 0
 
         flow_details = []
@@ -516,9 +695,7 @@ def dump_results(rows, attributed, scenarios, out_dir=RESULTS_DIR, aggregate=Non
         scenario_record = {
             "name": name,
             "is_attack": is_attack,
-            "start_time": s.start_time,
-            "end_time": s.end_time,
-            "duration_seconds": s.end_time - s.start_time,
+            "trial_windows": windows,
             "flow_count": n_flows,
             "model_scores": results,
             "flows": flow_details
@@ -539,7 +716,7 @@ def dump_results(rows, attributed, scenarios, out_dir=RESULTS_DIR, aggregate=Non
     with open(os.path.join(out_dir, "summary.json"), "w") as fh:
         json.dump(summary, fh, indent=2)
 
-    print(f"\nwrote {len(scenarios_by_name)} per-attack-type files + summary.json to {out_dir}/")
+    print(f"\nwrote {len(windows_by_name)} per-attack-type files + summary.json to {out_dir}/")
 
 
 # =====================================================
@@ -548,8 +725,15 @@ def dump_results(rows, attributed, scenarios, out_dir=RESULTS_DIR, aggregate=Non
 
 def main():
     out_dir = sys.argv[1] if len(sys.argv) > 1 else RESULTS_DIR
+    # Default to 3 trials rather than 1: a single pass gives each scenario
+    # only 12-40 flows, and consecutive live runs in this project have
+    # shown the same model/scenario swing by 20+ percentage points run to
+    # run (e.g. Random Forest specificity 94.5% -> 82.2%) purely from that
+    # small sample size - not because anything about the model changed.
+    trials = int(sys.argv[2]) if len(sys.argv) > 2 else 3
 
     print(f"Target (this machine's real NIC IP): {TARGET_IP}")
+    print(f"Running {trials} trial(s) of all {len(SCENARIOS)} scenarios ({trials * len(SCENARIOS)} scenario runs total)")
     print("Checking backend is reachable ...")
     requests.get(f"{API_BASE}/status", timeout=5).raise_for_status()
     print("Backend OK. Starting local victim HTTP server ...")
@@ -559,21 +743,27 @@ def main():
     poller.start()
 
     scenarios = []
-    for fn in SCENARIOS:
-        print(f"\nrunning scenario: {fn.__name__} ...")
-        s = fn()
-        scenarios.append(s)
-        print(f"  {s.name}: {s.start_time:.1f} -> {s.end_time:.1f} ({s.end_time - s.start_time:.1f}s)")
-        time.sleep(2)  # cooldown gap between scenarios, for cleaner attribution
+    for trial in range(1, trials + 1):
+        print(f"\n{'#' * 20} TRIAL {trial}/{trials} {'#' * 20}")
+        for fn in SCENARIOS:
+            print(f"\nrunning scenario: {fn.__name__} ...")
+            s = fn()
+            s.trial = trial
+            scenarios.append(s)
+            print(f"  {s.name}: {s.start_time:.1f} -> {s.end_time:.1f} ({s.end_time - s.start_time:.1f}s)")
+            time.sleep(2)  # cooldown gap between scenarios, for cleaner attribution
+        if trial < trials:
+            print(f"\ncooling down {TRIAL_COOLDOWN}s between trials ...")
+            time.sleep(TRIAL_COOLDOWN)
 
     print(f"\ndraining ({DRAIN_SECONDS}s, letting the last flows expire and get scored) ...")
     time.sleep(DRAIN_SECONDS)
     poller.stop()
 
-    print(f"\ntotal distinct flows observed: {len(poller.flows)}")
+    print(f"\ntotal distinct flows observed across all trials: {len(poller.flows)}")
     attributed = attribute_flows(poller.flows, scenarios)
-    for s in scenarios:
-        print(f"  {s.name}: {len(attributed[s.name])} flows attributed")
+    for name in dict.fromkeys(s.name for s in scenarios):  # unique names, first-seen order
+        print(f"  {name}: {len(attributed[name])} flows attributed (pooled across {trials} trial(s))")
 
     rows = score(attributed, scenarios)
     print_report(rows)
@@ -581,7 +771,12 @@ def main():
     metrics = aggregate_metrics(attributed, scenarios)
     print_aggregate_metrics(metrics)
 
-    dump_results(rows, attributed, scenarios, out_dir=out_dir, aggregate=metrics)
+    family_metrics = family_aware_metrics(attributed, scenarios)
+    print_family_aware_metrics(family_metrics)
+
+    print_trial_consistency(poller.flows, scenarios, trials)
+
+    dump_results(rows, attributed, scenarios, out_dir=out_dir, aggregate=metrics, family_aware=family_metrics)
 
 
 if __name__ == "__main__":
