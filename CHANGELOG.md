@@ -9,6 +9,43 @@ Each entry: **What** changed, **Why** (the finding that drove it), **Result**
 
 ---
 
+## 2026-08-27 — Live-test the packet-level models; fix a silent sniffer-death bug
+
+**What:** Added `live_test_packet_models.py` to live-test the packet-level
+temporal XGBoost + CNN-LSTM (no Flow/FlowManager dependency, so they can't
+use the existing app/simulate_attacks.py live-test path - this sniffs
+packets directly and scores them as they arrive, reusing
+`simulate_attacks.py`'s scenario generators for ground truth).
+
+**Bug found and fixed:** the first version ran XGBoost's `predict_proba`
+synchronously inside the scapy `sniff()` callback. Under a genuine flood
+(hundreds of packets/sec), that fell far enough behind that Npcap's
+capture buffer overflowed and the sniffer died silently in its background
+thread (daemon-thread exceptions aren't surfaced) - only 2 seconds into
+the very first flood scenario, leaving every later scenario with zero
+captured packets, which looked at first like a timestamp/attribution bug
+rather than a dead capture. Fixed by decoupling capture from inference:
+`on_packet()` now only does cheap field extraction and pushes onto a
+queue; a separate worker thread does the rolling-history bookkeeping and
+model inference.
+
+**Result:** recovered 4 of 5 flood scenarios (previously 1 of 5) before
+the sniffer eventually died again under sustained load (~2s into the 4th
+consecutive flood scenario, HTTP flood) - likely Npcap's own kernel-level
+buffer limit rather than the same Python-side bottleneck, not yet fixed.
+Live results for the scenarios that did complete: temporal XGB generalized
+near-perfectly across every flood type (99.8-100% recall) but only 56%
+specificity - consistent with the earlier `shortcut_warning` (95.6%
+importance on inter-packet timing regularity): it likely fires on any
+unusually regular/fast timing, not attack semantics specifically. CNN+LSTM
+was far less consistent (94-99.9% on ICMP/SYN, 57.7% on HTTP, only 0.4% on
+UDP flood) - a real, uneven generalization signal rather than one
+dominant shortcut.
+
+**Files:** `live_test_packet_models.py` (new)
+
+---
+
 ## 2026-08-27 — Add LSNM2024 as an independent-tool data source; pivot to packet-level modeling
 
 **What:** Sourced LSNM2024 (Abu Al-Haija et al., ICICS 2024, CC BY 4.0,
