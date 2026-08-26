@@ -1,0 +1,357 @@
+{
+  "created_at": "2026-08-26T07:59:40.274809+00:00",
+  "dataset": "CIC-IDS2018, 10 days (7 partial samples + 3 full days) + CIC-DDoS2019, 18 attack-type files (own benign only, no cross-dataset blending) - identical to train_experimental_models_2019.ipynb Variant 1",
+  "total_rows": 3821984,
+  "train_rows": 2919482,
+  "test_rows": 902502,
+  "attack_types": [
+    "Bot",
+    "Brute Force -Web",
+    "Brute Force -XSS",
+    "DDOS attack-HOIC",
+    "DDOS attack-LOIC-UDP",
+    "DDoS attacks-LOIC-HTTP",
+    "DoS attacks-GoldenEye",
+    "DoS attacks-Hulk",
+    "DoS attacks-SlowHTTPTest",
+    "DoS attacks-Slowloris",
+    "DrDoS_DNS",
+    "DrDoS_LDAP",
+    "DrDoS_MSSQL",
+    "DrDoS_NTP",
+    "DrDoS_NetBIOS",
+    "DrDoS_SNMP",
+    "DrDoS_SSDP",
+    "DrDoS_UDP",
+    "FTP-BruteForce",
+    "Infilteration",
+    "LDAP",
+    "MSSQL",
+    "NetBIOS",
+    "Portmap",
+    "SQL Injection",
+    "SSH-Bruteforce",
+    "Syn",
+    "TFTP",
+    "UDP",
+    "UDP-lag",
+    "WebDDoS"
+  ],
+  "features": [
+    "Flow Duration",
+    "Tot Fwd Pkts",
+    "TotLen Fwd Pkts",
+    "Flow Byts/s",
+    "Flow Pkts/s",
+    "Avg Pkt Size",
+    "Min Pkt Size",
+    "Protocol"
+  ],
+  "note": "Classifier-algorithm comparison on identical single-flow data/features to test whether the Min Pkt Size shortcut reliance (flagged in Variant 1/2) is algorithm-specific or a property of the data/feature set itself.",
+  "models": {
+    "XGBoost": {
+      "metrics": {
+        "accuracy": 0.9209907568071871,
+        "precision": 0.9393212949317832,
+        "recall": 0.9031426774244802,
+        "f1": 0.920876784561064,
+        "threshold": 0.26999999999999996
+      },
+      "feature_importances": [
+        [
+          "Min Pkt Size",
+          0.5889974148720888
+        ],
+        [
+          "Avg Pkt Size",
+          0.15029984488636486
+        ],
+        [
+          "TotLen Fwd Pkts",
+          0.09697973583668865
+        ],
+        [
+          "Flow Pkts/s",
+          0.058848979937300386
+        ],
+        [
+          "Flow Duration",
+          0.04350494156025437
+        ],
+        [
+          "Tot Fwd Pkts",
+          0.026111328585277073
+        ],
+        [
+          "Protocol",
+          0.020931349755356463
+        ],
+        [
+          "Flow Byts/s",
+          0.014326404566669396
+        ]
+      ],
+      "shortcut_warning": true
+    },
+    "Random Forest": {
+      "metrics": {
+        "accuracy": 0.9157442310377152,
+        "precision": 0.9301806855819548,
+        "recall": 0.9022154798465118,
+        "f1": 0.9159846865211555,
+        "threshold": 0.24999999999999994
+      },
+      "feature_importances": [
+        [
+          "Avg Pkt Size",
+          0.20040846467409906
+        ],
+        [
+          "Flow Duration",
+          0.17181584498700084
+        ],
+        [
+          "Flow Pkts/s",
+          0.17088260583057027
+        ],
+        [
+          "TotLen Fwd Pkts",
+          0.1302097571764085
+        ],
+        [
+          "Min Pkt Size",
+          0.125547689279873
+        ],
+        [
+          "Flow Byts/s",
+          0.10480554197233254
+        ],
+        [
+          "Tot Fwd Pkts",
+          0.07616904092380385
+        ],
+        [
+          "Protocol",
+          0.020161055155911933
+        ]
+      ],
+      "shortcut_warning": false
+    },
+    "HistGradientBoosting": {
+      "metrics": {
+        "accuracy": 0.9197619506660373,
+        "precision": 0.9382932751107528,
+        "recall": 0.9016865854534454,
+        "f1": 0.9196257823486387,
+        "threshold": 0.25999999999999995
+      },
+      "feature_importances": null,
+      "shortcut_warning": null
+    }
+  },
+  "per_attack_type_recall": [
+    {
+      "attack_type": "Bot",
+      "n": 85859,
+      "XGBoost": 0.9998951769762052,
+      "Random Forest": 0.9998602359682736,
+      "HistGradientBoosting": 0.9997787069497664
+    },
+    {
+      "attack_type": "Infilteration",
+      "n": 48264,
+      "XGBoost": 0.3042226089839218,
+      "Random Forest": 0.33256671639317087,
+      "HistGradientBoosting": 0.32425824631195094
+    },
+    {
+      "attack_type": "DDOS attack-HOIC",
+      "n": 34045,
+      "XGBoost": 0.9996475253341166,
+      "Random Forest": 0.9992950506682332,
+      "HistGradientBoosting": 0.9992950506682332
+    },
+    {
+      "attack_type": "UDP",
+      "n": 23646,
+      "XGBoost": 0.9999577095491838,
+      "Random Forest": 0.9999154190983676,
+      "HistGradientBoosting": 0.9999154190983676
+    },
+    {
+      "attack_type": "NetBIOS",
+      "n": 22806,
+      "XGBoost": 1.0,
+      "Random Forest": 1.0,
+      "HistGradientBoosting": 0.9999561518898535
+    },
+    {
+      "attack_type": "Syn",
+      "n": 22252,
+      "XGBoost": 0.9911918029840014,
+      "Random Forest": 0.97991191802984,
+      "HistGradientBoosting": 0.9912816825453892
+    },
+    {
+      "attack_type": "DoS attacks-Hulk",
+      "n": 21135,
+      "XGBoost": 0.9642299503193754,
+      "Random Forest": 0.9481428909392003,
+      "HistGradientBoosting": 0.9537260468417317
+    },
+    {
+      "attack_type": "DDoS attacks-LOIC-HTTP",
+      "n": 12020,
+      "XGBoost": 1.0,
+      "Random Forest": 1.0,
+      "HistGradientBoosting": 1.0
+    },
+    {
+      "attack_type": "FTP-BruteForce",
+      "n": 11996,
+      "XGBoost": 0.886378792930977,
+      "Random Forest": 0.886378792930977,
+      "HistGradientBoosting": 0.8908802934311437
+    },
+    {
+      "attack_type": "DrDoS_SSDP",
+      "n": 11988,
+      "XGBoost": 0.9968301634968302,
+      "Random Forest": 0.9920754087420754,
+      "HistGradientBoosting": 0.9951618284951619
+    },
+    {
+      "attack_type": "DoS attacks-SlowHTTPTest",
+      "n": 11966,
+      "XGBoost": 0.8780712017382584,
+      "Random Forest": 0.8780712017382584,
+      "HistGradientBoosting": 0.8809125856593683
+    },
+    {
+      "attack_type": "SSH-Bruteforce",
+      "n": 11948,
+      "XGBoost": 1.0,
+      "Random Forest": 1.0,
+      "HistGradientBoosting": 1.0
+    },
+    {
+      "attack_type": "UDP-lag",
+      "n": 11922,
+      "XGBoost": 1.0,
+      "Random Forest": 1.0,
+      "HistGradientBoosting": 1.0
+    },
+    {
+      "attack_type": "DrDoS_NTP",
+      "n": 11912,
+      "XGBoost": 0.9998321020819342,
+      "Random Forest": 0.9998321020819342,
+      "HistGradientBoosting": 0.9998321020819342
+    },
+    {
+      "attack_type": "DrDoS_MSSQL",
+      "n": 11880,
+      "XGBoost": 1.0,
+      "Random Forest": 1.0,
+      "HistGradientBoosting": 1.0
+    },
+    {
+      "attack_type": "DrDoS_SNMP",
+      "n": 11838,
+      "XGBoost": 0.9999155262713296,
+      "Random Forest": 0.9999155262713296,
+      "HistGradientBoosting": 0.9998310525426592
+    },
+    {
+      "attack_type": "DrDoS_UDP",
+      "n": 11769,
+      "XGBoost": 1.0,
+      "Random Forest": 0.99991503101368,
+      "HistGradientBoosting": 1.0
+    },
+    {
+      "attack_type": "DrDoS_LDAP",
+      "n": 11721,
+      "XGBoost": 0.9998293660950431,
+      "Random Forest": 0.9999146830475215,
+      "HistGradientBoosting": 0.9998293660950431
+    },
+    {
+      "attack_type": "DrDoS_DNS",
+      "n": 11718,
+      "XGBoost": 0.9999146612049837,
+      "Random Forest": 0.9999146612049837,
+      "HistGradientBoosting": 0.9999146612049837
+    },
+    {
+      "attack_type": "MSSQL",
+      "n": 11598,
+      "XGBoost": 1.0,
+      "Random Forest": 1.0,
+      "HistGradientBoosting": 1.0
+    },
+    {
+      "attack_type": "DrDoS_NetBIOS",
+      "n": 11366,
+      "XGBoost": 1.0,
+      "Random Forest": 0.9998240366003871,
+      "HistGradientBoosting": 1.0
+    },
+    {
+      "attack_type": "Portmap",
+      "n": 11286,
+      "XGBoost": 1.0,
+      "Random Forest": 1.0,
+      "HistGradientBoosting": 0.9999113946482368
+    },
+    {
+      "attack_type": "TFTP",
+      "n": 10788,
+      "XGBoost": 0.9732109751575825,
+      "Random Forest": 0.9424360400444939,
+      "HistGradientBoosting": 0.9729328883945124
+    },
+    {
+      "attack_type": "DoS attacks-Slowloris",
+      "n": 6310,
+      "XGBoost": 0.24833597464342314,
+      "Random Forest": 0.13518225039619652,
+      "HistGradientBoosting": 0.010301109350237718
+    },
+    {
+      "attack_type": "DoS attacks-GoldenEye",
+      "n": 5403,
+      "XGBoost": 0.9670553396261337,
+      "Random Forest": 0.9537294095872664,
+      "HistGradientBoosting": 0.9755691282620766
+    },
+    {
+      "attack_type": "DDOS attack-LOIC-UDP",
+      "n": 1730,
+      "XGBoost": 0.002890173410404624,
+      "Random Forest": 0.0,
+      "HistGradientBoosting": 0.005202312138728324
+    },
+    {
+      "attack_type": "Brute Force -Web",
+      "n": 276,
+      "XGBoost": 0.4855072463768116,
+      "Random Forest": 0.4746376811594203,
+      "HistGradientBoosting": 0.4746376811594203
+    },
+    {
+      "attack_type": "WebDDoS",
+      "n": 4,
+      "XGBoost": 1.0,
+      "Random Forest": 0.5,
+      "HistGradientBoosting": 1.0
+    },
+    {
+      "attack_type": "SQL Injection",
+      "n": 3,
+      "XGBoost": 0.0,
+      "Random Forest": 0.0,
+      "HistGradientBoosting": 0.0
+    }
+  ]
+}

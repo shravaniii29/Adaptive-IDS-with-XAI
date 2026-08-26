@@ -38,6 +38,14 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # deployed-in-place artifacts under models/experimental.
 MODELS_DIR = Path(os.environ.get("EXPERIMENTAL_MODELS_DIR", PROJECT_ROOT / "models" / "experimental"))
 
+# Extra single-flow classifier candidates from classifier_comparison.ipynb -
+# same 8 BASE_FEATURES as variant 1, different algorithms (Random Forest,
+# HistGradientBoosting), scored alongside the 3 named variants purely for
+# live-test comparison. Kept separate from MODELS_DIR since these aren't
+# part of the promoted variant1/2/3 set.
+CANDIDATE_MODELS_DIR = Path(os.environ.get("CANDIDATE_MODELS_DIR", PROJECT_ROOT / "models" / "classifier_comparison"))
+CANDIDATE_NAMES = ["xgboost", "random_forest", "histgradientboosting"]
+
 BASE_FEATURES = [
     "Flow Duration", "Tot Fwd Pkts", "TotLen Fwd Pkts",
     "Flow Byts/s", "Flow Pkts/s", "Avg Pkt Size", "Min Pkt Size", "Protocol",
@@ -64,6 +72,11 @@ def _load_pickle(name):
         return pickle.load(f)
 
 
+def _load_pickle_from(directory, name):
+    with open(directory / name, "rb") as f:
+        return pickle.load(f)
+
+
 _variant1_ready = False
 _variant2_ready = False
 _variant3_ready = False
@@ -83,6 +96,24 @@ try:
     _variant2_ready = True
 except Exception as exc:  # noqa: BLE001
     _variant2_load_error = str(exc)
+
+candidate_models = {}
+candidate_thresholds = {}
+candidate_features = None
+_candidate_load_errors = {}
+
+try:
+    candidate_features = _load_pickle_from(CANDIDATE_MODELS_DIR, "features.pkl")
+except Exception as exc:  # noqa: BLE001
+    _candidate_load_errors["_common"] = str(exc)
+
+if candidate_features is not None:
+    for cname in CANDIDATE_NAMES:
+        try:
+            candidate_models[cname] = _load_pickle_from(CANDIDATE_MODELS_DIR, f"model_{cname}.pkl")
+            candidate_thresholds[cname] = _load_pickle_from(CANDIDATE_MODELS_DIR, f"threshold_{cname}.pkl")
+        except Exception as exc:  # noqa: BLE001 - a missing candidate (e.g. one that failed to train) just isn't available, not fatal
+            _candidate_load_errors[cname] = str(exc)
 
 try:
     import torch
@@ -122,11 +153,17 @@ except Exception as exc:  # noqa: BLE001
 
 def extract_experimental_features(flow):
 
-    forward_lengths = flow.forward_packet_lengths
     forward_payloads = flow.forward_payload_lengths
 
-    tot_fwd_pkts = len(forward_lengths)
-    totlen_fwd_pkts = float(np.sum(forward_lengths)) if forward_lengths else 0.0
+    tot_fwd_pkts = len(forward_payloads)
+    # CICFlowMeter's TotLen Fwd Pkts sums PAYLOAD length, not full frame
+    # length - confirmed against real training rows, where the vast
+    # majority of attack flows (single SYN/ACK-style packets with no
+    # payload) have TotLen Fwd Pkts == 0, which full-frame length never
+    # would. Using forward_packet_lengths here inflated TotLen/Avg Pkt
+    # Size by fixed per-packet header overhead relative to what the
+    # model was trained on.
+    totlen_fwd_pkts = float(np.sum(forward_payloads)) if forward_payloads else 0.0
     avg_pkt_size = totlen_fwd_pkts / tot_fwd_pkts if tot_fwd_pkts > 0 else 0.0
     min_pkt_size = float(np.min(forward_payloads)) if forward_payloads else 0.0
 
@@ -205,6 +242,31 @@ def _predict_variant3(features, dst_port, protocol):
         return {"available": False, "error": str(exc)}
 
 
+def _predict_candidates(features):
+    """Scores the classifier_comparison.ipynb candidates (Random Forest,
+    HistGradientBoosting, and a reference XGBoost) using the exact same
+    single-flow features as variant 1 - they share BASE_FEATURES exactly.
+    Purely for live-test comparison; never wired into hybrid_prediction."""
+    result = {}
+    for cname in CANDIDATE_NAMES:
+        if cname not in candidate_models:
+            result[cname] = {"available": False, "error": _candidate_load_errors.get(cname, "not loaded")}
+            continue
+        try:
+            row = pd.DataFrame([[features[f] for f in candidate_features]], columns=candidate_features)
+            probability = float(candidate_models[cname].predict_proba(row)[0][1])
+            threshold = candidate_thresholds[cname]
+            result[cname] = {
+                "available": True,
+                "probability": probability,
+                "prediction": int(probability >= threshold),
+                "threshold": threshold,
+            }
+        except Exception as exc:  # noqa: BLE001 - one bad candidate must never affect the others
+            result[cname] = {"available": False, "error": str(exc)}
+    return result
+
+
 def predict_all(flow):
     """Run all 3 experimental variants against one completed flow.
     Never raises - each variant is independently isolated, and this
@@ -219,6 +281,7 @@ def predict_all(flow):
         "variant1_xgb_single_flow": _predict_variant1(features),
         "variant2_xgb_temporal": _predict_variant2(features, dst_port, protocol),
         "variant3_cnn_lstm": _predict_variant3(features, dst_port, protocol),
+        "candidate_models": _predict_candidates(features),
     }
 
     # Record this flow's own features as history for FUTURE flows in this
