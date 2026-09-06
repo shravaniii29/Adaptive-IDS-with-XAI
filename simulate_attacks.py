@@ -237,6 +237,7 @@ SCENARIOS = [
 
 CANDIDATE_KEYS = ["xgboost", "random_forest", "histgradientboosting"]
 FAMILY_KEYS = ["raw_flood", "reflection", "connection_application_layer"]
+RL_KEYS = ["rl_verdict_classifier"]
 
 
 @dataclass
@@ -251,6 +252,7 @@ class ObservedFlow:
     variant3: dict
     candidates: dict = field(default_factory=dict)  # classifier_comparison.ipynb models, keyed by CANDIDATE_KEYS
     families: dict = field(default_factory=dict)  # train_attack_family_models.py models, keyed by FAMILY_KEYS
+    rl_verdict: dict = field(default_factory=dict)  # rl_cicids_combined_classifier.py, keyed by RL_KEYS
 
 
 def _model_result(flow, model_key):
@@ -265,6 +267,8 @@ def _model_result(flow, model_key):
         entry = flow.candidates.get(model_key, {})
     elif model_key in FAMILY_KEYS:
         entry = flow.families.get(model_key, {})
+    elif model_key in RL_KEYS:
+        entry = flow.rl_verdict.get(model_key, {})
     else:
         entry = {"variant1_xgb_single_flow": flow.variant1,
                  "variant2_xgb_temporal": flow.variant2,
@@ -317,6 +321,7 @@ class Poller:
                 variant3=entry.get("variant3_cnn_lstm", {}),
                 candidates=entry.get("candidate_models", {}),
                 families=entry.get("family_models", {}),
+                rl_verdict={"rl_verdict_classifier": entry.get("rl_verdict_classifier", {})},
             ))
 
     def _run(self):
@@ -355,7 +360,7 @@ def attribute_flows(flows, scenarios, active_timeout=20, flow_timeout=5):
 # =====================================================
 
 MODEL_KEYS = (["deployed_hybrid", "variant1_xgb_single_flow", "variant2_xgb_temporal", "variant3_cnn_lstm"]
-              + CANDIDATE_KEYS + FAMILY_KEYS)
+              + CANDIDATE_KEYS + FAMILY_KEYS + RL_KEYS)
 MODEL_LABELS = {
     "deployed_hybrid": "Deployed hybrid",
     "variant1_xgb_single_flow": "Var1 XGB single-flow",
@@ -367,6 +372,7 @@ MODEL_LABELS = {
     "raw_flood": "Family: Raw Flood",
     "reflection": "Family: Reflection",
     "connection_application_layer": "Family: Connection",
+    "rl_verdict_classifier": "RL verdict (bandit)",
 }
 
 
