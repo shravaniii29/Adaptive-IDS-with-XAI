@@ -1,0 +1,173 @@
+{
+  "created_at": "2026-09-06T09:08:31.726060+00:00",
+  "model": "rl_verdict_classifier v2",
+  "dataset": "CIC-IDS2018 (28 offset windows + 3 full days) + CIC-DDoS2019 (18 attack-type files), pooled, no family split",
+  "split": "per-(day, Label) chronological 70/30 (per_day_label_split) - fixes tafm.per_day_split's coverage gap where a minority attack type's whole time window could land entirely in test (confirmed for DDOS attack-LOIC-UDP and DoS attacks-Slowloris, both 0 train rows under the old per-day-only split)",
+  "reward": "asymmetric: +1 correct, -1 false alarm, -2 missed attack",
+  "train_rows": 2675388,
+  "test_rows": 1146596,
+  "overall_metrics_held_out": {
+    "accuracy": 0.864170989607499,
+    "precision": 0.7952047361797416,
+    "recall": 0.8863808992759955,
+    "specificity": 0.8495313092375056,
+    "f1": 0.8383210159529022
+  },
+  "per_attack_label_recall_held_out": [
+    {
+      "label": "Bot",
+      "n": 85857,
+      "recall": 0.9978685488661378
+    },
+    {
+      "label": "Brute Force -Web",
+      "n": 184,
+      "recall": 0.32608695652173914
+    },
+    {
+      "label": "Brute Force -XSS",
+      "n": 69,
+      "recall": 0.18840579710144928
+    },
+    {
+      "label": "DDOS attack-HOIC",
+      "n": 34830,
+      "recall": 1.0
+    },
+    {
+      "label": "DDOS attack-LOIC-UDP",
+      "n": 519,
+      "recall": 0.9980732177263969
+    },
+    {
+      "label": "DDoS attacks-LOIC-HTTP",
+      "n": 11978,
+      "recall": 1.0
+    },
+    {
+      "label": "DoS attacks-GoldenEye",
+      "n": 9799,
+      "recall": 0.8429431574650474
+    },
+    {
+      "label": "DoS attacks-Hulk",
+      "n": 17819,
+      "recall": 0.9502777933666311
+    },
+    {
+      "label": "DoS attacks-SlowHTTPTest",
+      "n": 11966,
+      "recall": 0.8892695971920441
+    },
+    {
+      "label": "DoS attacks-Slowloris",
+      "n": 1893,
+      "recall": 0.6899101954569467
+    },
+    {
+      "label": "DrDoS_DNS",
+      "n": 11718,
+      "recall": 0.9998293224099676
+    },
+    {
+      "label": "DrDoS_LDAP",
+      "n": 11721,
+      "recall": 0.9997440491425647
+    },
+    {
+      "label": "DrDoS_MSSQL",
+      "n": 11880,
+      "recall": 0.9997474747474747
+    },
+    {
+      "label": "DrDoS_NTP",
+      "n": 11911,
+      "recall": 0.9998320879858954
+    },
+    {
+      "label": "DrDoS_NetBIOS",
+      "n": 11365,
+      "recall": 1.0
+    },
+    {
+      "label": "DrDoS_SNMP",
+      "n": 11837,
+      "recall": 0.9998310382698319
+    },
+    {
+      "label": "DrDoS_SSDP",
+      "n": 11988,
+      "recall": 0.9856523189856523
+    },
+    {
+      "label": "DrDoS_UDP",
+      "n": 11769,
+      "recall": 0.99983006202736
+    },
+    {
+      "label": "FTP-BruteForce",
+      "n": 11969,
+      "recall": 0.8930570640822124
+    },
+    {
+      "label": "Infilteration",
+      "n": 48192,
+      "recall": 0.20451527224435592
+    },
+    {
+      "label": "LDAP",
+      "n": 2977,
+      "recall": 0.9912663755458515
+    },
+    {
+      "label": "MSSQL",
+      "n": 15699,
+      "recall": 0.9936938658513281
+    },
+    {
+      "label": "NetBIOS",
+      "n": 22804,
+      "recall": 1.0
+    },
+    {
+      "label": "Portmap",
+      "n": 11286,
+      "recall": 1.0
+    },
+    {
+      "label": "SQL Injection",
+      "n": 26,
+      "recall": 0.38461538461538464
+    },
+    {
+      "label": "SSH-Bruteforce",
+      "n": 11935,
+      "recall": 1.0
+    },
+    {
+      "label": "Syn",
+      "n": 22251,
+      "recall": 0.7114286998337154
+    },
+    {
+      "label": "TFTP",
+      "n": 10788,
+      "recall": 0.9368743047830923
+    },
+    {
+      "label": "UDP",
+      "n": 16567,
+      "recall": 0.9994567513732118
+    },
+    {
+      "label": "UDP-lag",
+      "n": 11924,
+      "recall": 1.0
+    },
+    {
+      "label": "WebDDoS",
+      "n": 1,
+      "recall": 0.0
+    }
+  ]
+}

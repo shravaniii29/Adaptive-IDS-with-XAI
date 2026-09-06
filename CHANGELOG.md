@@ -9,6 +9,63 @@ Each entry: **What** changed, **Why** (the finding that drove it), **Result**
 
 ---
 
+## 2026-09-06 — RL verdict classifier (contextual bandit) on combined 2018+2019 data; live-tested
+
+**What:** Added `rl_cicids_combined_classifier.py`, a one-step contextual
+bandit (numpy MLP Q-network, no torch dependency) trained as a general
+benign/attack classifier on the FULL pooled CIC-IDS2018 (28 offset windows +
+3 full days) + CIC-DDoS2019 (18 attack-type files) dataset -
+`train_attack_family_models.py`'s own loaders and 25-feature
+`TOP_FEATURES` schema, but pooled across every attack type instead of split
+by family. Wired the trained model (`models/rl_verdict_classifier/`) into
+live serving as a 10th scored model: `detection/experimental_models.py`
+(`_predict_rl_verdict`), `app/main.py` (`/history`, `/history/{flow_id}`,
+`/experimental`), and `simulate_attacks.py` (`RL_KEYS`, `MODEL_KEYS`,
+`MODEL_LABELS`), then live-tested with 3 trials of all 6 scenarios (337
+real flows) via `simulate_attacks.py rl_v2_live_test 3`.
+
+**Why:** First training pass (`tafm.per_day_split`, one 70th-percentile
+cutoff per day across every attack label combined) left `DDOS
+attack-LOIC-UDP` and `DoS attacks-Slowloris` with **zero training rows** -
+both attack types' entire time window inside their source day
+(02-21-2018, 02-15-2018) fell after that day's overall cutoff, because a
+much larger co-occurring attack (HOIC, GoldenEye) dominated the quantile.
+Fixed with `per_day_label_split()`: the 70th-percentile cutoff is now
+computed PER (day, Label) instead of once per day, so every label with
+enough rows lands in both train and test. Also tried reward-shaping
+(bigger miss-penalty + oversampling) for 3 weak/rare types with real
+training data (Infilteration, Brute Force -Web, SQL Injection) - a -6
+miss-penalty was too aggressive and collapsed the whole policy to
+near-always-predict-attack (0.999 recall / 0.067 specificity, the same
+degenerate pattern this project has hit before); not carried into the
+saved model.
+
+**Result (held-out, fixed split):** asymmetric-reward net (saved artifact) -
+accuracy=86.4%, recall=88.6%, specificity=85.0%, F1=83.8%, train=2,675,388 /
+test=1,146,596 rows. `DDOS attack-LOIC-UDP` and `Slowloris` recovered to
+99.8%/69.0% recall respectively (previously untrained/coincidental).
+
+**Live test (3 trials, 337 real flows, pooled):** accuracy=74.8%,
+recall=88.5%, specificity=34.2%, F1=84.0% - the highest F1 of all 10 scored
+models (deployed hybrid: 83.8%), and far better specificity than the
+deployed hybrid (2.5%) or Family: Connection (11.4%), though still weak in
+absolute terms. Per-attack recall: ICMP flood 72.7%, SYN flood 81.4%, UDP
+flood 85.7%, HTTP flood 100.0%, port scan 100.0% - at or near the best of
+any model on HTTP flood/port scan, behind deployed hybrid/Family: Raw Flood
+specifically on ICMP (72.7% vs 97.7%). Benign-baseline specificity was
+**highly inconsistent across trials** (75%, 0%, 0% - flagged
+high-variance): the pooled 34.2% is driven almost entirely by trial 1;
+trials 2-3 flagged essentially all benign traffic as attack. Not yet
+reliable enough to trust for specificity in isolation - offline held-out
+specificity (85.0%) did not transfer to live traffic, the same
+held-out/live gap this project has documented repeatedly for other models.
+
+**Files:** `rl_cicids_combined_classifier.py`,
+`models/rl_verdict_classifier/`, `detection/experimental_models.py`,
+`app/main.py`, `simulate_attacks.py`, `rl_v2_live_test/`.
+
+---
+
 ## 2026-08-27 — Live-test the packet-level models; fix a silent sniffer-death bug
 
 **What:** Added `live_test_packet_models.py` to live-test the packet-level

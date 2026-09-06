@@ -582,6 +582,12 @@ def get_history_flow(flow_id: int):
                 {}
             ),
 
+        "rl_verdict_classifier":
+            experimental.get(
+                "rl_verdict_classifier",
+                {}
+            ),
+
         "top_features":
             explanation.get(
                 "detailed_report",
@@ -654,6 +660,12 @@ def get_history():
                 experimental.get(
                     "family_models",
                     {}
+                ),
+
+            "rl_verdict_classifier":
+                experimental.get(
+                    "rl_verdict_classifier",
+                    {}
                 )
         })
 
@@ -710,6 +722,12 @@ def get_experimental():
         "variant3_cnn_lstm":
             experimental.get(
                 "variant3_cnn_lstm",
+                {}
+            ),
+
+        "rl_verdict_classifier":
+            experimental.get(
+                "rl_verdict_classifier",
                 {}
             )
     }

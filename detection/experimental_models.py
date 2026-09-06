@@ -127,6 +127,24 @@ for _fname, _fdir in FAMILY_MODEL_DIRS.items():
     except Exception as exc:  # noqa: BLE001 - a missing family model just isn't available, not fatal
         _family_load_errors[_fname] = str(exc)
 
+# RL verdict classifier (rl_cicids_combined_classifier.py) - a numpy
+# contextual-bandit MLP trained on the full pooled CIC-IDS2018 +
+# CIC-DDoS2019 dataset (same 25-feature TOP_FEATURES schema as the
+# deployed model / family models), scored the same way as the family
+# models: via extract_deployed_features, not the 8-feature experimental set.
+RL_VERDICT_DIR = Path(os.environ.get("RL_VERDICT_MODEL_DIR", PROJECT_ROOT / "models" / "rl_verdict_classifier"))
+_rl_verdict_ready = False
+
+try:
+    _rl_weights = np.load(RL_VERDICT_DIR / "weights.npz")
+    _rl_scaler = np.load(RL_VERDICT_DIR / "scaler.npz")
+    rl_W1, rl_b1, rl_W2, rl_b2 = _rl_weights["W1"], _rl_weights["b1"], _rl_weights["W2"], _rl_weights["b2"]
+    rl_mean, rl_std = _rl_scaler["mean"], _rl_scaler["std"]
+    rl_top_features = _load_pickle_from(RL_VERDICT_DIR, "top_features.pkl")
+    _rl_verdict_ready = True
+except Exception as exc:  # noqa: BLE001
+    _rl_verdict_load_error = str(exc)
+
 candidate_models = {}
 candidate_thresholds = {}
 candidate_features = None
@@ -334,6 +352,37 @@ def _predict_family_models(flow):
     return result
 
 
+def _predict_rl_verdict(flow):
+    """Scores rl_verdict_classifier (rl_cicids_combined_classifier.py) -
+    same 25-feature vector as the family models (extract_deployed_features),
+    scaled with its own saved mean/std, forward-passed through its numpy
+    Q-network. Prediction = argmax(Q); probability reported as the
+    softmax over the 2 Q-values, purely for display (the network was
+    trained on raw Q-value regression to reward, not a calibrated
+    probability, same caveat as any Q-learning agent)."""
+    if not _rl_verdict_ready:
+        return {"available": False, "error": _rl_verdict_load_error}
+    try:
+        features_25 = extract_deployed_features(flow)
+        x = np.array([features_25[f] for f in rl_top_features], dtype=np.float64)
+        x = (x - rl_mean) / rl_std
+        z1 = x @ rl_W1 + rl_b1
+        h = np.tanh(z1)
+        q = h @ rl_W2 + rl_b2
+        probs = np.exp(q - q.max())
+        probs /= probs.sum()
+        prediction = int(np.argmax(q))
+        return {
+            "available": True,
+            "label": "RL verdict classifier (contextual bandit)",
+            "probability": float(probs[1]),
+            "prediction": prediction,
+            "threshold": 0.5,
+        }
+    except Exception as exc:  # noqa: BLE001 - never let this take down the others
+        return {"available": False, "error": str(exc)}
+
+
 def predict_all(flow):
     """Run all 3 experimental variants against one completed flow.
     Never raises - each variant is independently isolated, and this
@@ -350,6 +399,7 @@ def predict_all(flow):
         "variant3_cnn_lstm": _predict_variant3(features, dst_port, protocol),
         "candidate_models": _predict_candidates(features),
         "family_models": _predict_family_models(flow),
+        "rl_verdict_classifier": _predict_rl_verdict(flow),
     }
 
     # Record this flow's own features as history for FUTURE flows in this
