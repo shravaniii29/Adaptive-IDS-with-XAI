@@ -66,6 +66,59 @@ held-out/live gap this project has documented repeatedly for other models.
 
 ---
 
+## 2026-09-06 (2) — Fix flow-attribution bug in simulate_attacks.py; corrected RL live-test numbers
+
+**What:** Fixed `attribute_flows()` in `simulate_attacks.py`. It matched a
+flow to the FIRST scenario (in schedule order) whose `[start-1, end+slack]`
+window contained the flow's `observed_at`, where `slack` = 26s
+(active_timeout + flow_timeout + 2*poll_interval). With scenarios only
+~10s long and ~2s apart, that slack is large enough for a scenario's
+window to swallow the scenario(s) immediately following it - and since
+"Benign baseline" is always scheduled first, it systematically stole
+credit for the ICMP-flood/SYN-flood flows that came right after it,
+whenever those flows drained late enough to still land inside benign's
+extended window. Fixed by attributing each flow to the LATEST (highest
+start_time) matching scenario instead of the first - the correct read of
+the same slack, since a flow lands at a later timestamp because it
+drained late, not because it belongs to an earlier scenario. Re-ran the
+same 3-trial live test (`rl_v2_live_test_fixed_attribution/`) after the
+fix.
+
+**Why found:** Investigating why RL verdict's benign-baseline specificity
+swung 75% -> 0% -> 0% across 3 back-to-back trials of the identical
+scenario. Cross-referencing each attributed flow's `observed_at` against
+the scenario log showed "Benign baseline"-labeled flows in trials 2-3
+timestamped well inside the immediately-following ICMP-flood/SYN-flood
+windows - i.e. real attack flows mislabeled as benign ground truth, so a
+model correctly flagging them as ATTACK was scored as wrong.
+
+**Result:** The fix changes the ranking reported earlier today - RL
+verdict's apparent "best F1 of all 10 models" finding was partly an
+artifact of the mislabeling, not fully real. Corrected overall metrics
+(309 flows, 3 trials pooled): deployed hybrid now leads (acc=83.8%
+recall=96.6% specificity=6.8% F1=91.1%), Family: Connection close behind
+(F1=90.1%), RL verdict third (acc=72.5% recall=82.6% specificity=11.4%
+F1=83.7% - down from the pre-fix 84.0%/34.2%). RL's per-attack recall:
+ICMP 76.1%, SYN 72.7%, UDP 80.0%, HTTP 83.3%, port scan 91.4% - solid but
+no longer the outright leader on any type.
+
+Separately, the fix exposed (did not cause) a second real issue: benign-
+baseline specificity is STILL highly inconsistent trial-to-trial for
+every model built on the 25-feature `extract_deployed_features` pipeline
+(deployed hybrid 33%/0%/0%, Family: Connection 44%/0%/6%, RL verdict
+56%/0%/0%), while the 8-feature experimental models (variants 1-3,
+classifier_comparison candidates) stay stable and high (78-100% across
+all 3 trials). This lines up with this project's own previously-
+documented "14.7%-specificity deployed-model bug" (referenced in
+`rl_retrain_policy.py`) - the 25-feature live pipeline's poor/volatile
+benign-traffic behavior looks like a pre-existing, chronic issue the RL
+model inherited by using the same feature pipeline, not something
+specific to the RL model or its training. Not yet root-caused.
+
+**Files:** `simulate_attacks.py`, `rl_v2_live_test_fixed_attribution/`.
+
+---
+
 ## 2026-08-27 — Live-test the packet-level models; fix a silent sniffer-death bug
 
 **What:** Added `live_test_packet_models.py` to live-test the packet-level
