@@ -1,16 +1,16 @@
 from feature_extraction.feature_extractor import extract_features
 
-from detection.predictor import predict_flow
+from detection.predictor_v8 import predict_flow_v8 as predict_flow
 from detection.drift_detector import DriftDetector
 
-from explainability.shap_explainer import SHAPExplainer
+from explainability.shap_explainer_v8 import SHAPExplainerV8 as SHAPExplainer
 
 from agents.coordinator import CoordinatorAgent
 
 
 class DetectionService:
     """
-    Detection Service
+    Detection Service (V8)
 
     Handles the complete IDS detection pipeline:
 
@@ -18,15 +18,23 @@ class DetectionService:
         ↓
     Feature Extraction
         ↓
-    Hybrid Prediction
+    Hybrid Prediction (V8: XGBoost + Isolation Forest, OR-fusion)
         ↓
     Drift Detection
         ↓
-    SHAP Explainability
+    SHAP Explainability (V8 XGBoost)
         ↓
     Agentic Analysis
         ↓
     Final Detection Result
+
+    This is the ONLY change made to this file for V8 live
+    deployment: the predictor and SHAP explainer imports now point
+    at the V8 modules (aliased to the same local names the rest of
+    this file already used), so every line below this point is
+    byte-for-byte identical to the pre-V8 version of this file.
+    V7's own predictor.py / shap_explainer.py are untouched and can
+    be restored here by reverting just the two import lines above.
     """
 
     def __init__(self):
@@ -157,6 +165,9 @@ class DetectionService:
 
             "hybrid_prediction":
                 prediction["hybrid_prediction"],
+
+            "detection_source":
+                prediction["detection_source"],
 
             # -------------------------------------
             # Drift

@@ -3,11 +3,12 @@ from scapy.layers.inet import IP, TCP
 
 class Flow:
 
-    def __init__(self, src_ip=None, dst_ip=None):
+    def __init__(self, src_ip=None, dst_ip=None, dst_port=None):
 
         # Flow identity
         self.src_ip = src_ip
         self.dst_ip = dst_ip
+        self.dst_port = dst_port
 
         # Basic statistics
         self.packet_count = 0
@@ -30,7 +31,8 @@ class Flow:
         self.backward_packet_lengths = []
         self.backward_timestamps = []
 
-        # Initial backward TCP window
+        # Initial TCP windows
+        self.init_fwd_window_bytes = None
         self.init_bwd_window_bytes = None
 
     def add_packet(self, packet):
@@ -78,6 +80,13 @@ class Flow:
                     header_length += tcp_header_length * 4
 
                 self.forward_header_lengths.append(header_length)
+
+                # Save first forward TCP window
+                if (
+                    self.init_fwd_window_bytes is None
+                    and TCP in packet
+                ):
+                    self.init_fwd_window_bytes = packet[TCP].window
 
             else:
 

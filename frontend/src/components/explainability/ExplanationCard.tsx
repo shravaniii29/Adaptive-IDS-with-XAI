@@ -41,13 +41,19 @@ const fallback = (featureKey?: string | null) => {
 };
 
 export default function ExplanationCard({ explanation }: { explanation: ShapExplanation | null }) {
+  // Prefer detailed_explanation (real per-flow SHAP value/impact objects).
+  // top_features alone is just feature-name strings with no impact, which
+  // previously defaulted every row to a false "More risky" (impact=0 >= 0).
+  const features = explanation?.detailed_explanation && explanation.detailed_explanation.length > 0
+    ? explanation.detailed_explanation
+    : explanation?.top_features ?? [];
   return (
     <Card className="h-full">
       <div className="mb-5">
         <p className="text-sm text-slate-400">Why the system made this decision</p>
         <h2 className="mt-1 text-xl font-semibold text-white">What the AI noticed</h2>
       </div>
-      {!explanation || !explanation.top_features || explanation.top_features.length === 0 ? (
+      {features.length === 0 ? (
         <EmptyState title="Waiting for an explanation" description="After the next flow is checked, this area will explain the decision in everyday language." />
       ) : (
         <>
@@ -55,7 +61,7 @@ export default function ExplanationCard({ explanation }: { explanation: ShapExpl
             The system compares small details of the connection. Red means a detail made the traffic look more risky; green means it made the traffic look safer.
           </p>
           <div className="space-y-4">
-            {explanation.top_features.map((item, index) => {
+            {features.map((item, index) => {
               const featureKey = typeof item === "string" ? item : (item?.feature ?? item?.name ?? "");
               const impact = typeof item === "object" && item !== null && typeof item.impact === "number" ? item.impact : 0;
               const positive = impact >= 0;

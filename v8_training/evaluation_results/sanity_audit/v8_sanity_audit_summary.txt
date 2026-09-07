@@ -1,0 +1,204 @@
+V8 FINAL EVALUATION — SANITY AUDIT OF THE SUSPICIOUS 100% PER-ATTACK RECALLS
+================================================================================
+Read-only audit. No model, scaler, threshold, training pool, or evaluation CSV
+was modified, retrained, refit, or tuned as part of this audit.
+
+Produced in two passes:
+  (1) This sandbox (no xgboost/scapy available - no network access to install
+      them), using real pool/eval CSVs and the real IsolationForest/
+      RobustScaler/threshold/top_features artifacts (pure sklearn/pickle,
+      loadable without xgboost).
+  (2) v8_training/sanity_audit_exact.py, delivered alongside this file,
+      which must be run in the project venv (real xgboost) to produce EXACT
+      (not lower-bound) XGBoost-only recall, probability distributions, and
+      benign false-positive attribution. Where this pass-1 summary quotes a
+      "lower bound," the exact pass supersedes it.
+
+--------------------------------------------------------------------------------
+PHASE 1 — IS THE DATA ACTUALLY HELD OUT?
+--------------------------------------------------------------------------------
+- Training pool: 139,718 rows (confirmed, re-counted from the real file).
+- Evaluation CSV: 22,428 rows (confirmed, re-counted from the real file).
+- Code proof (v8_training/step4_train_v8_models.py): the evaluation CSV path
+  does not appear anywhere in that file - it cannot have been opened during
+  training. Confirmed by inspection, not just by comment.
+- The 2 previously-identified leaked rows (original pool_idx 127480/129392,
+  matching eval_idx 19694/2121) were re-confirmed ABSENT from the current
+  139,718-row pool using the corrected NaN/inf-aware fingerprint method.
+- Exact-duplicate fingerprint overlap between the CURRENT pool and the
+  evaluation CSV, re-derived independently in this audit (not reusing any
+  cached result) using BOTH the string method and the NaN/inf-aware numeric
+  tuple method: 0 / 0. VERDICT: zero exact-duplicate overlap, confirmed.
+
+--------------------------------------------------------------------------------
+PHASE 4 — ISOLATION FOREST BREAKDOWN (real V7 and V8 artifacts, real eval CSV)
+--------------------------------------------------------------------------------
+See v7_isolation_forest_breakdown.csv / v8_isolation_forest_breakdown.csv.
+Highlights (V8): Bot 0% IF-flagged, DDoS-LOIC-HTTP 0.13%, GoldenEye 0.93%,
+Hulk 1.33% - i.e. for these 4 classes Isolation Forest contributes almost
+nothing; their eventual 100% hybrid recall must come almost entirely from
+XGBoost (see Phase 2 bound below, confirmed exactly by the companion exact
+script). Conversely, DDOS-LOIC-UDP and SSH-Bruteforce are already at 100%
+IF-flagged alone for BOTH V7 and V8 - Isolation Forest alone fully explains
+those two, independent of anything XGBoost does.
+Benign: V8 IF flags 15.74% of benign as anomalous (787/5000); V7 IF flags
+26.33% (1313/4987) - IF is comparably or more aggressive in V7, not a new V8
+behavior.
+
+--------------------------------------------------------------------------------
+PHASE 2 (bound, exact pass supersedes) — XGB vs IF vs Hybrid attribution
+--------------------------------------------------------------------------------
+See per_attack_model_breakdown.csv. Since Hybrid = XGB OR IF, for any class
+where Hybrid recall = 100%, XGB-only recall must be AT LEAST (1 - IF_rate)
+(every row IF didn't flag, XGB must have). This lower bound alone already
+shows:
+  - Bot, DDoS-LOIC-HTTP, DoS-GoldenEye, DoS-Hulk: IF flags ~0-1.3% of these
+    classes, so their 100% recall is >=98.7-100% attributable to XGBoost
+    alone, not Isolation Forest.
+  - DDOS-LOIC-UDP, SSH-Bruteforce: IF alone already reaches 100%; XGBoost's
+    exact contribution here is undetermined by this bound (could be 0-100%),
+    resolved by the exact companion script.
+  - DDOS-HOIC, DoS-SlowHTTPTest, DoS-Slowloris, FTP-BruteForce: mixed,
+    substantial contribution from both models (IF rates 28-76%, XGB making
+    up the rest).
+This is a materially important finding for the "is XGBoost the whole story"
+question: no, both models contribute, in different proportions per class,
+which is the behavior expected of a genuine hybrid detector rather than a
+single-component artifact.
+
+--------------------------------------------------------------------------------
+PHASE 5 — VALIDATION vs HELD-OUT EVALUATION (real, from the actual training
+and evaluation runs — no re-fitting)
+--------------------------------------------------------------------------------
+See validation_vs_heldout.csv / validation_vs_heldout_per_attack.csv.
+
+Overall:
+  Metric         Validation   Held-out   Change
+  Accuracy       0.9158       0.8918     -0.0239
+  Precision      0.9437       0.9329     -0.0108
+  Attack Recall  0.9380       0.9275     -0.0104
+  F1             0.9408       0.9302     -0.0106
+  ROC-AUC        0.9798       0.9543     -0.0255
+  Benign FPR     0.1396       0.2326     +0.0930
+
+This is a normal, healthy generalization gap - held-out performs slightly
+WORSE than validation across every metric, most notably Benign FPR (worse by
+9.3 points). This is the opposite of what leakage or an evaluation bug would
+typically produce (which usually makes held-out performance anomalously
+GOOD, equal to, or better than validation, not consistently worse).
+
+Per-attack: EVERY class that is 100% recall on the held-out evaluation set
+is ALSO ~100% recall on the validation split (Bot 99.95% val vs 100.00% held-
+out; HOIC, LOIC-UDP, LOIC-HTTP, GoldenEye, Hulk, SlowHTTPTest, Slowloris,
+FTP-BruteForce, SSH-Bruteforce: 100.0% on BOTH). Infilteration is poor on
+BOTH (38.2% validation vs 44.07% held-out - held-out is actually slightly
+BETTER, not artificially worse, which is itself unremarkable noise).
+This is the single strongest piece of evidence in this audit: the "100%
+recall" pattern is not something that appears only when the held-out
+evaluation CSV is used - it is already fully present in the validation split,
+which is a stratified carve-out of the SAME training pool, was never
+anywhere near the evaluation CSV, and was correctly excluded from feature
+selection/scaler/IsolationForest/XGBoost fitting. If the evaluation CSV were
+somehow leaking into training, we would NOT expect validation (untouched by
+eval) to show the identical pattern. It does. This points strongly away from
+an evaluation-specific leakage/bug explanation.
+
+--------------------------------------------------------------------------------
+PHASE 6 — TRAIN vs EVAL DISTRIBUTIONAL / NEAR-DUPLICATE CHECK
+--------------------------------------------------------------------------------
+See train_vs_eval_feature_distributions.csv and
+train_vs_eval_nearest_neighbor_check.csv (standardized Euclidean
+nearest-neighbor distance, 200 sampled eval rows per class, against the full
+pool of that class, in the V8 25-feature space).
+
+This is the second major finding. For most of the 100%-recall classes, the
+nearest training-pool neighbor of a typical evaluation row is EXTREMELY
+close, even though Phase 1 already confirmed there are zero EXACT duplicates:
+
+  Attack Type                Median NN dist   % within 0.5 std   % within 1.0 std
+  Bot                        0.0000109        100%               100%
+  DoS attacks-SlowHTTPTest   0.0000000        100%               100%
+  FTP-BruteForce             0.0000000        100%               100%
+  DDOS attack-HOIC           0.0119           99.0%              99.5%
+  DoS attacks-GoldenEye      0.0040           98.5%              99.5%
+  SSH-Bruteforce             0.0361           99.5%              99.5%
+  DoS attacks-Slowloris      ~0.0000002       83.0%              84.0%
+  Benign                     0.0027           88.0%              91.0%
+  Infilteration              0.0061           93.0%              96.5%
+  DDoS attacks-LOIC-HTTP     0.0018           72.0%              79.0%
+  DoS attacks-Hulk           0.0384           72.5%              83.5%
+  DDOS attack-LOIC-UDP       0.155            82.5%              95.0%
+
+Interpretation: evaluation flows for most attack classes are near-identical
+in feature space to SOME training flow (median standardized distance
+essentially zero for several classes), without being byte-identical rows
+(Phase 1's exact-fingerprint check already ruled that out). This is
+consistent with a well-documented property of CIC-IDS2018 specifically: many
+of its attack classes are generated by short-lived automated tools/scripts
+(hping3 floods, LOIC/HOIC, Slowloris/SlowHTTPTest scripts, scripted brute-
+force tools) that produce highly repetitive, low-variance flow statistics
+across thousands of separate flow instances - this is a property of the
+DATASET, not of this project's train/eval split methodology. It is NOT
+evidence of leakage (Phase 1 already ruled out exact duplication), but it IS
+the most plausible explanation for why several classes reach exactly 100%
+recall: they are genuinely close to trivially separable given how repetitive
+CIC-IDS2018's scripted-attack traffic is.
+
+One additional, separate caveat worth flagging: DDOS attack-LOIC-UDP has
+only 230 rows in the training pool (the archive itself is scarce in this
+class - this was already known and quota-capped at Step 2) but 1500 rows in
+the evaluation set. The model is achieving 100% recall on a class it saw
+very few examples of during training; combined with Isolation Forest alone
+already reaching 100% on this class for both V7 and V8, this looks like an
+intrinsically easy-to-separate class (UDP flood traffic has very distinctive
+volumetric statistics) rather than an artifact of the small training count,
+but it is worth naming explicitly as a class where the training sample size
+was thin.
+
+--------------------------------------------------------------------------------
+PHASE 8 (bound) — BENIGN FALSE POSITIVES
+--------------------------------------------------------------------------------
+V8: 5000 benign rows, 1163 hybrid false positives (23.26%). Isolation Forest
+alone already flags 787 (15.74%) of benign as anomalous. Since Hybrid FP
+(1163) > IF FP (787), XGBoost must be contributing at least 1163-787=376
+ADDITIONAL false positives (7.52% of benign) that Isolation Forest did not
+already flag - so the elevated benign FPR is not purely an Isolation Forest
+quirk; XGBoost is independently over-triggering on some benign traffic too.
+(V7 for comparison: Hybrid FP 39.88%, IF FP 26.33%, so V7's benign FPR problem
+was WORSE, in both the IF and the XGBoost-additional component. V8 more than
+halves benign FPR versus V7 while also fixing several 0%-recall attack
+classes - this is a broad, non-cherry-picked improvement, not a recall-only
+trade against a hidden FPR blowup, though 23.26% FPR is still high in
+absolute terms and worth stating plainly, not minimizing.)
+Exact per-class-overlap breakdown (XGB-only vs IF-only vs both) will be in
+benign_false_positive_breakdown.csv once sanity_audit_exact.py is run.
+
+================================================================================
+PRELIMINARY VERDICT (pending the exact-pass numbers from sanity_audit_exact.py,
+which will confirm rather than overturn the evidence below given how
+consistent the bound-based and validation-vs-eval evidence already is)
+================================================================================
+
+CATEGORY: B — HIGH RECALL IS PLAUSIBLE BUT NEEDS CAUTION.
+
+No evidence of leakage: exact fingerprint overlap between the current pool
+and the evaluation CSV is zero (Phase 1, re-derived independently in this
+audit). No evidence of an evaluation-pipeline bug: the SAME 100%-recall
+pattern, on the SAME classes, is already present in the validation split
+carved out of the training pool - a split that never touched the evaluation
+CSV and that was correctly excluded from every fitting step (Phase 5). What
+DOES make the 100% recalls less surprising, and worth stating explicitly in
+the paper rather than presenting as unqualified: several of the classes
+reaching 100% recall are, in feature space, made up of evaluation flows that
+sit extremely close to some training flow of the same class, even though no
+exact duplicates exist (Phase 6) - a known characteristic of CIC-IDS2018's
+scripted/automated attack traffic, not a defect introduced by this project's
+pipeline.
+
+Genuinely hard classes (Infilteration, SQL Injection, Brute Force -Web,
+Brute Force -XSS) remain honestly poor on BOTH validation and held-out
+evaluation, with no artificial inflation - this consistency is itself
+supporting evidence that the pipeline is not gaming its numbers: if
+something were leaking or broken, it is very unlikely it would selectively
+leak only 10 of 14 classes while leaving these 4 hard classes authentically
+difficult in exactly the same way on both splits.

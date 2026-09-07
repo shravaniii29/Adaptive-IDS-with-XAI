@@ -1,32 +1,50 @@
 import numpy as np
 MICROSECONDS_PER_SECOND = 1_000_000
 
+# -------------------------------------------------
+# V8 candidate feature list (reference/documentation only).
+#
+# This constant is NOT consumed anywhere in the codebase for
+# column selection or ordering - detection/predictor.py loads its
+# own authoritative `top_features` list from the trained model's
+# pickled artifact (models*/top_features*.pkl) and reindexes the
+# `features` dict returned by extract_features() against THAT list.
+# extract_features() therefore only needs to guarantee that every
+# name a trained model may have selected is present as a key in the
+# returned dict; dict key order below is irrelevant to correctness.
+#
+# This is the V8 mutual_info_classif Top-25 selection (fit on the
+# V8 training split only, random_state=42) at the time the extractor
+# was last extended. It is kept here for readability/debugging, not
+# as a runtime contract.
+# -------------------------------------------------
+
 TOP_FEATURES = [
+    "Init Fwd Win Byts",
+    "Dst Port",
     "pkt_rate_ratio",
-    "Flow Duration",
+    "Fwd Header Len",
+    "Subflow Fwd Byts",
+    "TotLen Fwd Pkts",
+    "Fwd Pkt Len Mean",
+    "Pkt Len Max",
+    "Fwd Seg Size Avg",
+    "Fwd Pkt Len Max",
+    "Pkt Len Std",
+    "Pkt Len Var",
+    "Bwd Pkt Len Mean",
+    "Bwd Seg Size Avg",
+    "Pkt Len Mean",
+    "TotLen Bwd Pkts",
+    "Subflow Bwd Byts",
+    "Bwd Pkt Len Max",
     "Flow IAT Max",
-    "Flow Pkts/s",
+    "Pkt Size Avg",
     "Fwd Pkts/s",
     "Flow IAT Mean",
-    "Pkt Len Max",
-    "Pkt Size Avg",
-    "Fwd IAT Tot",
-    "iat_variation",
-    "Fwd Header Len",
-    "Fwd IAT Max",
-    "Fwd IAT Mean",
-    "Flow IAT Std",
-    "TotLen Fwd Pkts",
-    "Subflow Fwd Byts",
-    "Init Bwd Win Byts",
-    "Flow IAT Min",
-    "Bwd Pkt Len Max",
-    "Subflow Bwd Byts",
-    "TotLen Bwd Pkts",
-    "Bwd Seg Size Avg",
-    "Bwd Pkt Len Mean",
-    "Bwd Pkt Len Std",
-    "Pkt Len Mean",
+    "Flow Pkts/s",
+    "Flow Duration",
+    "Bwd Pkts/s",
 ]
 
 
@@ -57,6 +75,13 @@ def safe_std(values):
     return float(np.std(values))
 
 
+def safe_var(values):
+    if len(values) == 0:
+        return 0.0
+
+    return float(np.var(values))
+
+
 def safe_max(values):
     if len(values) == 0:
         return 0.0
@@ -73,8 +98,9 @@ def safe_min(values):
 
 def extract_features(flow):
     """
-    Convert a Flow object into the 25 features expected
-    by the trained IDS model.
+    Convert a Flow object into the named statistical flow features
+    used by the trained IDS models (V7's 25 and V8's extended
+    candidate set - see TOP_FEATURES above).
 
     CICIDS timing features are stored in microseconds,
     while Scapy packet timestamps are represented in seconds.
@@ -113,6 +139,7 @@ def extract_features(flow):
     if flow_duration_seconds == 0:
         flow_packets_per_second = 0.0
         forward_packets_per_second = 0.0
+        backward_packets_per_second = 0.0
 
     else:
         flow_packets_per_second = (
@@ -121,6 +148,10 @@ def extract_features(flow):
 
         forward_packets_per_second = (
             forward_packet_count / flow_duration_seconds
+        )
+
+        backward_packets_per_second = (
+            backward_packet_count / flow_duration_seconds
         )
 
     # -------------------------------------------------
@@ -141,20 +172,6 @@ def extract_features(flow):
     flow_iat_mean_seconds = safe_mean(flow_iats)
 
     flow_iat_std_seconds = safe_std(flow_iats)
-
-    # -------------------------------------------------
-    # IAT variation
-    # Must match v7 feature engineering exactly
-    #
-    # IMPORTANT:
-    # Calculate BEFORE microsecond conversion so the formula
-    # remains aligned with the current v7 feature engineering.
-    # -------------------------------------------------
-
-    iat_variation = (
-        flow_iat_std_seconds
-        / (flow_iat_mean_seconds + 1)
-    )
 
     # -------------------------------------------------
     # Convert CICIDS timing features to microseconds
@@ -183,6 +200,24 @@ def extract_features(flow):
     flow_iat_std = (
         flow_iat_std_seconds
         * MICROSECONDS_PER_SECOND
+    )
+
+    # -------------------------------------------------
+    # IAT variation
+    #
+    # Must match the V7 training notebook's feature_engineering()
+    # exactly: notebooks/v7_xgb_iso.ipynb computes this from the raw
+    # CIC-IDS2018 "Flow IAT Std"/"Flow IAT Mean" CSV columns, which are
+    # already in MICROSECONDS - not from the pre-conversion seconds
+    # values. Using flow_iat_std/flow_iat_mean (microseconds, computed
+    # above) instead of the *_seconds variants fixes a train/serving
+    # skew: the "+1" damping term behaves very differently at second
+    # scale vs microsecond scale, so this is not just a units relabel.
+    # -------------------------------------------------
+
+    iat_variation = (
+        flow_iat_std
+        / (flow_iat_mean + 1)
     )
 
     fwd_iat_total = (
@@ -281,6 +316,61 @@ def extract_features(flow):
         "Pkt Len Mean": safe_mean(
             flow.packet_lengths
         ),
+
+        # ---------------------------------------------
+        # V8 additions below this line.
+        #
+        # Each mirrors an existing formula pattern in this
+        # file 1:1 (forward-direction / combined-direction
+        # analogues of features already computed above), per
+        # the Step-4 extractor-compatibility report.
+        # ---------------------------------------------
+
+        # Mirrors "Init Bwd Win Byts" above, forward direction.
+        "Init Fwd Win Byts": float(
+            flow.init_fwd_window_bytes
+            if flow.init_fwd_window_bytes is not None
+            else 0
+        ),
+
+        # Destination port of the flow-initiating packet.
+        # 0 for non-TCP/UDP IP traffic (see get_packet_ports()).
+        "Dst Port": float(
+            flow.dst_port
+            if flow.dst_port is not None
+            else 0
+        ),
+
+        # Mirrors "Pkt Len Max"/"Pkt Size Avg" above, forward-only.
+        "Fwd Pkt Len Max": safe_max(
+            flow.forward_packet_lengths
+        ),
+
+        "Fwd Pkt Len Mean": safe_mean(
+            flow.forward_packet_lengths
+        ),
+
+        # CICFlowMeter defines "Seg Size Avg" identically to
+        # "Pkt Len Mean" for the same direction - this file already
+        # relies on that exact equivalence for the existing
+        # "Bwd Seg Size Avg" feature above (also
+        # safe_mean(flow.backward_packet_lengths)), so the forward
+        # analogue uses the same source data.
+        "Fwd Seg Size Avg": safe_mean(
+            flow.forward_packet_lengths
+        ),
+
+        # Mirrors "Bwd Pkt Len Std" above, combined packet lengths.
+        "Pkt Len Std": safe_std(
+            flow.packet_lengths
+        ),
+
+        "Pkt Len Var": safe_var(
+            flow.packet_lengths
+        ),
+
+        # Mirrors "Fwd Pkts/s" above, backward direction.
+        "Bwd Pkts/s": backward_packets_per_second,
     }
 
     return features

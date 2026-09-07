@@ -8,4 +8,5 @@ export interface ShapFeature {
 export interface ShapExplanation {
   flow_id: string | number;
   top_features: (ShapFeature | string)[];
+  detailed_explanation?: ShapFeature[];
 }

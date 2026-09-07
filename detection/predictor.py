@@ -132,6 +132,21 @@ def predict_flow(features):
         or isolation_prediction == 1
     )
 
+    # ---------------------------------------------
+    # Detection source (which model(s) triggered)
+    # Does not affect hybrid_prediction - additive
+    # transparency field only.
+    # ---------------------------------------------
+
+    if xgb_prediction == 1 and isolation_prediction == 1:
+        detection_source = "both"
+    elif xgb_prediction == 1:
+        detection_source = "xgboost"
+    elif isolation_prediction == 1:
+        detection_source = "isolation_forest"
+    else:
+        detection_source = "none"
+
 
     return {
 
@@ -144,4 +159,6 @@ def predict_flow(features):
         "isolation_prediction": isolation_prediction,
 
         "hybrid_prediction": hybrid_prediction,
+
+        "detection_source": detection_source,
     }

@@ -1,0 +1,15 @@
+Attack_Type,N,V8_Hybrid_Recall,V8_IF_only_Recall,V8_XGB_Recall_LOWER_BOUND,Pure_XGB_driven (IF~0%),Fully_explained_by_IF_alone (IF>=Hybrid),V7_Hybrid_Recall,V7_IF_only_Recall,V7_XGB_Recall_LOWER_BOUND,NN_dist_median,frac_near_dup_(<0.5),frac_near_dup_(<1.0)
+Bot,1500,1.0,0.0,0.0,True,False,1.0,0.0,0.0,1.08563269305105e-05,1.0,1.0
+Brute Force -Web,611,0.4975,0.4321,0.0,False,False,0.527,0.4632,0.0,,,
+Brute Force -XSS,230,0.687,0.4957,0.1826,False,False,0.6565,0.4913,0.1478,,,
+DDOS attack-HOIC,1500,1.0,0.3687,0.3687,False,False,0.4993,0.0,0.0,0.0118825997965681,0.99,0.995
+DDOS attack-LOIC-UDP,1500,1.0,1.0,1.0,False,True,1.0,1.0,1.0,0.1549343284428269,0.825,0.95
+DDoS attacks-LOIC-HTTP,1500,1.0,0.0013,0.0013,True,False,0.0,0.0,0.0,0.0018328750646493,0.72,0.79
+DoS attacks-GoldenEye,1500,1.0,0.0093,0.0093,True,False,0.0067,0.0067,0.0,0.0039934922052711,0.985,0.995
+DoS attacks-Hulk,1500,1.0,0.0133,0.0133,True,False,0.3313,0.0,0.0,0.038461701501673,0.725,0.835
+DoS attacks-SlowHTTPTest,1500,1.0,0.4633,0.4633,False,False,0.0,0.0,0.0,0.0,1.0,1.0
+DoS attacks-Slowloris,1500,1.0,0.2833,0.2833,False,False,0.7473,0.7427,0.49,2.256998610610853e-07,0.83,0.84
+FTP-BruteForce,1500,1.0,0.7647,0.7647,False,False,0.0,0.0,0.0,0.0,1.0,1.0
+Infilteration,1500,0.4407,0.3207,0.0,False,False,0.2461,0.1711,0.0,0.0061284387078525,0.93,0.965
+SQL Injection,87,0.4828,0.3908,0.0,False,False,0.3103,0.2759,0.0,,,
+SSH-Bruteforce,1500,1.0,1.0,1.0,False,True,1.0,1.0,1.0,0.0363382924981374,0.995,0.995

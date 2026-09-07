@@ -1,0 +1,56 @@
+V7 vs V8 - Final Held-Out Evaluation Report
+======================================================================
+
+Evaluation CSV: C:\Shravani Data\Study\ENGINEERING\TE\SEM 6\Major_Proj_2\evaluation_data\cic_ids2018_20_attack_eval.csv
+Rows: 22428
+
+V7 native scorable rows: 22382 (dropped 46, Flow Duration==0)
+V8 native scorable rows: 22428 (dropped 0)
+Matched-subset rows (headline comparison): 22382
+
+MATCHED-SUBSET OVERALL COMPARISON
+----------------------------------------------------------------------
+       Metric       V7       V8    Change  V8_better
+     Accuracy 0.479671 0.892994  0.413323       True
+    Precision 0.795518 0.932875  0.137358       True
+Attack_Recall 0.444840 0.929175  0.484335       True
+           F1 0.570607 0.931022  0.360415       True
+      ROC_AUC 0.564402 0.954928  0.390527       True
+   Benign_FPR 0.398837 0.233206 -0.165631       True
+
+MATCHED-SUBSET PER-ATTACK-TYPE COMPARISON
+----------------------------------------------------------------------
+             Attack_Type    N              Metric       V7       V8    Change  V7_n_detected_or_flagged  V8_n_detected_or_flagged  V7_n_missed  V8_n_missed
+                  Benign 4987 false_positive_rate 0.398837 0.233206 -0.165631                      1989                      1163          NaN          NaN
+                     Bot 1500              recall 1.000000 1.000000  0.000000                      1500                      1500          0.0          0.0
+        Brute Force -Web  611              recall 0.527005 0.497545 -0.029460                       322                       304        289.0        307.0
+        Brute Force -XSS  230              recall 0.656522 0.686957  0.030435                       151                       158         79.0         72.0
+        DDOS attack-HOIC 1500              recall 0.499333 1.000000  0.500667                       749                      1500        751.0          0.0
+    DDOS attack-LOIC-UDP 1500              recall 1.000000 1.000000  0.000000                      1500                      1500          0.0          0.0
+  DDoS attacks-LOIC-HTTP 1500              recall 0.000000 1.000000  1.000000                         0                      1500       1500.0          0.0
+   DoS attacks-GoldenEye 1500              recall 0.006667 1.000000  0.993333                        10                      1500       1490.0          0.0
+        DoS attacks-Hulk 1500              recall 0.331333 1.000000  0.668667                       497                      1500       1003.0          0.0
+DoS attacks-SlowHTTPTest 1500              recall 0.000000 1.000000  1.000000                         0                      1500       1500.0          0.0
+   DoS attacks-Slowloris 1500              recall 0.747333 1.000000  0.252667                      1121                      1500        379.0          0.0
+          FTP-BruteForce 1500              recall 0.000000 1.000000  1.000000                         0                      1500       1500.0          0.0
+           Infilteration 1467              recall 0.246080 0.449216  0.203136                       361                       659       1106.0        808.0
+           SQL Injection   87              recall 0.310345 0.482759  0.172414                        27                        42         60.0         45.0
+          SSH-Bruteforce 1500              recall 1.000000 1.000000  0.000000                      1500                      1500          0.0          0.0
+
+V8 NATIVE (ALL 22,428 ROWS) OVERALL METRICS
+----------------------------------------------------------------------
+{
+  "n": 22428,
+  "tp": 16165,
+  "tn": 3837,
+  "fp": 1163,
+  "fn": 1263,
+  "accuracy": 0.8918316390226503,
+  "precision": 0.9328831948291783,
+  "attack_recall": 0.927530410833142,
+  "f1": 0.9301991023132697,
+  "roc_auc": 0.9543164448014689,
+  "benign_fpr": 0.2326
+}
+
+Integrity checks: V7 artifacts unchanged=True  V8 artifacts unchanged=True  Eval CSV unchanged=True

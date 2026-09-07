@@ -3,7 +3,7 @@ import time
 from scapy.layers.inet import IP
 
 from feature_extraction.flow import Flow
-from feature_extraction.flow_builder import get_flow_key
+from feature_extraction.flow_builder import get_flow_key, get_packet_ports
 
 
 class FlowManager:
@@ -23,9 +23,12 @@ class FlowManager:
 
         if key not in self.active_flows:
 
+            _, dst_port = get_packet_ports(packet)
+
             self.active_flows[key] = Flow(
                 src_ip=packet[IP].src,
                 dst_ip=packet[IP].dst,
+                dst_port=dst_port,
             )
 
         self.active_flows[key].add_packet(packet)

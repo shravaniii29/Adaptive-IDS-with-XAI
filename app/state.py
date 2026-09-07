@@ -178,6 +178,12 @@ class AppState:
             "hybrid_prediction":
                 result.get("hybrid_prediction"),
 
+            "detection_source":
+                result.get("detection_source"),
+
+            "packet_count":
+                result.get("packet_count"),
+
             # -----------------------------------------
             # Drift
             # -----------------------------------------
