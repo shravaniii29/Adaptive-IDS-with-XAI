@@ -28,6 +28,7 @@ import numpy as np
 import pandas as pd
 from xgboost import XGBClassifier  # noqa: F401 - ensures class is registered before unpickling
 
+from detection import fast_isolation_forest
 from detection.experimental_history import RollingHistoryStore
 from feature_extraction.feature_extractor import extract_features as extract_deployed_features
 
@@ -68,14 +69,33 @@ history_store = RollingHistoryStore()
 # unavailable, per the plan's lazy-import requirement)
 # =====================================================
 
+def _force_single_threaded(obj):
+    """Trained IsolationForest/RandomForest models were saved with
+    n_jobs=-1 (parallelize across all CPU cores) - sensible for training
+    on millions of rows, catastrophic for live serving: joblib's
+    multiprocessing backend spins up a fresh worker POOL for every single
+    decision_function()/predict() call, since there's never a persistent
+    Parallel context here to reuse one across calls. Profiling one
+    detect() call found IsolationForest.decision_function alone taking
+    ~150-780ms - almost entirely multiprocessing pool spawn/teardown
+    overhead for a single-row prediction that has zero use for
+    parallelism. n_jobs is a live attribute (not baked into the fitted
+    tree structure), so this is safe to override post-load without
+    retraining - no-op for anything without the attribute (thresholds,
+    feature-name lists, scalers, ...)."""
+    if hasattr(obj, "n_jobs"):
+        obj.n_jobs = 1
+    return obj
+
+
 def _load_pickle(name):
     with open(MODELS_DIR / name, "rb") as f:
-        return pickle.load(f)
+        return _force_single_threaded(pickle.load(f))
 
 
 def _load_pickle_from(directory, name):
     with open(directory / name, "rb") as f:
-        return pickle.load(f)
+        return _force_single_threaded(pickle.load(f))
 
 
 _variant1_ready = False
@@ -144,6 +164,51 @@ try:
     _rl_verdict_ready = True
 except Exception as exc:  # noqa: BLE001
     _rl_verdict_load_error = str(exc)
+
+# Temporal25 candidate (train_temporal25_candidate.py) - the deployed
+# model's own 25-feature TOP_FEATURES schema PLUS cross-flow temporal/
+# rate features (reuses the SAME history_store variant2 already
+# populates - grouped by (dst_port, protocol), so no separate tracking
+# needed). Tests whether the near-zero HTTP-flood/port-scan recall every
+# other 25-feature model shows live is a feature-engineering gap (no
+# model on the plain 25-feature schema can see repetition/rate across
+# flows) rather than a training-data or pipeline problem. XGB-only, not
+# hybrid-with-isolation-forest: the trained hybrid combination degenerated
+# to the same "flags nearly everything" pattern this project has hit
+# before (held-out precision 0.8%), so only the well-behaved XGB
+# component (49.3% held-out recall, 87.7% precision) is served live.
+TEMPORAL25_DIR = Path(os.environ.get("TEMPORAL25_MODEL_DIR", PROJECT_ROOT / "models" / "temporal25_candidate"))
+_temporal25_ready = False
+
+try:
+    temporal25_xgb = _load_pickle_from(TEMPORAL25_DIR, "xgb_model.pkl")
+    temporal25_threshold = _load_pickle_from(TEMPORAL25_DIR, "threshold.pkl")
+    temporal25_feature_cols = _load_pickle_from(TEMPORAL25_DIR, "feature_cols.pkl")
+    temporal25_hist_cols = _load_pickle_from(TEMPORAL25_DIR, "hist_cols.pkl")
+    _temporal25_ready = True
+except Exception as exc:  # noqa: BLE001
+    _temporal25_load_error = str(exc)
+
+
+def _predict_temporal25(flow, dst_port, protocol):
+    if not _temporal25_ready:
+        return {"available": False, "error": _temporal25_load_error}
+    try:
+        features_25 = extract_deployed_features(flow)
+        hist_features = history_store.get_temporal_features(dst_port, protocol)
+        combined = {**features_25, **{c: hist_features[c] for c in temporal25_hist_cols}}
+        row = pd.DataFrame([[combined[f] for f in temporal25_feature_cols]], columns=temporal25_feature_cols)
+        probability = float(temporal25_xgb.predict_proba(row)[0][1])
+        return {
+            "available": True,
+            "label": "XGBoost (25-feature + temporal history)",
+            "probability": probability,
+            "prediction": int(probability >= temporal25_threshold),
+            "threshold": temporal25_threshold,
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"available": False, "error": str(exc)}
+
 
 candidate_models = {}
 candidate_thresholds = {}
@@ -338,7 +403,7 @@ def _predict_family_models(flow):
 
             xgb_probability = float(m["xgb"].predict_proba(row)[0][1])
             xgb_prediction = int(xgb_probability >= m["threshold"])
-            isolation_prediction = int(m["isolation"].predict(scaled)[0] == -1)
+            isolation_prediction = int(fast_isolation_forest.predict(m["isolation"], scaled)[0] == -1)
             hybrid_prediction = int(xgb_prediction == 1 or isolation_prediction == 1)
 
             result[fname] = {
@@ -400,6 +465,7 @@ def predict_all(flow):
         "candidate_models": _predict_candidates(features),
         "family_models": _predict_family_models(flow),
         "rl_verdict_classifier": _predict_rl_verdict(flow),
+        "temporal25_candidate": _predict_temporal25(flow, dst_port, protocol),
     }
 
     # Record this flow's own features as history for FUTURE flows in this

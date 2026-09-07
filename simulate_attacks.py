@@ -37,12 +37,14 @@ Usage:
 import http.client
 import json
 import os
+import random
 import socket
+import string
 import sys
 import threading
 import time
 from dataclasses import dataclass, field
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 
 import requests
 from scapy.layers.inet import IP, ICMP, TCP, UDP
@@ -54,8 +56,57 @@ POLL_INTERVAL = 0.5
 DRAIN_SECONDS = 35  # >= FlowManager's active_timeout + margin - raised from 25s since scoring now runs
                      # 10 models per flow (was 4), and slower per-flow processing under load was
                      # observed to shrink the number of flows captured per run
+# >= FlowManager's active_timeout(20s), same margin as DRAIN_SECONDS. The
+# previous 2s inter-scenario gap was far too short: ICMP packets all hash
+# to the SAME flow key regardless of timing (get_flow_key hardcodes
+# src_port=dst_port=0 for ICMP - no per-connection disambiguation), so
+# with only 2s between scenario_benign_baseline's few pings and
+# scenario_icmp_flood's barrage against the same target, a benign ping
+# flow that hadn't yet been swept by the (synchronous, can-fall-behind-
+# under-load) expiry worker would still be "active" when the flood
+# started, and the flood's packets got appended to that SAME flow object
+# - merging benign and attack traffic into one flow with corrupted ground
+# truth. Confirmed as the cause of the wild trial-to-trial specificity
+# swings the 25-feature models showed even after the attribution fix.
+SCENARIO_GAP_SECONDS = 35
 TRIAL_COOLDOWN = 5   # gap between trials, so one trial's tail flows don't bleed into the next trial's window
 RESULTS_DIR = "simulation_results"  # one JSON file per attack type, for demo/visualization use
+SCORING_DRAIN_POLL_SECONDS = 3
+SCORING_DRAIN_MAX_WAIT_SECONDS = 300  # generous cap - never block forever if something's stuck
+
+
+def _wait_for_scoring_drain():
+    """Poll /status's scoring_queue_depth until the backend has actually
+    finished scoring every flow it has captured, instead of guessing a
+    fixed sleep. _scoring_worker runs 10 models + SHAP + 5 agents per flow
+    - far slower than flow-creation rate during a flood - so a fixed
+    DRAIN_SECONDS sleep can leave a real backlog undrained. Confirmed live:
+    after a full 3-trial run, SYN flood/UDP flood/port scan (all after
+    ICMP flood in schedule order) showed ZERO scored flows in /history
+    minutes after the run "finished" - not because nothing was captured,
+    but because a deep HTTP-flood backlog was still being worked through
+    by a single scoring thread, and the fixed 35s drain gave up long
+    before it cleared. Capped so a genuinely stuck backend can't hang this
+    script forever - if the cap is hit, results legitimately reflect an
+    unfinished backlog and that's printed so it isn't silently trusted."""
+    print("waiting for the backend's scoring backlog to drain ...")
+    waited = 0.0
+    last_depth = None
+    while waited < SCORING_DRAIN_MAX_WAIT_SECONDS:
+        try:
+            depth = requests.get(f"{API_BASE}/status", timeout=5).json().get("scoring_queue_depth")
+        except Exception:
+            depth = None
+        if depth == 0:
+            print(f"  scoring backlog drained after {waited:.0f}s")
+            return
+        if depth != last_depth:
+            print(f"  scoring_queue_depth={depth} (waited {waited:.0f}s) ...")
+            last_depth = depth
+        time.sleep(SCORING_DRAIN_POLL_SECONDS)
+        waited += SCORING_DRAIN_POLL_SECONDS
+    print(f"  WARNING: scoring backlog did not drain within {SCORING_DRAIN_MAX_WAIT_SECONDS}s "
+          f"(last depth={last_depth}) - results below may be missing flows still queued for scoring")
 
 
 def local_lan_ip():
@@ -102,6 +153,15 @@ TARGET_IP = resolve_target_ip()
 # =====================================================
 
 class _QuietHandler(BaseHTTPRequestHandler):
+    # BaseHTTPRequestHandler defaults to HTTP/1.0, which closes the
+    # connection after every response regardless of a client's
+    # "Connection: keep-alive" header - real GoldenEye/Slowloris hold
+    # connections open across many requests (confirmed against real
+    # CICIDS2018 rows: median Flow Duration ~7s here vs ~4ms this
+    # server previously produced), which needs the server side to
+    # actually support persistence too, not just the client asking for it.
+    protocol_version = "HTTP/1.1"
+
     def do_GET(self):
         self.send_response(200)
         self.send_header("Content-Length", "2")
@@ -113,7 +173,14 @@ class _QuietHandler(BaseHTTPRequestHandler):
 
 
 def start_victim_server():
-    server = HTTPServer((TARGET_IP, VICTIM_HTTP_PORT), _QuietHandler)
+    # Plain HTTPServer is single-threaded - fine for the old fire-and-
+    # close-instantly HTTP flood (one request at a time, briefly), but
+    # scenario_http_flood's workers now each hold a PERSISTENT connection
+    # open for the whole scenario (see _hulk_style_worker) - several
+    # concurrent long-lived connections need the server to actually
+    # service them concurrently, or the ones queued behind another
+    # connection's keep-alive wait time out and abort.
+    server = ThreadingHTTPServer((TARGET_IP, VICTIM_HTTP_PORT), _QuietHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     return server
@@ -173,34 +240,101 @@ def scenario_udp_flood(duration=10, port=9998):
     return Scenario("UDP flood", True, TARGET_IP, {port}, start, time.time())
 
 
-def scenario_http_flood(duration=10):
-    start = time.time()
-    end = start + duration
-    while time.time() < end:
+
+# Real HTTP-flood tools (Hulk, GoldenEye) don't just loop plain GETs
+# sequentially from one connection - they run many CONCURRENT connections,
+# rotate a pool of real browser User-Agents, cache-bust with a random
+# query string per request (defeats any caching layer, and is a
+# documented Hulk/GoldenEye signature), and force "Connection: close" so
+# each request is its own fresh flow rather than one long-lived kept-alive
+# session. A single sequential loop of identical bare GETs is structurally
+# closer to one browser tab refreshing than to a DoS tool.
+_UA_POOL = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+]
+_REFERER_POOL = [
+    "https://www.google.com/", "https://www.bing.com/", "https://duckduckgo.com/",
+    "https://www.facebook.com/", "https://t.co/",
+]
+
+
+def _hulk_style_worker(stop_time, headers_sent):
+    """Holds ONE persistent (keep-alive) connection open for the whole
+    scenario, pacing requests seconds apart instead of firing as fast as
+    possible - real GoldenEye/Slowloris exhaust a server by keeping many
+    connections alive over time, not by maximizing throughput on each
+    one. Confirmed against real CICIDS2018 GoldenEye/Slowloris rows:
+    median Flow Duration ~7s and Flow IAT Mean ~1.6s with real
+    variation (iat_variation ~1.74) - a fire-and-close-instantly loop
+    (the previous version) produced ~4ms flows with near-zero, near-
+    uniform IATs, nothing like the real attack's statistical signature."""
+    conn = http.client.HTTPConnection(TARGET_IP, VICTIM_HTTP_PORT, timeout=2)
+    try:
+        while time.time() < stop_time:
+            try:
+                cache_bust = "".join(random.choices(string.ascii_lowercase + string.digits, k=8))
+                headers = {
+                    "User-Agent": random.choice(_UA_POOL),
+                    "Referer": random.choice(_REFERER_POOL),
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Connection": "keep-alive",
+                }
+                conn.request("GET", f"/?{cache_bust}", headers=headers)
+                conn.getresponse().read()
+                headers_sent[0] += 1
+            except Exception:
+                # server/OS may have dropped the connection - reopen and
+                # keep going rather than ending this worker early
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+                conn = http.client.HTTPConnection(TARGET_IP, VICTIM_HTTP_PORT, timeout=2)
+            time.sleep(random.uniform(0.5, 2.5))
+    finally:
         try:
-            conn = http.client.HTTPConnection(TARGET_IP, VICTIM_HTTP_PORT, timeout=1)
-            conn.request("GET", "/")
-            conn.getresponse().read()
             conn.close()
         except Exception:
             pass
+
+
+def scenario_http_flood(duration=10, concurrency=20):
+    start = time.time()
+    stop_time = start + duration
+    headers_sent = [0]
+    threads = [threading.Thread(target=_hulk_style_worker, args=(stop_time, headers_sent))
+               for _ in range(concurrency)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
     return Scenario("HTTP flood", True, TARGET_IP, {VICTIM_HTTP_PORT}, start, time.time())
 
 
 def scenario_port_scan(duration=10):
+    # Real SYN-scan tools (Nmap -sS default) never complete the TCP
+    # handshake - they send a bare SYN and read the response (SYN-ACK =
+    # open, RST = closed), then move on. A full connect() + immediate
+    # close (the old implementation) generates a real handshake's worth of
+    # ACK/FIN/RST traffic per port that a genuine half-open scan never
+    # produces - a structurally different packet/flag signature than what
+    # the model's training data (generated by real scanning tools) likely
+    # contains. Uses raw SYN packets, one fixed source port for the whole
+    # scan (matches real scanner behavior, and this project's own
+    # SYN-flood scenario's reasoning for not fragmenting flows), stepping
+    # through the port range as fast as the scan tool would.
     start = time.time()
     ports = list(range(9900, 9900 + 60))
+    src_port = 40002
     end = start + duration
     while time.time() < end:
-        for port in ports:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(0.05)
-            try:
-                s.connect_ex((TARGET_IP, port))
-            except Exception:
-                pass
-            finally:
-                s.close()
+        for p in ports:
+            send(IP(dst=TARGET_IP) / TCP(sport=src_port, dport=p, flags="S"), verbose=0)
             if time.time() >= end:
                 break
     return Scenario("Port scan", True, TARGET_IP, set(ports), start, time.time())
@@ -217,7 +351,20 @@ def scenario_benign_baseline(duration=12):
         except Exception:
             pass
         time.sleep(2)
-    return Scenario("Benign baseline", False, TARGET_IP, set(), start, time.time())
+    # dst_ports={0, VICTIM_HTTP_PORT}, NOT the empty-set "any port
+    # matches" wildcard this used to be (0 = ICMP's port-less flows, per
+    # _first_packet_dst_port; VICTIM_HTTP_PORT = the actual HTTP requests
+    # above) - the wildcard was sweeping in the test harness's OWN
+    # /history + /status polling traffic (Poller hits API_BASE, port
+    # 8000, every 0.5s - real captured loopback traffic, indistinguishable
+    # from "live" traffic to the sniffer) and unrelated Windows background
+    # noise, scoring both as if they were genuine benign user traffic.
+    # Confirmed live: port 8000 self-polling traffic showed 21.4%
+    # specificity (n=70, dominating the aggregate) while the ACTUAL
+    # scripted ICMP/HTTP benign traffic was 100% correct (n=4) - the
+    # model was never wrong about real benign traffic, only about traffic
+    # this scenario should never have claimed credit (or blame) for.
+    return Scenario("Benign baseline", False, TARGET_IP, {0, VICTIM_HTTP_PORT}, start, time.time())
 
 
 SCENARIOS = [
@@ -238,6 +385,7 @@ SCENARIOS = [
 CANDIDATE_KEYS = ["xgboost", "random_forest", "histgradientboosting"]
 FAMILY_KEYS = ["raw_flood", "reflection", "connection_application_layer"]
 RL_KEYS = ["rl_verdict_classifier"]
+TEMPORAL25_KEYS = ["temporal25_candidate"]
 
 
 @dataclass
@@ -245,6 +393,7 @@ class ObservedFlow:
     flow_id: object
     source_ip: str
     destination_ip: str
+    destination_port: object
     observed_at: float
     hybrid_prediction: int
     variant1: dict
@@ -253,6 +402,7 @@ class ObservedFlow:
     candidates: dict = field(default_factory=dict)  # classifier_comparison.ipynb models, keyed by CANDIDATE_KEYS
     families: dict = field(default_factory=dict)  # train_attack_family_models.py models, keyed by FAMILY_KEYS
     rl_verdict: dict = field(default_factory=dict)  # rl_cicids_combined_classifier.py, keyed by RL_KEYS
+    temporal25: dict = field(default_factory=dict)  # train_temporal25_candidate.py, keyed by TEMPORAL25_KEYS
 
 
 def _model_result(flow, model_key):
@@ -269,6 +419,8 @@ def _model_result(flow, model_key):
         entry = flow.families.get(model_key, {})
     elif model_key in RL_KEYS:
         entry = flow.rl_verdict.get(model_key, {})
+    elif model_key in TEMPORAL25_KEYS:
+        entry = flow.temporal25.get(model_key, {})
     else:
         entry = {"variant1_xgb_single_flow": flow.variant1,
                  "variant2_xgb_temporal": flow.variant2,
@@ -314,7 +466,16 @@ class Poller:
                 flow_id=flow_id,
                 source_ip=entry.get("source_ip"),
                 destination_ip=entry.get("destination_ip"),
-                observed_at=entry.get("recorded_at") or time.time(),
+                destination_port=entry.get("destination_port"),
+                # flow_start_time (real Npcap capture time) not recorded_at
+                # (when this flow was SCORED) - under a scoring backlog the
+                # two diverge by minutes, and recorded_at-based matching
+                # was silently dropping delayed flows out of every
+                # scenario's ~26s window entirely (0 flows attributed)
+                # rather than just mis-timing them. Falls back to
+                # recorded_at only for a backend running before this field
+                # existed.
+                observed_at=entry.get("flow_start_time") or entry.get("recorded_at") or time.time(),
                 hybrid_prediction=entry.get("hybrid_prediction"),
                 variant1=entry.get("variant1_xgb_single_flow", {}),
                 variant2=entry.get("variant2_xgb_temporal", {}),
@@ -322,6 +483,7 @@ class Poller:
                 candidates=entry.get("candidate_models", {}),
                 families=entry.get("family_models", {}),
                 rl_verdict={"rl_verdict_classifier": entry.get("rl_verdict_classifier", {})},
+                temporal25={"temporal25_candidate": entry.get("temporal25_candidate", {})},
             ))
 
     def _run(self):
@@ -353,7 +515,23 @@ def attribute_flows(flows, scenarios, active_timeout=20, flow_timeout=5):
     earliest. Confirmed wrong via a live-test run where "Benign baseline"
     flows' timestamps landed inside the immediately-following ICMP-flood
     and SYN-flood windows, corrupting specificity for every model scored
-    (not the model's own fault - the ground-truth label was wrong)."""
+    (not the model's own fault - the ground-truth label was wrong).
+
+    Also filters on destination port (Scenario.dst_ports - "empty set =
+    any port matches", per its own field comment) - previously defined
+    but never actually checked here, so attribution was really just IP +
+    timing. Since every scenario targets the same TARGET_IP, the IP check
+    filtered nothing, and ANY loopback traffic landing in a scenario's
+    time window - confirmed via direct capture to include unrelated
+    background chatter on this machine (periodic local TCP connections
+    on ports uninvolved in any scenario) - got attributed as that
+    scenario's ground truth. A benign background flow scored "correct"
+    only if a model happened to guess ATTACK; every model that correctly
+    called it benign was marked wrong against a fabricated attack label.
+    This was silently corrupting recall/specificity for every scenario in
+    every prior test run, and unlike the scenario-overlap bug above isn't
+    bounded to a boundary window - unrelated traffic anywhere inside a
+    whole scenario's own window could be swept in."""
     slack = active_timeout + flow_timeout + POLL_INTERVAL * 2
     attributed = {s.name: [] for s in scenarios}
 
@@ -361,6 +539,7 @@ def attribute_flows(flows, scenarios, active_timeout=20, flow_timeout=5):
         candidates = [
             s for s in scenarios
             if flow.destination_ip == s.dst_ip
+            and (not s.dst_ports or flow.destination_port in s.dst_ports)
             and s.start_time - 1 <= flow.observed_at <= s.end_time + slack
         ]
         if not candidates:
@@ -376,7 +555,7 @@ def attribute_flows(flows, scenarios, active_timeout=20, flow_timeout=5):
 # =====================================================
 
 MODEL_KEYS = (["deployed_hybrid", "variant1_xgb_single_flow", "variant2_xgb_temporal", "variant3_cnn_lstm"]
-              + CANDIDATE_KEYS + FAMILY_KEYS + RL_KEYS)
+              + CANDIDATE_KEYS + FAMILY_KEYS + RL_KEYS + TEMPORAL25_KEYS)
 MODEL_LABELS = {
     "deployed_hybrid": "Deployed hybrid",
     "variant1_xgb_single_flow": "Var1 XGB single-flow",
@@ -389,6 +568,7 @@ MODEL_LABELS = {
     "reflection": "Family: Reflection",
     "connection_application_layer": "Family: Connection",
     "rl_verdict_classifier": "RL verdict (bandit)",
+    "temporal25_candidate": "Candidate: 25feat+temporal",
 }
 
 
@@ -710,6 +890,7 @@ def dump_results(rows, attributed, scenarios, out_dir=RESULTS_DIR, aggregate=Non
                 "flow_id": f.flow_id,
                 "source_ip": f.source_ip,
                 "destination_ip": f.destination_ip,
+                "destination_port": f.destination_port,
                 "observed_at": f.observed_at,
                 "models": per_model
             })
@@ -773,13 +954,15 @@ def main():
             s.trial = trial
             scenarios.append(s)
             print(f"  {s.name}: {s.start_time:.1f} -> {s.end_time:.1f} ({s.end_time - s.start_time:.1f}s)")
-            time.sleep(2)  # cooldown gap between scenarios, for cleaner attribution
+            print(f"  draining {SCENARIO_GAP_SECONDS}s before the next scenario (flow-key collision margin) ...")
+            time.sleep(SCENARIO_GAP_SECONDS)
         if trial < trials:
             print(f"\ncooling down {TRIAL_COOLDOWN}s between trials ...")
             time.sleep(TRIAL_COOLDOWN)
 
-    print(f"\ndraining ({DRAIN_SECONDS}s, letting the last flows expire and get scored) ...")
+    print(f"\ndraining ({DRAIN_SECONDS}s, letting the last flows expire) ...")
     time.sleep(DRAIN_SECONDS)
+    _wait_for_scoring_drain()
     poller.stop()
 
     print(f"\ntotal distinct flows observed across all trials: {len(poller.flows)}")

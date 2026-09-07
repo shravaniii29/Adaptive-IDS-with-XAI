@@ -22,6 +22,22 @@ def _first_packet_dst_port(packet):
     return 0
 
 
+def _first_packet_src_port(packet):
+    """src_port of the packet that started this flow (None for non-TCP/UDP,
+    e.g. ICMP - Flow._is_forward_packet handles that case separately).
+    Passed through so Flow can key direction on (src_ip, src_port) instead
+    of src_ip alone - required for self-targeted traffic (src_ip == dst_ip
+    on every packet, both directions) where IP alone can't disambiguate."""
+
+    if TCP in packet:
+        return packet[TCP].sport
+
+    if UDP in packet:
+        return packet[UDP].sport
+
+    return None
+
+
 class FlowManager:
 
     def __init__(self, flow_timeout=5, active_timeout=20):
@@ -60,6 +76,7 @@ class FlowManager:
                     dst_ip=packet[IP].dst,
                     protocol=packet[IP].proto,
                     dst_port=_first_packet_dst_port(packet),
+                    src_port=_first_packet_src_port(packet),
                 )
 
             self.active_flows[key].add_packet(packet)

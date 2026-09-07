@@ -4,11 +4,24 @@ from scapy.layers.l2 import Ether, Loopback
 
 class Flow:
 
-    def __init__(self, src_ip=None, dst_ip=None, protocol=None, dst_port=None):
+    # ICMP types that are REPLIES (vs. requests). No port field exists to
+    # disambiguate ICMP direction the way TCP/UDP src_port does below, so
+    # direction is inferred from type instead.
+    _ICMP_REPLY_TYPES = {0, 14, 16, 18}
+
+    def __init__(self, src_ip=None, dst_ip=None, protocol=None, dst_port=None, src_port=None):
 
         # Flow identity
         self.src_ip = src_ip
         self.dst_ip = dst_ip
+
+        # Source port of the packet that opened this flow. Needed (see
+        # _is_forward_packet) to tell direction apart for self-targeted
+        # traffic, where src_ip == dst_ip on every packet in both
+        # directions - None (the default for callers that construct a
+        # Flow directly, e.g. tests, rather than via FlowManager) falls
+        # back to the old IP-only comparison.
+        self.src_port = src_port
 
         # IP protocol number (6=TCP, 17=UDP, 1=ICMP, ...) and destination
         # port of the flow, taken from the first packet. Used by the
@@ -48,6 +61,50 @@ class Flow:
         # Initial backward TCP window
         self.init_bwd_window_bytes = None
 
+    def _is_forward_packet(self, packet):
+        """True if `packet` travels in the same direction as the packet
+        that opened this flow.
+
+        IP address alone can't tell direction apart for self-targeted
+        traffic (this project's live testing always targets 127.0.0.1 -
+        see RUNNING.md) - src_ip == dst_ip on EVERY packet in both
+        directions there, so `packet[IP].src == self.src_ip` used to be
+        true unconditionally, misclassifying 100% of packets (including
+        every real backward reply) as forward. Confirmed by diffing this
+        project's extractor against the real cicflowmeter library on an
+        identical captured pcap: 7,520 fwd / 0 bwd here vs. the correct
+        3,761 fwd / 3,760 bwd there, for the same SYN-flood flow. Fixed
+        by keying TCP/UDP direction on (src_ip, src_port) of the
+        initiating packet, not IP alone - src_port disambiguates even
+        when both endpoints share an IP, and is a no-op improvement when
+        they don't. Falls back to the old IP-only check when this Flow
+        was constructed without src_port (e.g. tests that build one
+        directly rather than via FlowManager).
+
+        ICMP has no port to key on, so direction is inferred from type
+        instead: request types (echo/timestamp/info/mask request) are
+        forward, their reply counterparts are backward.
+        """
+
+        if ICMP in packet:
+            return packet[ICMP].type not in self._ICMP_REPLY_TYPES
+
+        if self.src_port is not None:
+
+            if TCP in packet:
+                return (
+                    packet[IP].src == self.src_ip
+                    and packet[TCP].sport == self.src_port
+                )
+
+            if UDP in packet:
+                return (
+                    packet[IP].src == self.src_ip
+                    and packet[UDP].sport == self.src_port
+                )
+
+        return packet[IP].src == self.src_ip
+
     def add_packet(self, packet):
 
         packet_length = len(packet)
@@ -70,7 +127,7 @@ class Flow:
         # Direction detection
         if IP in packet:
 
-            if packet[IP].src == self.src_ip:
+            if self._is_forward_packet(packet):
 
                 # Forward packet
                 self.forward_packet_lengths.append(packet_length)
@@ -95,7 +152,18 @@ class Flow:
                 else:
                     l2_header_length = 0
 
-                header_length = l2_header_length + ip_header_length * 4
+                # L4 (TCP/UDP/ICMP) header size alone - this is what
+                # CICFlowMeter's own "Fwd Header Len" feature measures
+                # (confirmed against the real cicflowmeter library on
+                # captured HTTP-flood-shaped traffic: it reports a flat
+                # 20 bytes/fwd-packet - TCP header only, no IP/L2 - while
+                # this project's own extractor was summing L2+IP+L4 and
+                # landing at ~44-56 bytes/packet, a ~2-2.5x inflation on
+                # every single flow this project has ever scored, for a
+                # feature the deployed model's TOP_FEATURES actually
+                # uses). Tracked separately from the L2+IP+L4 total below,
+                # which payload_length still needs for Min Pkt Size.
+                l4_header_length = 0
 
                 if TCP in packet:
 
@@ -104,11 +172,11 @@ class Flow:
                     if tcp_header_length is None:
                         tcp_header_length = 5
 
-                    header_length += tcp_header_length * 4
+                    l4_header_length = tcp_header_length * 4
 
                 elif UDP in packet:
 
-                    header_length += 8
+                    l4_header_length = 8
 
                 elif ICMP in packet:
 
@@ -117,9 +185,11 @@ class Flow:
                     # as forward payload, inflating Min Pkt Size (the
                     # single highest-importance experimental-model feature)
                     # by a constant 8 bytes for every ICMP flow.
-                    header_length += 8
+                    l4_header_length = 8
 
-                self.forward_header_lengths.append(header_length)
+                self.forward_header_lengths.append(l4_header_length)
+
+                header_length = l2_header_length + ip_header_length * 4 + l4_header_length
 
                 payload_length = max(0, packet_length - header_length)
 

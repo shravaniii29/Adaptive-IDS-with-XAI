@@ -5,12 +5,19 @@ Connects the live packet-capture pipeline to the
 agentic IDS layer and exposes results to the dashboard.
 """
 
+import json
+import os
+import re
+import subprocess
+import sys
 import time
 import threading
 import asyncio
+import queue
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from detection.detection_service import DetectionService
@@ -26,13 +33,24 @@ from app.state import AppState
 
 state = AppState()
 
-detection_service = DetectionService()
+# IDS_LIGHTWEIGHT_SCORING=1 skips SHAP explainability + the 5-agent
+# orchestration layer per flow - see DetectionService.__init__ for why.
+# Set for simulate_attacks.py-style load testing; leave unset (default:
+# full pipeline) for the real interactive dashboard demo, or when
+# debugging the SHAP/agent output itself.
+_LIGHTWEIGHT_SCORING = os.environ.get("IDS_LIGHTWEIGHT_SCORING", "").lower() in ("1", "true", "yes")
+
+detection_service = DetectionService(lightweight=_LIGHTWEIGHT_SCORING)
 
 flow_manager = FlowManager(
     flow_timeout=5
 )
 
 EXPIRY_POLL_INTERVAL_SECONDS = 1
+
+# Completed flows waiting to be scored, decoupled from the expiry worker
+# (see _scoring_worker docstring for why this queue exists).
+_completed_flow_queue = queue.Queue()
 
 
 # =====================================================
@@ -94,6 +112,22 @@ def _expiry_worker():
 
     A flow becomes complete when it has been
     inactive for flow_timeout seconds.
+
+    Only removes expired flows from FlowManager and hands them off to the
+    scoring queue - never scores them itself. Scoring (detection_service
+    .detect(), which runs every model including the RL verdict classifier)
+    can take long enough under load that doing it inline here used to let
+    this loop fall behind on its 1s cadence. Since FlowManager keys ICMP
+    packets by (src_ip, dst_ip) alone - no port, so every ICMP packet
+    between the same two hosts collides on one flow key regardless of
+    timing - a delayed expiry check let a stale-but-not-yet-swept flow
+    (e.g. a few benign pings) still be sitting in active_flows when
+    unrelated new ICMP traffic (e.g. a flood) arrived moments later,
+    silently merging the two into one flow with corrupted ground truth.
+    Keeping this loop free of scoring work means a flow is removed from
+    active_flows within ~1s of going idle no matter how backlogged
+    scoring gets, so new packets on that same key correctly start a fresh
+    Flow instead of extending a stale one.
     """
 
     while True:
@@ -116,7 +150,24 @@ def _expiry_worker():
 
         for _key, flow in expired_flows:
 
-            _handle_completed_flow(flow)
+            _completed_flow_queue.put(flow)
+
+
+def _scoring_worker():
+
+    """
+    Scores completed flows off of the queue _expiry_worker fills, on its
+    own thread - see _expiry_worker's docstring for why scoring must not
+    happen inline there. A backlog here only delays when a result shows
+    up (dashboard/API), which is a far smaller problem than the flow-key
+    collision letting scoring delay cause.
+    """
+
+    while True:
+
+        flow = _completed_flow_queue.get()
+
+        _handle_completed_flow(flow)
 
 
 # =====================================================
@@ -143,6 +194,15 @@ async def lifespan(app: FastAPI):
     )
 
     expiry_thread.start()
+
+    # Start flow scoring (decoupled from expiry timing - see
+    # _expiry_worker/_scoring_worker docstrings)
+    scoring_thread = threading.Thread(
+        target=_scoring_worker,
+        daemon=True
+    )
+
+    scoring_thread.start()
 
     state.start_time = time.time()
 
@@ -191,7 +251,18 @@ def get_status():
         **statistics,
 
         "last_error":
-            state.last_error
+            state.last_error,
+
+        # Flows waiting on _scoring_worker (10 models + SHAP + 5 agents per
+        # flow - far slower than flow-creation rate under flood load, so
+        # this can lag real time by minutes after a heavy test). Lets
+        # callers like simulate_attacks.py wait for actual completion
+        # instead of guessing a fixed drain time - confirmed via a live
+        # test where a fixed 35s drain left SYN flood/UDP flood/port scan
+        # with ZERO scored flows because their flows were still sitting
+        # behind an undrained HTTP-flood backlog.
+        "scoring_queue_depth":
+            _completed_flow_queue.qsize()
     }
 
 
@@ -629,6 +700,12 @@ def get_history():
             "destination_ip":
                 result.get("destination_ip"),
 
+            "destination_port":
+                result.get("destination_port"),
+
+            "flow_start_time":
+                result.get("flow_start_time"),
+
             "hybrid_prediction":
                 result.get("hybrid_prediction"),
 
@@ -665,6 +742,12 @@ def get_history():
             "rl_verdict_classifier":
                 experimental.get(
                     "rl_verdict_classifier",
+                    {}
+                ),
+
+            "temporal25_candidate":
+                experimental.get(
+                    "temporal25_candidate",
                     {}
                 )
         })
@@ -802,6 +885,216 @@ def get_system():
         "last_error":
             state.last_error
     }
+
+
+# =====================================================
+# SIMULATION RESULTS ENDPOINTS
+#
+# Serves simulate_attacks.py's saved summary.json output (per-scenario
+# model_scores + aggregate_metrics + family_aware_metrics) to the
+# dashboard, so a live-test run's results are visualizable there instead
+# of only as printed console output. Read-only, off the local
+# filesystem - the name path param is validated against directory
+# traversal (alphanumeric/underscore/hyphen only, and the resolved path
+# is checked to stay under PROJECT_ROOT) since it comes straight from
+# the URL.
+# =====================================================
+
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+_SIMULATION_NAME_RE = re.compile(r"^[A-Za-z0-9_\-]+$")
+
+
+def _find_simulation_dirs():
+    """Any project-root directory containing a summary.json shaped like
+    simulate_attacks.py's dump_results() output (has "scenarios" and
+    "aggregate_metrics") - not a hardcoded list, so any future live-test
+    run shows up automatically without a backend change."""
+
+    results = []
+
+    for entry in _PROJECT_ROOT.iterdir():
+
+        if not entry.is_dir() or not _SIMULATION_NAME_RE.match(entry.name):
+            continue
+
+        summary_path = entry / "summary.json"
+
+        if not summary_path.exists():
+            continue
+
+        try:
+            with open(summary_path, "r") as f:
+                data = json.load(f)
+            if "scenarios" not in data or "aggregate_metrics" not in data:
+                continue
+        except Exception:
+            continue
+
+        results.append({
+            "name": entry.name,
+            "generated_at": data.get("generated_at"),
+            "trials": data.get("trials"),
+            "target_ip": data.get("target_ip"),
+            "scenario_count": len(data.get("scenarios", [])),
+        })
+
+    results.sort(key=lambda r: r.get("generated_at") or 0, reverse=True)
+
+    return results
+
+
+@app.get("/simulations")
+def list_simulations():
+
+    return {"simulations": _find_simulation_dirs()}
+
+
+@app.get("/simulations/{name}")
+def get_simulation(name: str):
+
+    if not _SIMULATION_NAME_RE.match(name):
+        raise HTTPException(status_code=400, detail="invalid simulation name")
+
+    sim_dir = (_PROJECT_ROOT / name).resolve()
+
+    if _PROJECT_ROOT.resolve() not in sim_dir.parents:
+        raise HTTPException(status_code=400, detail="invalid simulation name")
+
+    summary_path = sim_dir / "summary.json"
+
+    if not summary_path.exists():
+        raise HTTPException(status_code=404, detail="simulation not found")
+
+    with open(summary_path, "r") as f:
+        return json.load(f)
+
+
+# =====================================================
+# SIMULATION RUN LAUNCHER
+#
+# Lets the dashboard actually TRIGGER a new simulate_attacks.py live
+# test, not just view past ones. Runs as a genuine separate OS process
+# (not an in-process import/call) since simulate_attacks.py needs to
+# reach this very server over real HTTP (it polls /status and /history
+# to reachability-check and collect results, exactly like a real
+# external client would) and sends real packets - it can't run inside
+# this async event loop. Only one run at a time: floods generated by a
+# second concurrent run would corrupt the first run's own flow-key
+# collision margins (see simulate_attacks.py's SCENARIO_GAP_SECONDS
+# comment for why that margin matters).
+# =====================================================
+
+_simulation_run_lock = threading.Lock()
+_simulation_run_state = {
+    "process": None,
+    "out_dir": None,
+    "trials": None,
+    "started_at": None,
+    "log_path": None,
+}
+
+
+@app.post("/simulations/run")
+def start_simulation_run(payload: dict = None):
+
+    trials = 1
+    out_dir = None
+
+    if payload:
+        trials = int(payload.get("trials", 1))
+        out_dir = payload.get("out_dir")
+
+    if trials < 1 or trials > 10:
+        raise HTTPException(status_code=400, detail="trials must be between 1 and 10")
+
+    if not out_dir:
+        out_dir = f"live_test_{time.strftime('%Y%m%d_%H%M%S')}"
+
+    if not _SIMULATION_NAME_RE.match(out_dir):
+        raise HTTPException(
+            status_code=400,
+            detail="invalid out_dir name (letters, digits, underscore, hyphen only)"
+        )
+
+    with _simulation_run_lock:
+
+        existing = _simulation_run_state["process"]
+
+        if existing is not None and existing.poll() is None:
+            raise HTTPException(status_code=409, detail="a simulation is already running")
+
+        sim_dir = _PROJECT_ROOT / out_dir
+        sim_dir.mkdir(parents=True, exist_ok=True)
+
+        log_path = sim_dir / "run.log"
+        log_file = open(log_path, "w")
+
+        process = subprocess.Popen(
+            [sys.executable, "simulate_attacks.py", out_dir, str(trials)],
+            cwd=_PROJECT_ROOT,
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+        )
+
+        _simulation_run_state.update({
+            "process": process,
+            "out_dir": out_dir,
+            "trials": trials,
+            "started_at": time.time(),
+            "log_path": str(log_path),
+        })
+
+    return {"status": "started", "out_dir": out_dir, "trials": trials}
+
+
+@app.get("/simulations/run/status")
+def get_simulation_run_status():
+
+    with _simulation_run_lock:
+
+        process = _simulation_run_state["process"]
+
+        if process is None:
+            return {"running": False}
+
+        running = process.poll() is None
+
+        log_tail = ""
+        log_path = _simulation_run_state.get("log_path")
+
+        if log_path and Path(log_path).exists():
+            try:
+                with open(log_path, "r", errors="replace") as f:
+                    log_tail = "".join(f.readlines()[-60:])
+            except Exception:
+                pass
+
+        started_at = _simulation_run_state["started_at"]
+
+        return {
+            "running": running,
+            "out_dir": _simulation_run_state["out_dir"],
+            "trials": _simulation_run_state["trials"],
+            "started_at": started_at,
+            "elapsed_seconds": (time.time() - started_at) if started_at else None,
+            "exit_code": None if running else process.returncode,
+            "log_tail": log_tail,
+        }
+
+
+@app.post("/simulations/run/cancel")
+def cancel_simulation_run():
+
+    with _simulation_run_lock:
+
+        process = _simulation_run_state["process"]
+
+        if process is None or process.poll() is not None:
+            raise HTTPException(status_code=400, detail="no simulation is currently running")
+
+        process.terminate()
+
+    return {"status": "cancelling"}
 
 
 # =====================================================

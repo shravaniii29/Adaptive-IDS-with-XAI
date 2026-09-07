@@ -30,17 +30,35 @@ class DetectionService:
     Final Detection Result
     """
 
-    def __init__(self):
+    # Placeholder shape returned for shap_explanation/agent_analysis when
+    # running lightweight - kept as dicts (not None) so any caller that
+    # does result["shap_explanation"].get(...) doesn't need to change.
+    _SKIPPED_EXPLANATION = {"skipped": "lightweight mode - SHAP disabled"}
+    _SKIPPED_AGENT_ANALYSIS = {"skipped": "lightweight mode - agents disabled"}
+
+    def __init__(self, lightweight=False):
 
         # -----------------------------------------
         # Core modules
         # -----------------------------------------
 
+        # Skips SHAP explainability + the 5-agent orchestration layer -
+        # neither is read by simulate_attacks.py's Poller (it only ever
+        # reads hybrid_prediction and the experimental model scores from
+        # /history), but together they were measured at ~500ms of a
+        # ~506ms-per-flow total detect() cost, capping live throughput at
+        # ~2 flows/sec - far below what a flood scenario generates. Keep
+        # lightweight=False (the default) for the real interactive
+        # dashboard demo, where the explanation/agent output is the whole
+        # point; set True for load-testing/simulation, and flip back to
+        # False any time the SHAP/agent output itself needs debugging.
+        self.lightweight = lightweight
+
         self.drift_detector = DriftDetector()
 
-        self.shap_explainer = SHAPExplainer()
+        self.shap_explainer = None if lightweight else SHAPExplainer()
 
-        self.coordinator = CoordinatorAgent()
+        self.coordinator = None if lightweight else CoordinatorAgent()
 
         # -----------------------------------------
         # Statistics
@@ -80,10 +98,10 @@ class DetectionService:
         # SHAP Explainability
         # -----------------------------------------
 
-        shap_explanation = self.shap_explainer.explain_flow(
-
-            features
-
+        shap_explanation = (
+            self._SKIPPED_EXPLANATION
+            if self.lightweight
+            else self.shap_explainer.explain_flow(features)
         )
 
         # -----------------------------------------
@@ -119,11 +137,32 @@ class DetectionService:
             "destination_ip":
                 flow.dst_ip,
 
+            # Needed by simulate_attacks.py's attribute_flows() to match a
+            # flow to the scenario that actually generated it - destination
+            # IP alone doesn't disambiguate, since every simulated scenario
+            # targets the same TARGET_IP.
+            "destination_port":
+                flow.dst_port,
+
             "packet_count":
                 flow.packet_count,
 
             "duration":
                 flow.duration,
+
+            # Real packet-capture-relative timestamp (from Npcap via
+            # packet.time - unaffected by scoring delay), NOT when this
+            # flow was scored. simulate_attacks.py's attribute_flows()
+            # needs this instead of recorded_at: recorded_at only reflects
+            # capture time when _scoring_worker has no backlog. Under a
+            # flood-scale backlog (confirmed live: HTTP flood/port scan
+            # can queue thousands of flows behind slower-arriving ones),
+            # scoring can lag capture by minutes - far past the ~26s
+            # matching window - which was silently dropping delayed flows
+            # from ground truth entirely (0 flows attributed) rather than
+            # misattributing them.
+            "flow_start_time":
+                flow.start_time,
 
             # -------------------------------------
             # Extracted features
@@ -193,10 +232,10 @@ class DetectionService:
         # Agentic Layer
         # -----------------------------------------
 
-        agent_analysis = self.coordinator.analyze(
-
-            result
-
+        agent_analysis = (
+            self._SKIPPED_AGENT_ANALYSIS
+            if self.lightweight
+            else self.coordinator.analyze(result)
         )
 
         # -----------------------------------------
