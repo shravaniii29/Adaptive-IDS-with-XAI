@@ -24,13 +24,19 @@ import os
 import pickle
 from pathlib import Path
 
+import joblib
 import numpy as np
 import pandas as pd
 from xgboost import XGBClassifier  # noqa: F401 - ensures class is registered before unpickling
 
 from detection import fast_isolation_forest
 from detection.experimental_history import RollingHistoryStore
-from feature_extraction.feature_extractor import extract_features as extract_deployed_features
+from feature_extraction.feature_extractor import (
+    extract_features as extract_deployed_features,
+    safe_max,
+    safe_mean,
+    safe_std,
+)
 
 MICROSECONDS_PER_SECOND = 1_000_000
 
@@ -207,6 +213,89 @@ def _predict_temporal25(flow, dst_port, protocol):
             "threshold": temporal25_threshold,
         }
     except Exception as exc:  # noqa: BLE001
+        return {"available": False, "error": str(exc)}
+
+
+# V8 (the paper's validated final baseline, review-integration branch,
+# v8_training/models_v8/) - its own independently mutual-info-selected
+# 25-feature set, 17 of which overlap by name with the deployed model's
+# TOP_FEATURES and 8 of which don't (Init Fwd Win Byts, Dst Port,
+# Fwd Pkt Len Mean/Max, Fwd Seg Size Avg, Pkt Len Std/Var, Bwd Pkts/s -
+# confirmed by diffing top_features_v8.pkl against TOP_FEATURES directly,
+# not assumed). Same XGBoost + IsolationForest OR-fusion architecture as
+# the deployed model and the family models, just a different feature
+# subset/order and its own scaler/threshold. Loaded with joblib (not
+# pickle.load, which V8's own predictor_v8.py documents as unable to
+# traverse the joblib-specific nested pickle sub-stream on its
+# IsolationForest/scaler artifacts) and re-scored through this project's
+# fast_isolation_forest for the same determinism/speed fix already
+# applied to every other model in this harness - V8's own predictor_v8.py
+# calls sklearn's IsolationForest.predict()/decision_function() directly,
+# which would silently reintroduce the joblib-parallel non-determinism
+# this session already root-caused for the deployed model.
+V8_MODELS_DIR = Path(os.environ.get("V8_MODELS_DIR", PROJECT_ROOT / "models" / "v8_reference"))
+_v8_ready = False
+
+try:
+    v8_xgb = _force_single_threaded(joblib.load(V8_MODELS_DIR / "xgb_model_v8.pkl"))
+    v8_isolation = _force_single_threaded(joblib.load(V8_MODELS_DIR / "isolation_forest_v8.pkl"))
+    v8_scaler = joblib.load(V8_MODELS_DIR / "scaler_v8.pkl")
+    v8_threshold = joblib.load(V8_MODELS_DIR / "threshold_v8.pkl")
+    v8_top_features = list(joblib.load(V8_MODELS_DIR / "top_features_v8.pkl"))
+    _v8_ready = True
+except Exception as exc:  # noqa: BLE001
+    _v8_load_error = str(exc)
+
+
+def _extract_v8_features(flow, features_25, dst_port):
+    """The 8 V8-only features not already in features_25 (the deployed
+    model's 25-feature dict) - each mirrors an existing same-direction/
+    combined-direction formula already computed for the deployed model,
+    per v8_training's own extractor-compatibility notes."""
+    forward_lengths = flow.forward_packet_lengths
+    backward_pkt_count = len(flow.backward_packet_lengths)
+    duration = float(flow.duration)
+    backward_packets_per_second = (backward_pkt_count / duration) if duration > 0 else 0.0
+
+    return {
+        **features_25,
+        "Init Fwd Win Byts": float(flow.init_fwd_window_bytes) if flow.init_fwd_window_bytes is not None else 0.0,
+        "Dst Port": float(dst_port),
+        "Fwd Pkt Len Mean": safe_mean(forward_lengths),
+        "Fwd Pkt Len Max": safe_max(forward_lengths),
+        "Fwd Seg Size Avg": safe_mean(forward_lengths),
+        "Pkt Len Std": safe_std(flow.packet_lengths),
+        "Pkt Len Var": float(np.var(flow.packet_lengths)) if flow.packet_lengths else 0.0,
+        "Bwd Pkts/s": backward_packets_per_second,
+    }
+
+
+def _predict_v8(flow, dst_port):
+    """Scores the paper's validated V8 baseline against the same live
+    flow every other model in this harness sees - mirrors
+    _predict_family_models' scale -> XGBoost -> Isolation Forest ->
+    OR-combine structure, parameterized for V8's own feature set/order."""
+    if not _v8_ready:
+        return {"available": False, "error": _v8_load_error}
+    try:
+        features_25 = extract_deployed_features(flow)
+        features_v8 = _extract_v8_features(flow, features_25, dst_port)
+        row = pd.DataFrame([[features_v8[f] for f in v8_top_features]], columns=v8_top_features)
+        scaled = v8_scaler.transform(row)
+
+        xgb_probability = float(v8_xgb.predict_proba(row)[0][1])
+        xgb_prediction = int(xgb_probability >= v8_threshold)
+        isolation_prediction = int(fast_isolation_forest.predict(v8_isolation, scaled)[0] == -1)
+        hybrid_prediction = int(xgb_prediction == 1 or isolation_prediction == 1)
+
+        return {
+            "available": True,
+            "label": "V8 (paper-validated baseline)",
+            "probability": xgb_probability,
+            "prediction": hybrid_prediction,
+            "threshold": float(v8_threshold),
+        }
+    except Exception as exc:  # noqa: BLE001 - one bad model must never affect the others
         return {"available": False, "error": str(exc)}
 
 
@@ -466,6 +555,7 @@ def predict_all(flow):
         "family_models": _predict_family_models(flow),
         "rl_verdict_classifier": _predict_rl_verdict(flow),
         "temporal25_candidate": _predict_temporal25(flow, dst_port, protocol),
+        "v8_candidate": _predict_v8(flow, dst_port),
     }
 
     # Record this flow's own features as history for FUTURE flows in this
