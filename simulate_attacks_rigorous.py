@@ -4,16 +4,34 @@ than merged in, so simulate_attacks.py's own default behavior (and
 anything already citing it) stays unchanged.
 
 The only functional difference from simulate_attacks.py: scenario_benign_
-baseline() sends 17 varied-path HTTP requests per trial (each opens its
+baseline() sends 18 varied-path HTTP requests per trial (each opens its
 own connection - a fresh ephemeral source port, hence a distinct flow
-under this project's 5-tuple flow key) instead of 3 near-identical ones.
-That's what grows the benign SAMPLE SIZE, not scenario duration - the
-original 3-request version left specificity estimated from just 12 flows
-total across 3 trials, too small for a citable confidence interval
-(Wilson 95% CI on 12/12 correct is [75.7%, 100%], not "100%"). Run with a
-higher trial count than the 3-trial default to get a defensible n on
-every scenario - the run this file was built for used 25 trials, n=475
-benign / 3,415 attack, giving specificity 95% CI [99.2%, 100%].
+under this project's 5-tuple flow key) instead of 3 near-identical ones,
+plus the unchanged ICMP-ping burst (still 1 flow/trial regardless of
+count, since ICMP has no port to disambiguate by). That's 19 benign
+flows/trial - confirmed against the actual captured output, not just
+counted from this list: 25 trials -> 475 total (25 x 1 ICMP + 25 x 18
+HTTP), exactly matching what shipped, with nothing uncounted for. This is
+what grows the benign SAMPLE SIZE, not scenario duration - the original
+3-request version left specificity estimated from just 12 flows total
+across 3 trials, too small for a citable confidence interval (Wilson 95%
+CI on 12/12 correct is [75.7%, 100%], not "100%"). Run with a higher
+trial count than the 3-trial default to get a defensible n on every
+scenario - the run this file was built for used 25 trials, n=475 benign /
+3,415 attack, giving specificity 95% CI [99.2%, 100%].
+
+IMPORTANT construct-validity caveat, distinct from the sample-size fix
+above: every one of those 475 benign flows is still the SAME kind of
+traffic - synthetic ICMP echo requests and HTTP GETs to this project's
+own throwaway local victim server. There is no DNS, no HTTPS/TLS, no
+SMB, no real-world browsing mix, and no traffic to any host but this
+machine. "100% specificity" from this harness means 100% specificity
+against this one narrow, scripted probe-traffic construct - it does NOT
+demonstrate specificity against the diversity of protocols and
+destinations a deployed SOC sensor would actually see. Report it
+accordingly (e.g. "100% specificity on synthetic HTTP/ICMP probe
+traffic"), not as an unqualified stand-in for general benign-traffic
+performance.
 
 Everything else - scenario set, model roster (including v8_candidate),
 attribution logic, output format - is identical to simulate_attacks.py;
