@@ -61,6 +61,9 @@ class Flow:
         # Initial backward TCP window
         self.init_bwd_window_bytes = None
 
+        # Initial forward TCP window
+        self.init_fwd_window_bytes = None
+
     def _is_forward_packet(self, packet):
         """True if `packet` travels in the same direction as the packet
         that opened this flow.
@@ -194,6 +197,13 @@ class Flow:
                 payload_length = max(0, packet_length - header_length)
 
                 self.forward_payload_lengths.append(payload_length)
+
+                # Save first forward TCP window
+                if (
+                    self.init_fwd_window_bytes is None
+                    and TCP in packet
+                ):
+                    self.init_fwd_window_bytes = packet[TCP].window
 
             else:
 

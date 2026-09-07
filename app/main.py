@@ -749,6 +749,12 @@ def get_history():
                 experimental.get(
                     "temporal25_candidate",
                     {}
+                ),
+
+            "v8_candidate":
+                experimental.get(
+                    "v8_candidate",
+                    {}
                 )
         })
 

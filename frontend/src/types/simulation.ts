@@ -79,6 +79,7 @@ export const MODEL_LABELS: Record<string, string> = {
   connection_application_layer: "Family: Connection",
   rl_verdict_classifier: "RL verdict (bandit)",
   temporal25_candidate: "Candidate: 25feat+temporal",
+  v8_candidate: "V8 (paper baseline)",
 };
 
 export const modelLabel = (key: string): string => MODEL_LABELS[key] ?? key;
