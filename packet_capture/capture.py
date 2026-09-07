@@ -88,9 +88,23 @@ def start_capture(callback, packet_count=0):
               "falling back to scapy's default interface selection, which may "
               "be wrong on a multi-adapter machine.")
 
+    def _prn(packet):
+        # scapy's sniff() print()s whatever prn returns, if it isn't None -
+        # callback (FlowManager.process_packet) returns the flow key for its
+        # own callers' benefit (tests key on it), which under this wiring
+        # meant every captured packet got auto-printed. Under flood-level
+        # packet rates with stdout redirected to a log file, that print
+        # storm can back up and stall this capture loop, dropping real
+        # packets - confirmed by a 3-trial back-to-back ICMP flood: trial 1
+        # (empty stdout buffer) captured the full ~11.5k-packet flood as one
+        # flow, trials 2-3 (queued print backlog from trial 1) captured only
+        # 2-4 packets total each. Discard the return value here so sniff()
+        # never has anything to print.
+        callback(packet)
+
     sniff(
         iface=iface,
-        prn=callback,
+        prn=_prn,
         count=packet_count,
         store=False
     )

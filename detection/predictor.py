@@ -5,6 +5,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from detection import fast_isolation_forest
+
 
 # -------------------------------------------------
 # Project paths
@@ -22,12 +24,26 @@ MODELS_DIR = Path(os.environ.get("DEPLOYED_MODELS_DIR", PROJECT_ROOT / "models")
 # Load deployment artifacts
 # -------------------------------------------------
 
+def _force_single_threaded(model):
+    """Trained with n_jobs=-1 (all cores) - fine for training, but joblib's
+    multiprocessing backend spins up a fresh worker pool on every single
+    predict()/decision_function() call with no persistent Parallel context
+    to reuse, since live serving scores one flow at a time. Profiling
+    found this alone costing hundreds of ms per flow - pure process
+    spawn/teardown overhead for a single-row prediction that gets no
+    benefit from parallelism. n_jobs is a live attribute, not part of the
+    fitted tree structure, so overriding it post-load needs no retrain."""
+    if hasattr(model, "n_jobs"):
+        model.n_jobs = 1
+    return model
+
+
 with open(MODELS_DIR / "xgb_model.pkl", "rb") as file:
-    xgb_model = pickle.load(file)
+    xgb_model = _force_single_threaded(pickle.load(file))
 
 
 with open(MODELS_DIR / "isolation_forest.pkl", "rb") as file:
-    isolation_forest = pickle.load(file)
+    isolation_forest = _force_single_threaded(pickle.load(file))
 
 
 with open(MODELS_DIR / "scaler.pkl", "rb") as file:
@@ -109,12 +125,12 @@ def predict_flow(features):
     # ---------------------------------------------
 
     isolation_prediction_raw = int(
-        isolation_forest.predict(scaled_features)[0]
+        fast_isolation_forest.predict(isolation_forest, scaled_features)[0]
     )
 
     isolation_score = float(
-        isolation_forest.decision_function(
-            scaled_features
+        fast_isolation_forest.decision_function(
+            isolation_forest, scaled_features
         )[0]
     )
 
