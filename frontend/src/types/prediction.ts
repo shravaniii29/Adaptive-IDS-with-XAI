@@ -1,3 +1,9 @@
+export interface ShapFeature {
+  feature: string;
+  value: number;
+  impact: number;
+}
+
 export interface Prediction {
   flow_id: string | number;
   source_ip?: string;
@@ -10,4 +16,15 @@ export interface Prediction {
 
 export interface PredictionHistoryEntry extends Prediction {
   observedAt: string;
+  timestamp?: number;
+  attack_hypothesis?: string;
+  confidence?: string;
+  explanation_summary?: string;
+  reasoning?: string[];
+  supporting_features?: ShapFeature[];
+  detailed_explanation?: string[];
+  threat_level?: string;
+  recommended_action?: string;
+  response_reason?: string;
+  verdict?: string;
 }
