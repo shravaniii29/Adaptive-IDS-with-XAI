@@ -1,0 +1,1438 @@
+{
+  "name": "UDP flood",
+  "is_attack": true,
+  "start_time": 1787731788.4606419,
+  "end_time": 1787731798.4748673,
+  "duration_seconds": 10.014225482940674,
+  "flow_count": 33,
+  "model_scores": {
+    "deployed_hybrid": 0.9393939393939394,
+    "variant1_xgb_single_flow": 0.0,
+    "variant2_xgb_temporal": 0.0,
+    "variant3_cnn_lstm": 0.12121212121212122,
+    "xgboost": 0.0,
+    "random_forest": 0.36363636363636365,
+    "histgradientboosting": 0.36363636363636365
+  },
+  "flows": [
+    {
+      "flow_id": 106,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731812.4749124,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 107,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731812.8358014,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 108,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731813.2151442,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 109,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731813.61092,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 110,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731813.962734,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 111,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731814.338313,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 112,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731814.7035067,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 113,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731815.1027875,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 114,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731815.4741466,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 115,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731815.8306718,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 116,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731816.2149563,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 117,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731816.588452,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 118,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731816.9476984,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 119,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731817.3235438,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 120,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731817.708508,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 121,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731818.0629256,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 122,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731818.4385433,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 123,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731818.8150039,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 124,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731819.1675344,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 125,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731819.556096,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 126,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731819.9214165,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 127,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731820.2752783,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 128,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731820.6668494,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 129,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731821.0719054,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 130,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731821.4278808,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 131,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731821.839026,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 132,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731822.1793635,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 133,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731822.5436018,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 134,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731822.905541,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 135,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731823.2482846,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 136,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731823.624525,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 137,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731823.991629,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 138,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787731824.3714187,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": false
+        }
+      }
+    }
+  ]
+}

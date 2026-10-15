@@ -1,0 +1,4111 @@
+{
+  "name": "Benign baseline",
+  "is_attack": false,
+  "trial_windows": [
+    {
+      "trial": 1,
+      "start_time": 1787773201.4598246,
+      "end_time": 1787773211.4858882,
+      "duration_seconds": 10.026063680648804
+    },
+    {
+      "trial": 2,
+      "start_time": 1787773278.6610408,
+      "end_time": 1787773288.7001936,
+      "duration_seconds": 10.03915286064148
+    },
+    {
+      "trial": 3,
+      "start_time": 1787773355.7735486,
+      "end_time": 1787773365.7988858,
+      "duration_seconds": 10.025337219238281
+    },
+    {
+      "trial": 4,
+      "start_time": 1787773433.1934125,
+      "end_time": 1787773443.2295756,
+      "duration_seconds": 10.036163091659546
+    },
+    {
+      "trial": 5,
+      "start_time": 1787773510.3637254,
+      "end_time": 1787773520.4013982,
+      "duration_seconds": 10.037672758102417
+    }
+  ],
+  "flow_count": 70,
+  "model_scores": {
+    "deployed_hybrid": 0.11428571428571428,
+    "variant1_xgb_single_flow": 0.9857142857142858,
+    "variant2_xgb_temporal": 0.9857142857142858,
+    "variant3_cnn_lstm": 0.7571428571428571,
+    "xgboost": 0.9857142857142858,
+    "random_forest": 0.8714285714285714,
+    "histgradientboosting": 0.9714285714285714,
+    "raw_flood": 0.7,
+    "reflection": 0.7,
+    "connection_application_layer": 0.6857142857142857
+  },
+  "flows": [
+    {
+      "flow_id": 111,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773207.2983563,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 112,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773208.0566525,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 113,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773209.8252406,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 114,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773210.7088227,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 115,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773211.6422877,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 116,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773212.457493,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 117,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773214.4346538,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 118,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773215.5713117,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 119,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773216.5666707,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 120,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773217.506434,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 121,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773218.5500598,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 122,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773219.504683,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 123,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773220.460188,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 124,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773221.4110198,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 125,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773222.4119632,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 126,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773223.493243,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 127,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773224.49808,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 128,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773225.834818,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 129,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773228.2321048,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 130,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773229.8678958,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 131,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773231.0645256,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 132,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773232.156147,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 133,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773233.3488984,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 134,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773234.6373813,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 135,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773235.8050833,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 136,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773236.5897365,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 137,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773237.3332994,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        }
+      }
+    },
+    {
+      "flow_id": 177,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773298.6181629,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 178,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773300.422546,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 179,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773302.156636,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 180,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773304.092249,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 181,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773306.3407912,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 182,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773309.307201,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 183,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773313.2514539,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 222,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773375.859521,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 223,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773377.0482845,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 224,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773378.2943723,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 225,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773379.5144842,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 226,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773380.6197453,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 227,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773381.8183563,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 228,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773383.0005803,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 229,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773384.2227259,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 230,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773385.4603128,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 231,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773386.903211,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 232,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773389.0769322,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 233,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773390.4240692,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 234,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773391.7884107,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 285,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773453.454998,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 286,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773454.7551732,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 287,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773456.0498998,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 288,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773457.4403653,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 289,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773458.9244447,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 290,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773460.3874652,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 291,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773461.9651167,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 292,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773463.721635,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 293,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773465.4408658,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 294,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773466.8996801,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 295,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773468.1160069,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 330,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773530.2892601,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 331,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773531.7060733,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 332,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773533.138168,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 333,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773534.545129,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 334,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773535.9162493,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 335,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773537.3887734,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 336,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773538.7864797,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 337,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773540.0225759,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 338,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773541.3817976,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 339,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773542.8138347,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 340,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773544.052963,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    },
+    {
+      "flow_id": 341,
+      "source_ip": "127.0.0.1",
+      "destination_ip": "127.0.0.1",
+      "observed_at": 1787773545.3455412,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 1,
+          "correct": false
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "xgboost": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "random_forest": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "histgradientboosting": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "raw_flood": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "reflection": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "connection_application_layer": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    }
+  ]
+}
