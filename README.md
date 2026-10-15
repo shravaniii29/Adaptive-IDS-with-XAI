@@ -236,9 +236,15 @@ Each stored result keeps one complete set of outputs per model under `variants` 
 
 `/predict`, `/history` and the WebSocket payload also return `isolation_anomaly`, `confidence_score` and `fusion_mode`. Full statistics for the confidence mode are in `fusion_calibration/STATS.md`. The threshold was tuned by `tune_fusion_threshold.py` on live self-targeted traffic: on the held-out trial it gave 98.3% attack recall, but it is sensitive (at 0.20 recall falls to 51%), ordinary traffic overlaps attack scores, and the blended score ranks flows slightly worse than Isolation Forest alone (ROC-AUC 0.83 against 0.91) because the deployed XGBoost probability is close to chance on live flows. Re-run `tune_fusion_threshold.py` after changing the models or the feature pipeline.
 
-### The IDS ignores its own dashboard traffic
+### Loopback traffic is ignored, except during a simulation
 
-The dashboard polls the backend over loopback every few seconds, and the sniffer would otherwise capture and score that traffic (in one session 112 of 174 flows, about 70% of them flagged). Loopback flows involving ports 8000 or 5173 are therefore skipped; the count is shown as `ignored_management_flows` in `/status`. Change the ports with `IDS_IGNORE_PORTS` (comma-separated), or set it to an empty string to score everything.
+Loopback flows (127.x to 127.x) never leave the machine: they are programs on the same PC talking to each other. On a normal desktop they are mostly noise (the dashboard polling this backend, the backend's own event-loop connection, vendor background services), and models trained on network flows flag a large share of them: in one session 16 of 20 loopback flows were flagged against 0 of 27 real network flows, and the dashboard's own polling was 112 of 174 flows. So loopback flows are skipped by default and counted as `ignored_loopback_flows` in `/status`.
+
+The attack simulation has to be aimed at loopback (Windows does not deliver a machine's traffic to its own LAN address to any capture point), so loopback is scored automatically **while a simulation is running**: a run started from the dashboard's *Run simulation* button is detected by the backend, and `simulate_attacks.py` run from a terminal reports itself through `POST /simulation/active` (the report expires after 90 seconds, so a crashed script cannot leave it on). `/status` shows `loopback_monitoring` and `simulation_active`. Nothing needs changing for a demo. Set `IDS_IGNORE_LOOPBACK=0` to score loopback traffic all the time. While it runs, `simulate_attacks.py` also pins the dashboard's Hybrid | V8 view to the hybrid and restores it afterwards.
+
+### Hybrid vs V8 after a simulation
+
+The *Live Simulation* page opens the newest run automatically when a simulation finishes and shows a **Hybrid vs V8** card: pooled recall, specificity, precision, F1 and accuracy for both models on the same flows, and a per-attack table. `python compare_hybrid_v8.py <run_dir>` prints the same comparison and writes `COMPARISON.md` into the run folder.
 
 ## Running the frontend
 

@@ -58,30 +58,55 @@ _completed_flow_queue = queue.Queue()
 # FLOW PROCESSING
 # =====================================================
 
-# The dashboard polls this backend over loopback every few seconds, and the
-# sniffer captures that traffic like any other. Scored as ordinary flows it
-# made up most of a running system's history (112 of 174 flows in one
-# observed session) and was flagged as an attack about 70% of the time, so
-# half of everything on screen was the IDS looking at itself. Flows between
-# loopback addresses that involve one of these ports are management-plane
-# traffic and are skipped. Set IDS_IGNORE_PORTS="" to score everything.
-_IGNORED_PORTS = {
-    int(p) for p in os.environ.get("IDS_IGNORE_PORTS", "8000,5173").split(",")
-    if p.strip().isdigit()
-}
+# Loopback flows (127.x <-> 127.x) never leave this machine: they are
+# programs talking to each other. On a normal desktop they are mostly noise -
+# the dashboard polling this backend, this backend's own event-loop wake-up
+# connection, vendor background services - and the models, trained on
+# network flows, flag a large share of them (in one observed session 16 of
+# 20 loopback flows against 0 of 27 real network flows, and the dashboard's
+# own polling was 112 of 174 flows). So loopback flows are skipped by
+# default and counted in /status as ignored_loopback_flows.
+#
+# The attack simulation has to be aimed at loopback (Windows does not
+# deliver a machine's traffic to its own LAN address to any capture point),
+# so loopback is scored automatically while a simulation is running: when
+# the dashboard's Run simulation button launched it, or when
+# simulate_attacks.py reports itself active through /simulation/active.
+# Nothing needs changing for a demo. Set IDS_IGNORE_LOOPBACK=0 to score
+# loopback traffic all the time.
+_IGNORE_LOOPBACK = os.environ.get("IDS_IGNORE_LOOPBACK", "1").strip().lower() not in ("0", "false", "no")
 _ignored_flow_count = 0
+_external_simulation_until = 0.0  # simulate_attacks.py run from a terminal
 
 
 def _is_loopback(ip):
     return ip is not None and (str(ip).startswith("127.") or str(ip) == "::1")
 
 
-def _is_own_management_traffic(flow):
+def _simulation_active():
+    """A simulation is running: one launched from the dashboard, or one that
+    has recently reported itself through /simulation/active."""
+
+    process = _simulation_run_state["process"]
+
+    if process is not None and process.poll() is None:
+
+        return True
+
+    return time.time() < _external_simulation_until
+
+
+def _loopback_monitoring_on():
+
+    return (not _IGNORE_LOOPBACK) or _simulation_active()
+
+
+def _is_ignorable_loopback_traffic(flow):
+
     return (
-        bool(_IGNORED_PORTS)
-        and _is_loopback(flow.src_ip)
+        _is_loopback(flow.src_ip)
         and _is_loopback(flow.dst_ip)
-        and (flow.dst_port in _IGNORED_PORTS or flow.src_port in _IGNORED_PORTS)
+        and not _loopback_monitoring_on()
     )
 
 
@@ -89,7 +114,7 @@ def _handle_completed_flow(flow):
 
     global _ignored_flow_count
 
-    if _is_own_management_traffic(flow):
+    if _is_ignorable_loopback_traffic(flow):
 
         _ignored_flow_count += 1
 
@@ -343,8 +368,14 @@ def get_status():
 
         **statistics,
 
-        "ignored_management_flows":
+        "ignored_loopback_flows":
             _ignored_flow_count,
+
+        "loopback_monitoring":
+            _loopback_monitoring_on(),
+
+        "simulation_active":
+            _simulation_active(),
 
         "last_error":
             state.last_error,
@@ -1178,6 +1209,28 @@ def start_simulation_run(payload: dict = None):
         })
 
     return {"status": "started", "out_dir": out_dir, "trials": trials}
+
+
+class SimulationActiveRequest(BaseModel):
+    active: bool
+    ttl_seconds: float = 90.0
+
+
+@app.post("/simulation/active")
+def set_simulation_active(request: SimulationActiveRequest):
+    """simulate_attacks.py run from a terminal reports itself here so
+    loopback traffic is scored while it runs (a run launched from the
+    dashboard is detected automatically). The report expires after
+    ttl_seconds, so a crashed script cannot leave loopback monitoring on."""
+
+    global _external_simulation_until
+
+    _external_simulation_until = (
+        time.time() + min(max(request.ttl_seconds, 1.0), 600.0)
+        if request.active else 0.0
+    )
+
+    return {"simulation_active": _simulation_active()}
 
 
 @app.get("/simulations/run/status")
