@@ -63,7 +63,7 @@ with open(MODELS_DIR / "top_features.pkl", "rb") as file:
 # Fusion of the two detectors
 # -------------------------------------------------
 #
-# "confidence" (default): the original V7 design, a weighted score
+# The original V7 design, a weighted score
 #
 #       confidence = (1 - alpha) * xgb_probability + alpha * isolation_anomaly
 #
@@ -72,23 +72,16 @@ with open(MODELS_DIR / "top_features.pkl", "rb") as file:
 # anomalous), so no dataset-specific min/max normalisation is needed.
 # Both numbers are read from MODELS_DIR/fusion_config.json, written by
 # tune_fusion_threshold.py; the defaults below are only a fallback.
+# (The old rule - flag if either detector flags - was removed: it flagged
+# most ordinary traffic.)
 #
-# "or": the previous rule - flag if XGBoost >= threshold OR Isolation
-# Forest calls the flow an anomaly. It has high recall but flags a lot
-# of ordinary traffic. Select it with IDS_FUSION_MODE=or.
-#
-# Caveat from the calibration run (fusion_calibration/): the tuned
+# Caveat from the calibration run (fusion_calibration/STATS.md): the tuned
 # threshold sits just under a tight cluster of flood-flow scores, so
 # recall is sensitive to it (0.179 -> 98% recall, 0.20 -> 51%), and
 # ordinary traffic overlaps attack scores. Re-run tune_fusion_threshold.py
 # whenever the models or the feature pipeline change.
 
-FUSION_MODE = os.environ.get("IDS_FUSION_MODE", "confidence").strip().lower()
-
-if FUSION_MODE not in ("confidence", "or"):
-    raise ValueError(
-        f"IDS_FUSION_MODE must be 'confidence' or 'or', got {FUSION_MODE!r}"
-    )
+FUSION_MODE = "confidence"
 
 FUSION_ALPHA = 0.3
 FUSION_THRESHOLD = 0.55
@@ -202,13 +195,7 @@ def predict_flow(features):
         + FUSION_ALPHA * isolation_anomaly
     )
 
-    if FUSION_MODE == "confidence":
-        hybrid_prediction = int(confidence_score >= FUSION_THRESHOLD)
-    else:
-        hybrid_prediction = int(
-            xgb_prediction == 1
-            or isolation_prediction == 1
-        )
+    hybrid_prediction = int(confidence_score >= FUSION_THRESHOLD)
 
 
     return {
