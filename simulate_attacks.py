@@ -932,7 +932,7 @@ def dump_results(rows, attributed, scenarios, out_dir=RESULTS_DIR, aggregate=Non
 # Main
 # =====================================================
 
-def main():
+def _run():
     out_dir = sys.argv[1] if len(sys.argv) > 1 else RESULTS_DIR
     # Default to 3 trials rather than 1: a single pass gives each scenario
     # only 12-40 flows, and consecutive live runs in this project have
@@ -988,6 +988,50 @@ def main():
     print_trial_consistency(poller.flows, scenarios, trials)
 
     dump_results(rows, attributed, scenarios, out_dir=out_dir, aggregate=metrics, family_aware=family_metrics)
+
+
+# =====================================================
+# Backend coordination
+#
+# The backend ignores loopback traffic normally (desktop background chatter
+# is mostly noise to the models) and this harness aims its attacks at
+# loopback, so it tells the backend it is running - the dashboard's "Run
+# simulation" button needs none of this, the backend sees its own process.
+# It also pins the dashboard's Hybrid | V8 view to the hybrid while it runs:
+# the harness reads the deployed hybrid's verdict from /history, which
+# serves whichever model is being viewed (V8 is scored separately as the
+# v8_candidate column either way).
+# =====================================================
+
+def _backend_call(method, path, **kwargs):
+    try:
+        response = requests.request(method, f"{API_BASE}{path}", timeout=5, **kwargs)
+        return response.json() if response.ok else None
+    except Exception:
+        return None
+
+
+def _heartbeat(stop_event):
+    while not stop_event.is_set():
+        _backend_call("POST", "/simulation/active", json={"active": True, "ttl_seconds": 90})
+        stop_event.wait(20)
+
+
+def main():
+    stop = threading.Event()
+    previous = _backend_call("GET", "/mode")
+    previous_mode = previous.get("mode") if previous else None
+    beat = threading.Thread(target=_heartbeat, args=(stop,), daemon=True)
+    beat.start()
+    if previous_mode and previous_mode != "confidence":
+        _backend_call("POST", "/mode", json={"mode": "confidence"})
+    try:
+        _run()
+    finally:
+        stop.set()
+        _backend_call("POST", "/simulation/active", json={"active": False})
+        if previous_mode and previous_mode != "confidence":
+            _backend_call("POST", "/mode", json={"mode": previous_mode})
 
 
 if __name__ == "__main__":

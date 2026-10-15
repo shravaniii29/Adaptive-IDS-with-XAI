@@ -10,6 +10,7 @@ import ScenarioTabs from "../../components/simulation/ScenarioTabs";
 import ScenarioModelChart from "../../components/simulation/ScenarioModelChart";
 import ModelF1Chart from "../../components/simulation/ModelF1Chart";
 import RunSimulationPanel from "../../components/simulation/RunSimulationPanel";
+import HybridVsV8Card from "../../components/simulation/HybridVsV8Card";
 import { useSimulationDetail, useSimulationList, useSimulationRun } from "../../hooks/useSimulations";
 import { modelLabel } from "../../types/simulation";
 
@@ -111,6 +112,10 @@ export default function LiveSimulation() {
                   <span className="text-slate-300">{modelLabel(bestModel[0])}</span>
                 </p>
               )}
+
+              <div className="mt-6">
+                <HybridVsV8Card detail={detail} />
+              </div>
 
               <div className="mt-8">
                 <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">Attack type</p>
