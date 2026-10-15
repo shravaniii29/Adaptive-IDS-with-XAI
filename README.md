@@ -197,6 +197,8 @@ Notes:
 
 ## Running the backend
 
+A step-by-step list of every command (setup, backend, dashboard, simulations, stopping, troubleshooting) is in [`START_COMMANDS.txt`](START_COMMANDS.txt).
+
 > **Unverified:** the command below is the standard Uvicorn invocation for the `app` object in `app/main.py`. The exact command used during development was not documented.
 
 From the repository root, in a terminal with packet-capture privileges:
