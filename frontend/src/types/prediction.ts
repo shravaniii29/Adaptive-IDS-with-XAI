@@ -17,6 +17,7 @@ export interface Prediction {
 export interface PredictionHistoryEntry extends Prediction {
   observedAt: string;
   timestamp?: number;
+  recorded_at?: number;
   attack_hypothesis?: string;
   confidence?: string;
   explanation_summary?: string;

@@ -20,10 +20,14 @@ export function usePrediction() {
       .then((res) => {
         if (!res.flows || res.flows.length === 0) return;
         const entries: PredictionHistoryEntry[] = res.flows
-          .map((f) => ({
-            ...f,
-            observedAt: f.timestamp ? new Date(f.timestamp * 1000).toISOString() : new Date().toISOString(),
-          }))
+          .map((f) => {
+            // /history reports the wall-clock time as `recorded_at` (seconds).
+            const seconds = f.timestamp ?? f.recorded_at;
+            return {
+              ...f,
+              observedAt: seconds ? new Date(seconds * 1000).toISOString() : new Date().toISOString(),
+            };
+          })
           .reverse();
         setHistory((current) => {
           const ids = new Set(current.map((e) => e.flow_id));

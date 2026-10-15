@@ -709,6 +709,19 @@ def get_history():
             "hybrid_prediction":
                 result.get("hybrid_prediction"),
 
+            # The two detector outputs behind the hybrid decision.
+            # The dashboard's Live Logs table seeds itself from this
+            # endpoint and renders both ("AI check 1" / "AI check 2"),
+            # so they must be present here as well as in /predict.
+            "xgb_probability":
+                result.get("xgb_probability"),
+
+            "xgb_prediction":
+                result.get("xgb_prediction"),
+
+            "isolation_prediction":
+                result.get("isolation_prediction"),
+
             "variant1_xgb_single_flow":
                 experimental.get(
                     "variant1_xgb_single_flow",
