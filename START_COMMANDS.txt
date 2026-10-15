@@ -1,0 +1,160 @@
+ADAPTIVE IDS WITH XAI - HOW TO START EVERYTHING
+================================================
+
+Project folder:  C:\Users\udaya\OneDrive\Desktop\Major Project\_latest
+(GitHub: https://github.com/shravaniii29/Adaptive-IDS-with-XAI , branch: main)
+
+You need TWO terminal windows: one for the backend, one for the dashboard.
+Use PowerShell. All commands below are for Windows.
+
+
+------------------------------------------------
+0. ONE-TIME SETUP (skip if already done)
+------------------------------------------------
+Needs: Python 3.11+ (this project runs on 3.13), Node.js, Npcap
+(npcap.com, installed with "WinPcap API-compatible mode" ticked).
+
+  cd "C:\Users\udaya\OneDrive\Desktop\Major Project\_latest"
+  pip install -r requirements.txt
+  pip install -r app\requirements.txt
+  pip install torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+  cd "C:\Users\udaya\OneDrive\Desktop\Major Project\_latest\frontend"
+  npm ci
+
+
+------------------------------------------------
+1. START THE BACKEND  (terminal window 1)
+------------------------------------------------
+  cd "C:\Users\udaya\OneDrive\Desktop\Major Project\_latest"
+  python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+
+Wait for this line (it takes 20-40 seconds while the models load):
+  Uvicorn running on http://127.0.0.1:8000
+
+It starts live packet capture on the default network interface by itself.
+If capture fails, close the terminal and reopen PowerShell as Administrator.
+
+Check it is up (any terminal):
+  curl http://127.0.0.1:8000/status
+
+
+------------------------------------------------
+2. START THE DASHBOARD  (terminal window 2)
+------------------------------------------------
+  cd "C:\Users\udaya\OneDrive\Desktop\Major Project\_latest\frontend"
+  npm run dev
+
+Then open in the browser:   http://localhost:5173
+
+The dashboard talks to the backend on port 8000, so start the backend FIRST.
+
+
+------------------------------------------------
+3. RUN AN ATTACK SIMULATION
+------------------------------------------------
+EASIEST - in the dashboard:
+  Live Simulation page -> (optional) type a Target -> pick trials -> Run simulation
+  - Target empty = 127.0.0.77 (default).
+  - Target can only be a loopback address (127.x.x.x) or this PC's own address,
+    e.g. 127.0.0.88 or 192.168.1.37. Anything else is refused.
+  - 1 trial takes about 5 minutes. When it finishes the page opens the results
+    and shows the Hybrid vs V8 card.
+
+FROM A TERMINAL (backend must already be running):
+  cd "C:\Users\udaya\OneDrive\Desktop\Major Project\_latest"
+  python simulate_attacks.py my_run 3            (folder name, number of trials)
+
+  With a custom target:
+  $env:SIM_TARGET_IP = "127.0.0.88"
+  python simulate_attacks.py my_run 1
+
+Hybrid vs V8 table for a finished run (also writes COMPARISON.md in that folder):
+  python compare_hybrid_v8.py my_run
+
+Past runs (including the paper's 25-trial run) are in the run dropdown on the
+Live Simulation page.
+
+
+------------------------------------------------
+4. SWITCH BETWEEN HYBRID AND V8
+------------------------------------------------
+Top bar of the dashboard:  Showing [ Hybrid | V8 ]
+Both models score every flow all the time; the switch only changes which one
+you see. Resets to Hybrid when the backend restarts.
+
+Same thing from a terminal:
+  curl http://127.0.0.1:8000/mode
+  curl -X POST http://127.0.0.1:8000/mode -H "Content-Type: application/json" -d "{\"mode\":\"v8\"}"
+
+
+------------------------------------------------
+5. OPTIONS (set BEFORE starting the backend, in the same window)
+------------------------------------------------
+  $env:IDS_LIGHTWEIGHT_SCORING = "1"     skip SHAP + agents (faster; for load tests)
+  $env:IDS_IGNORE_LOOPBACK = "0"         score ALL loopback traffic (default: ignored
+                                         except the simulation's lab address)
+  $env:IDS_LAB_ADDRESS = "127.0.0.99"    change the default simulation address
+  python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+
+(These only last for that window. Open a new window to go back to defaults.)
+
+
+------------------------------------------------
+6. STOP EVERYTHING
+------------------------------------------------
+Press Ctrl+C in each terminal window.
+
+If something is still holding a port:
+  Get-NetTCPConnection -LocalPort 8000,5173 -State Listen | Select LocalPort,OwningProcess
+  Stop-Process -Id <the OwningProcess number> -Force
+
+
+------------------------------------------------
+7. GET THE LATEST CODE
+------------------------------------------------
+  cd "C:\Users\udaya\OneDrive\Desktop\Major Project\_latest"
+  git pull origin main
+  (then restart the backend; the dashboard reloads by itself)
+
+
+------------------------------------------------
+8. USEFUL CHECKS
+------------------------------------------------
+  curl http://127.0.0.1:8000/status           flow counts, ignored loopback flows, lab addresses
+  curl http://127.0.0.1:8000/mode             which model the dashboard is showing
+  curl http://127.0.0.1:8000/simulations/run/status    is a simulation running?
+  curl -X POST http://127.0.0.1:8000/clear    same as the dashboard's Clear Stats button
+
+Run the tests (install pytest first: pip install pytest):
+  cd "C:\Users\udaya\OneDrive\Desktop\Major Project\_latest"
+  python -m pytest tests
+
+
+------------------------------------------------
+9. IF SOMETHING GOES WRONG
+------------------------------------------------
+Dashboard shows "Backend unavailable" / nothing loads
+  -> the backend is not running or still loading models. Start it (step 1)
+     and wait for "Uvicorn running on http://127.0.0.1:8000".
+
+"address already in use" on port 8000 or 5173
+  -> an old copy is still running. See step 6 to stop it.
+
+No flows appear
+  -> normal while the PC is quiet; open a web page to make some traffic.
+     Loopback flows (programs talking to each other) are ignored on purpose;
+     the counter "ignored_loopback_flows" in /status shows how many.
+  -> if capture failed, reopen PowerShell as Administrator and check that
+     Npcap is installed.
+
+Simulation finds nothing / zero flows for the target
+  -> use the default target (leave the box empty) or 127.0.0.77 / 127.0.0.88.
+
+Demo checklist (in this order)
+  1. Start backend, wait for "Uvicorn running".
+  2. Start dashboard, open http://localhost:5173
+  3. Press Clear Stats.
+  4. Live Simulation -> Run simulation (1 trial, ~5 min).
+  5. Show the Hybrid vs V8 card, then flip the Hybrid | V8 switch on the
+     Overview / Live Logs / Explainability pages.
