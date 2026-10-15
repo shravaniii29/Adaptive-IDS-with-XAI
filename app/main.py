@@ -336,6 +336,15 @@ def get_predict():
         "isolation_prediction":
             result.get("isolation_prediction"),
 
+        "isolation_anomaly":
+            result.get("isolation_anomaly"),
+
+        "confidence_score":
+            result.get("confidence_score"),
+
+        "fusion_mode":
+            result.get("fusion_mode"),
+
         "hybrid_prediction":
             result.get("hybrid_prediction"),
 
@@ -721,6 +730,12 @@ def get_history():
 
             "isolation_prediction":
                 result.get("isolation_prediction"),
+
+            "isolation_anomaly":
+                result.get("isolation_anomaly"),
+
+            "confidence_score":
+                result.get("confidence_score"),
 
             "variant1_xgb_single_flow":
                 experimental.get(

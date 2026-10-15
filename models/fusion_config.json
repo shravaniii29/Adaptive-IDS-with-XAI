@@ -1,0 +1,24 @@
+{
+  "alpha": 0.3,
+  "threshold": 0.1789,
+  "calibrated_at": "2026-10-15T13:23:59+00:00",
+  "method": "tune_fusion_threshold.py: maximise balanced accuracy (attack recall vs mean of synthetic-benign and ordinary-traffic specificity) on trials 1..N-1; trial N and the second half of ordinary traffic held out",
+  "heldout_confidence": {
+    "recall": 0.9825581395348837,
+    "spec_synthetic": 1.0,
+    "spec_ordinary": 0.6428571428571429,
+    "balanced": 0.9019933554817275,
+    "n_attack": 172,
+    "n_synthetic": 4,
+    "n_ordinary": 14
+  },
+  "heldout_or_rule": {
+    "recall": 0.9069767441860465,
+    "spec_synthetic": 1.0,
+    "spec_ordinary": 0.7142857142857143,
+    "balanced": 0.8820598006644518,
+    "n_attack": 172,
+    "n_synthetic": 4,
+    "n_ordinary": 14
+  }
+}

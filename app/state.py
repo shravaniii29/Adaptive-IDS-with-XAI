@@ -189,6 +189,15 @@ class AppState:
             "isolation_prediction":
                 result.get("isolation_prediction"),
 
+            "isolation_anomaly":
+                result.get("isolation_anomaly"),
+
+            "confidence_score":
+                result.get("confidence_score"),
+
+            "fusion_mode":
+                result.get("fusion_mode"),
+
             "hybrid_prediction":
                 result.get("hybrid_prediction"),
 
