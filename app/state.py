@@ -8,6 +8,7 @@ dashboard clients.
 
 import asyncio
 import threading
+import time
 
 
 class AppState:
@@ -22,8 +23,11 @@ class AppState:
         # Recent IDS results for dashboard history
         self.result_history = []
 
-        # Maximum number of flows to retain
-        self.max_history = 20
+        # Maximum number of flows to retain. Raised from the original 20 -
+        # a burst of flows completing faster than a poller's interval
+        # (e.g. during a flood, for testing) can otherwise silently push
+        # flows out of the buffer before anything ever reads them.
+        self.max_history = 500
 
         self.last_error = None
 
@@ -43,6 +47,11 @@ class AppState:
     def record_result(self, result):
 
         with self.lock:
+
+            # Wall-clock time this flow was recorded - used by /history
+            # (and anything else needing to correlate flows to a time
+            # window) since the result dict itself carries no timestamp.
+            result["recorded_at"] = time.time()
 
             # Store latest result
             self.last_result = result
@@ -154,6 +163,11 @@ class AppState:
 
         incident = agent_analysis.get(
             "incident_report",
+            {}
+        )
+
+        experimental = result.get(
+            "experimental_models",
             {}
         )
 
@@ -281,7 +295,32 @@ class AppState:
                 incident.get("confidence"),
 
             "incident_summary":
-                incident.get("summary")
+                incident.get("summary"),
+
+            # -----------------------------------------
+            # Experimental Models (EXPERIMENTAL panel)
+            # -----------------------------------------
+
+            "experimental_disclaimer":
+                experimental.get("disclaimer"),
+
+            "experimental_variant1":
+                experimental.get(
+                    "variant1_xgb_single_flow",
+                    {}
+                ),
+
+            "experimental_variant2":
+                experimental.get(
+                    "variant2_xgb_temporal",
+                    {}
+                ),
+
+            "experimental_variant3":
+                experimental.get(
+                    "variant3_cnn_lstm",
+                    {}
+                )
         }
 
         dead_clients = []

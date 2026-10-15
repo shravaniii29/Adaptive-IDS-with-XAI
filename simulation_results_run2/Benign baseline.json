@@ -1,0 +1,44 @@
+{
+  "name": "Benign baseline",
+  "is_attack": false,
+  "start_time": 1787338205.756554,
+  "end_time": 1787338215.814298,
+  "duration_seconds": 10.057744026184082,
+  "flow_count": 1,
+  "model_scores": {
+    "deployed_hybrid": 1.0,
+    "variant1_xgb_single_flow": 1.0,
+    "variant2_xgb_temporal": 1.0,
+    "variant3_cnn_lstm": 1.0
+  },
+  "flows": [
+    {
+      "flow_id": 2453,
+      "source_ip": "4.213.25.240",
+      "destination_ip": "192.168.31.246",
+      "observed_at": 1787338239.245619,
+      "models": {
+        "deployed_hybrid": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant1_xgb_single_flow": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant2_xgb_temporal": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        },
+        "variant3_cnn_lstm": {
+          "available": true,
+          "prediction": 0,
+          "correct": true
+        }
+      }
+    }
+  ]
+}

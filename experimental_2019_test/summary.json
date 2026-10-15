@@ -1,0 +1,136 @@
+{
+  "generated_at": 1787730088.1696942,
+  "target_ip": "127.0.0.1",
+  "scenarios": [
+    {
+      "name": "Benign baseline",
+      "is_attack": false,
+      "flow_count": 68,
+      "model_scores": {
+        "deployed_hybrid": 0.11764705882352941,
+        "variant1_xgb_single_flow": 0.7647058823529411,
+        "variant2_xgb_temporal": 0.7352941176470589,
+        "variant3_cnn_lstm": 0.8970588235294118
+      },
+      "file": "Benign baseline.json"
+    },
+    {
+      "name": "ICMP flood",
+      "is_attack": true,
+      "flow_count": 27,
+      "model_scores": {
+        "deployed_hybrid": 0.8518518518518519,
+        "variant1_xgb_single_flow": 0.1111111111111111,
+        "variant2_xgb_temporal": 0.2222222222222222,
+        "variant3_cnn_lstm": 0.18518518518518517
+      },
+      "file": "ICMP flood.json"
+    },
+    {
+      "name": "SYN flood",
+      "is_attack": true,
+      "flow_count": 32,
+      "model_scores": {
+        "deployed_hybrid": 0.84375,
+        "variant1_xgb_single_flow": 0.0625,
+        "variant2_xgb_temporal": 0.0,
+        "variant3_cnn_lstm": 0.1875
+      },
+      "file": "SYN flood.json"
+    },
+    {
+      "name": "UDP flood",
+      "is_attack": true,
+      "flow_count": 51,
+      "model_scores": {
+        "deployed_hybrid": 1.0,
+        "variant1_xgb_single_flow": 0.0,
+        "variant2_xgb_temporal": 0.0,
+        "variant3_cnn_lstm": 0.0
+      },
+      "file": "UDP flood.json"
+    },
+    {
+      "name": "HTTP flood",
+      "is_attack": true,
+      "flow_count": 51,
+      "model_scores": {
+        "deployed_hybrid": 1.0,
+        "variant1_xgb_single_flow": 0.0,
+        "variant2_xgb_temporal": 0.0,
+        "variant3_cnn_lstm": 0.0
+      },
+      "file": "HTTP flood.json"
+    },
+    {
+      "name": "Port scan",
+      "is_attack": true,
+      "flow_count": 45,
+      "model_scores": {
+        "deployed_hybrid": 1.0,
+        "variant1_xgb_single_flow": 0.0,
+        "variant2_xgb_temporal": 0.0,
+        "variant3_cnn_lstm": 0.0
+      },
+      "file": "Port scan.json"
+    }
+  ],
+  "aggregate_metrics": {
+    "deployed_hybrid": {
+      "confusion_matrix": {
+        "tp": 197,
+        "fp": 60,
+        "tn": 8,
+        "fn": 9
+      },
+      "accuracy": 0.7481751824817519,
+      "precision": 0.7665369649805448,
+      "recall": 0.9563106796116505,
+      "f1": 0.8509719222462203,
+      "specificity": 0.11764705882352941,
+      "total_flows": 274
+    },
+    "variant1_xgb_single_flow": {
+      "confusion_matrix": {
+        "tp": 5,
+        "fp": 16,
+        "tn": 52,
+        "fn": 201
+      },
+      "accuracy": 0.20802919708029197,
+      "precision": 0.23809523809523808,
+      "recall": 0.024271844660194174,
+      "f1": 0.04405286343612335,
+      "specificity": 0.7647058823529411,
+      "total_flows": 274
+    },
+    "variant2_xgb_temporal": {
+      "confusion_matrix": {
+        "tp": 6,
+        "fp": 18,
+        "tn": 50,
+        "fn": 200
+      },
+      "accuracy": 0.20437956204379562,
+      "precision": 0.25,
+      "recall": 0.02912621359223301,
+      "f1": 0.052173913043478265,
+      "specificity": 0.7352941176470589,
+      "total_flows": 274
+    },
+    "variant3_cnn_lstm": {
+      "confusion_matrix": {
+        "tp": 11,
+        "fp": 7,
+        "tn": 61,
+        "fn": 195
+      },
+      "accuracy": 0.26277372262773724,
+      "precision": 0.6111111111111112,
+      "recall": 0.05339805825242718,
+      "f1": 0.09821428571428573,
+      "specificity": 0.8970588235294118,
+      "total_flows": 274
+    }
+  }
+}

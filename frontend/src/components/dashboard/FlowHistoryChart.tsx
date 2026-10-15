@@ -1,0 +1,9 @@
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import Card from "../common/Card";
+import EmptyState from "../common/EmptyState";
+import type { PredictionHistoryEntry } from "../../types/prediction";
+
+export default function FlowHistoryChart({ entries }: { entries: PredictionHistoryEntry[] }) {
+  const data = [...entries].reverse().map((entry) => ({ label: new Date(entry.observedAt).toLocaleTimeString(), probability: Math.round(entry.xgb_probability * 100), flow: entry.flow_id }));
+  return <Card className="h-full"><div className="mb-5"><p className="text-sm text-slate-400">Flow history</p><h2 className="mt-1 text-xl font-semibold text-white">Threat score over time</h2><p className="mt-1 text-xs text-slate-500">Each point is a processed flow. The chart retains the latest 100 flows.</p></div>{data.length < 2 ? <EmptyState title="Waiting for flow history" description="The chart will show how the threat score changes as new flows arrive." /> : <div className="h-64"><ResponsiveContainer width="100%" height="100%"><AreaChart data={data}><defs><linearGradient id="threatScore" x1="0" x2="0" y1="0" y2="1"><stop offset="5%" stopColor="#f97316" stopOpacity={0.45} /><stop offset="95%" stopColor="#f97316" stopOpacity={0} /></linearGradient></defs><CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} /><XAxis dataKey="label" tick={{ fill: "#94a3b8", fontSize: 11 }} minTickGap={32} /><YAxis domain={[0, 100]} tick={{ fill: "#94a3b8", fontSize: 11 }} unit="%" /><Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8 }} labelStyle={{ color: "#cbd5e1" }} /><Area type="monotone" dataKey="probability" stroke="#fb923c" fill="url(#threatScore)" strokeWidth={2} /></AreaChart></ResponsiveContainer></div>}</Card>;
+}

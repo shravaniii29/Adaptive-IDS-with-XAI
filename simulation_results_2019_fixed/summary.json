@@ -1,0 +1,78 @@
+{
+  "generated_at": 1787391934.636127,
+  "target_ip": "127.0.0.1",
+  "scenarios": [
+    {
+      "name": "Benign baseline",
+      "is_attack": false,
+      "flow_count": 75,
+      "model_scores": {
+        "deployed_hybrid": 0.14666666666666667,
+        "variant1_xgb_single_flow": 0.88,
+        "variant2_xgb_temporal": 0.8666666666666667,
+        "variant3_cnn_lstm": 0.5466666666666666
+      },
+      "file": "Benign baseline.json"
+    },
+    {
+      "name": "ICMP flood",
+      "is_attack": true,
+      "flow_count": 31,
+      "model_scores": {
+        "deployed_hybrid": 0.8387096774193549,
+        "variant1_xgb_single_flow": 0.03225806451612903,
+        "variant2_xgb_temporal": 0.12903225806451613,
+        "variant3_cnn_lstm": 0.5806451612903226
+      },
+      "file": "ICMP flood.json"
+    },
+    {
+      "name": "SYN flood",
+      "is_attack": true,
+      "flow_count": 46,
+      "model_scores": {
+        "deployed_hybrid": 0.45652173913043476,
+        "variant1_xgb_single_flow": 0.021739130434782608,
+        "variant2_xgb_temporal": 0.0,
+        "variant3_cnn_lstm": 0.32608695652173914
+      },
+      "file": "SYN flood.json"
+    },
+    {
+      "name": "UDP flood",
+      "is_attack": true,
+      "flow_count": 62,
+      "model_scores": {
+        "deployed_hybrid": 0.0,
+        "variant1_xgb_single_flow": 0.03225806451612903,
+        "variant2_xgb_temporal": 0.0,
+        "variant3_cnn_lstm": 0.0
+      },
+      "file": "UDP flood.json"
+    },
+    {
+      "name": "HTTP flood",
+      "is_attack": true,
+      "flow_count": 67,
+      "model_scores": {
+        "deployed_hybrid": 0.014925373134328358,
+        "variant1_xgb_single_flow": 0.014925373134328358,
+        "variant2_xgb_temporal": 0.0,
+        "variant3_cnn_lstm": 0.0
+      },
+      "file": "HTTP flood.json"
+    },
+    {
+      "name": "Port scan",
+      "is_attack": true,
+      "flow_count": 65,
+      "model_scores": {
+        "deployed_hybrid": 0.015384615384615385,
+        "variant1_xgb_single_flow": 0.015384615384615385,
+        "variant2_xgb_temporal": 0.0,
+        "variant3_cnn_lstm": 0.0
+      },
+      "file": "Port scan.json"
+    }
+  ]
+}

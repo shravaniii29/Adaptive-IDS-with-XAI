@@ -1,0 +1,234 @@
+{
+  "created_at": "2026-08-24T06:12:11.215110+00:00",
+  "dataset": "CIC-IDS2018, 10 days (7 partial samples + 3 full days: 02-28/03-01/03-02) + CIC-DDoS2019, 18 attack-type files (own benign only, no cross-dataset blending)",
+  "cicids2018_day_tags": [
+    "02-14-2018_off0",
+    "02-14-2018_off1",
+    "02-14-2018_off2",
+    "02-14-2018_off3",
+    "02-15-2018_off0",
+    "02-15-2018_off1",
+    "02-15-2018_off2",
+    "02-15-2018_off3",
+    "02-16-2018_off0",
+    "02-16-2018_off1",
+    "02-16-2018_off2",
+    "02-16-2018_off3",
+    "02-20-2018_off0",
+    "02-20-2018_off1",
+    "02-20-2018_off2",
+    "02-20-2018_off3",
+    "02-21-2018_off0",
+    "02-21-2018_off1",
+    "02-21-2018_off2",
+    "02-21-2018_off3",
+    "02-22-2018_off0",
+    "02-22-2018_off1",
+    "02-22-2018_off2",
+    "02-22-2018_off3",
+    "02-23-2018_off0",
+    "02-23-2018_off1",
+    "02-23-2018_off2",
+    "02-23-2018_off3",
+    "02-28-2018",
+    "03-01-2018",
+    "03-02-2018"
+  ],
+  "ddos2019_day_tags": [
+    "2019_01-12_DrDoS_DNS",
+    "2019_01-12_DrDoS_LDAP",
+    "2019_01-12_DrDoS_MSSQL",
+    "2019_01-12_DrDoS_NTP",
+    "2019_01-12_DrDoS_NetBIOS",
+    "2019_01-12_DrDoS_SNMP",
+    "2019_01-12_DrDoS_SSDP",
+    "2019_01-12_DrDoS_UDP",
+    "2019_01-12_Syn",
+    "2019_01-12_TFTP",
+    "2019_01-12_UDPLag",
+    "2019_03-11_LDAP",
+    "2019_03-11_MSSQL",
+    "2019_03-11_NetBIOS",
+    "2019_03-11_Portmap",
+    "2019_03-11_Syn",
+    "2019_03-11_UDP",
+    "2019_03-11_UDPLag"
+  ],
+  "total_rows": 3821984,
+  "train_rows": 2919482,
+  "test_rows": 902502,
+  "attack_types": [
+    "Bot",
+    "Brute Force -Web",
+    "Brute Force -XSS",
+    "DDOS attack-HOIC",
+    "DDOS attack-LOIC-UDP",
+    "DDoS attacks-LOIC-HTTP",
+    "DoS attacks-GoldenEye",
+    "DoS attacks-Hulk",
+    "DoS attacks-SlowHTTPTest",
+    "DoS attacks-Slowloris",
+    "DrDoS_DNS",
+    "DrDoS_LDAP",
+    "DrDoS_MSSQL",
+    "DrDoS_NTP",
+    "DrDoS_NetBIOS",
+    "DrDoS_SNMP",
+    "DrDoS_SSDP",
+    "DrDoS_UDP",
+    "FTP-BruteForce",
+    "Infilteration",
+    "LDAP",
+    "MSSQL",
+    "NetBIOS",
+    "Portmap",
+    "SQL Injection",
+    "SSH-Bruteforce",
+    "Syn",
+    "TFTP",
+    "UDP",
+    "UDP-lag",
+    "WebDDoS"
+  ],
+  "split": "per-day chronological, cutoff at 70th percentile of that day's own attack timestamps",
+  "trained_on_device": "cuda",
+  "note": "Experimental models, now including CIC-DDoS2019 alongside CIC-IDS2018. 2019 rows use only their own (sparse) benign traffic, never 2018's, to avoid a capture-session shortcut. See fetch_ddos2019_sample.py for the sampling method.",
+  "variant1": {
+    "metrics": {
+      "accuracy": 0.9209907568071871,
+      "precision": 0.9393212949317832,
+      "recall": 0.9031426774244802,
+      "f1": 0.920876784561064,
+      "threshold": 0.26999999999999996
+    },
+    "feature_importances": [
+      [
+        "Min Pkt Size",
+        0.5889974236488342
+      ],
+      [
+        "Avg Pkt Size",
+        0.15029984712600708
+      ],
+      [
+        "TotLen Fwd Pkts",
+        0.09697973728179932
+      ],
+      [
+        "Flow Pkts/s",
+        0.05884898081421852
+      ],
+      [
+        "Flow Duration",
+        0.04350494220852852
+      ],
+      [
+        "Tot Fwd Pkts",
+        0.026111328974366188
+      ],
+      [
+        "Protocol",
+        0.02093135006725788
+      ],
+      [
+        "Flow Byts/s",
+        0.01432640478014946
+      ]
+    ],
+    "shortcut_warning": true
+  },
+  "variant2": {
+    "metrics": {
+      "accuracy": 0.9377297778841487,
+      "precision": 0.9800663819006938,
+      "recall": 0.8959035714518913,
+      "f1": 0.9360970523388099,
+      "threshold": 0.3499999999999999
+    },
+    "feature_importances": [
+      [
+        "Min Pkt Size",
+        0.5129745602607727
+      ],
+      [
+        "hist_std_Flow_Duration",
+        0.1146198958158493
+      ],
+      [
+        "hist_std_TotLen_Fwd_Pkts",
+        0.09150191396474838
+      ],
+      [
+        "Avg Pkt Size",
+        0.05753111466765404
+      ],
+      [
+        "hist_flow_count",
+        0.03758489340543747
+      ],
+      [
+        "Flow Duration",
+        0.025461705401539803
+      ],
+      [
+        "time_since_last",
+        0.023548876866698265
+      ],
+      [
+        "Flow Pkts/s",
+        0.021472392603754997
+      ],
+      [
+        "TotLen Fwd Pkts",
+        0.02041483111679554
+      ],
+      [
+        "Tot Fwd Pkts",
+        0.01837126351892948
+      ],
+      [
+        "hist_mean_Flow_Duration",
+        0.017175063490867615
+      ],
+      [
+        "hist_std_Flow_Pkts_s",
+        0.012661772780120373
+      ],
+      [
+        "hist_mean_Flow_Byts_s",
+        0.010596532374620438
+      ],
+      [
+        "hist_std_Flow_Byts_s",
+        0.010171491652727127
+      ],
+      [
+        "hist_mean_Flow_Pkts_s",
+        0.009225396439433098
+      ],
+      [
+        "hist_mean_TotLen_Fwd_Pkts",
+        0.006079073064029217
+      ],
+      [
+        "Flow Byts/s",
+        0.0055832890793681145
+      ],
+      [
+        "Protocol",
+        0.005025893449783325
+      ]
+    ],
+    "shortcut_warning": true
+  },
+  "variant3": {
+    "metrics": {
+      "accuracy": 0.9340023623216347,
+      "precision": 0.9682637451169588,
+      "recall": 0.8998539554988693,
+      "f1": 0.9328062795212745,
+      "threshold": 0.36999999999999994
+    },
+    "architecture": "Conv1d(8->32,k=3) + LSTM(32->64) + Linear(64->1)"
+  }
+}

@@ -1,0 +1,196 @@
+{
+  "generated_at": 1787732038.3979049,
+  "target_ip": "127.0.0.1",
+  "scenarios": [
+    {
+      "name": "Benign baseline",
+      "is_attack": false,
+      "flow_count": 90,
+      "model_scores": {
+        "deployed_hybrid": 0.044444444444444446,
+        "variant1_xgb_single_flow": 0.9666666666666667,
+        "variant2_xgb_temporal": 1.0,
+        "variant3_cnn_lstm": 1.0,
+        "xgboost": 0.9666666666666667,
+        "random_forest": 0.8222222222222222,
+        "histgradientboosting": 0.8222222222222222
+      },
+      "file": "Benign baseline.json"
+    },
+    {
+      "name": "ICMP flood",
+      "is_attack": true,
+      "flow_count": 27,
+      "model_scores": {
+        "deployed_hybrid": 0.9629629629629629,
+        "variant1_xgb_single_flow": 0.0,
+        "variant2_xgb_temporal": 0.0,
+        "variant3_cnn_lstm": 0.037037037037037035,
+        "xgboost": 0.0,
+        "random_forest": 0.07407407407407407,
+        "histgradientboosting": 0.07407407407407407
+      },
+      "file": "ICMP flood.json"
+    },
+    {
+      "name": "SYN flood",
+      "is_attack": true,
+      "flow_count": 27,
+      "model_scores": {
+        "deployed_hybrid": 0.9259259259259259,
+        "variant1_xgb_single_flow": 0.0,
+        "variant2_xgb_temporal": 0.0,
+        "variant3_cnn_lstm": 0.2222222222222222,
+        "xgboost": 0.0,
+        "random_forest": 0.2962962962962963,
+        "histgradientboosting": 0.2962962962962963
+      },
+      "file": "SYN flood.json"
+    },
+    {
+      "name": "UDP flood",
+      "is_attack": true,
+      "flow_count": 30,
+      "model_scores": {
+        "deployed_hybrid": 0.9666666666666667,
+        "variant1_xgb_single_flow": 0.0,
+        "variant2_xgb_temporal": 0.0,
+        "variant3_cnn_lstm": 0.2,
+        "xgboost": 0.0,
+        "random_forest": 0.13333333333333333,
+        "histgradientboosting": 0.13333333333333333
+      },
+      "file": "UDP flood.json"
+    },
+    {
+      "name": "HTTP flood",
+      "is_attack": true,
+      "flow_count": 30,
+      "model_scores": {
+        "deployed_hybrid": 0.9333333333333333,
+        "variant1_xgb_single_flow": 0.06666666666666667,
+        "variant2_xgb_temporal": 0.0,
+        "variant3_cnn_lstm": 0.26666666666666666,
+        "xgboost": 0.06666666666666667,
+        "random_forest": 0.26666666666666666,
+        "histgradientboosting": 0.26666666666666666
+      },
+      "file": "HTTP flood.json"
+    },
+    {
+      "name": "Port scan",
+      "is_attack": true,
+      "flow_count": 34,
+      "model_scores": {
+        "deployed_hybrid": 0.9411764705882353,
+        "variant1_xgb_single_flow": 0.029411764705882353,
+        "variant2_xgb_temporal": 0.0,
+        "variant3_cnn_lstm": 0.0,
+        "xgboost": 0.029411764705882353,
+        "random_forest": 0.23529411764705882,
+        "histgradientboosting": 0.23529411764705882
+      },
+      "file": "Port scan.json"
+    }
+  ],
+  "aggregate_metrics": {
+    "deployed_hybrid": {
+      "confusion_matrix": {
+        "tp": 140,
+        "fp": 86,
+        "tn": 4,
+        "fn": 8
+      },
+      "accuracy": 0.6050420168067226,
+      "precision": 0.6194690265486725,
+      "recall": 0.9459459459459459,
+      "f1": 0.7486631016042781,
+      "specificity": 0.044444444444444446,
+      "total_flows": 238
+    },
+    "variant1_xgb_single_flow": {
+      "confusion_matrix": {
+        "tp": 3,
+        "fp": 3,
+        "tn": 87,
+        "fn": 145
+      },
+      "accuracy": 0.37815126050420167,
+      "precision": 0.5,
+      "recall": 0.02027027027027027,
+      "f1": 0.03896103896103896,
+      "specificity": 0.9666666666666667,
+      "total_flows": 238
+    },
+    "variant2_xgb_temporal": {
+      "confusion_matrix": {
+        "tp": 0,
+        "fp": 0,
+        "tn": 90,
+        "fn": 148
+      },
+      "accuracy": 0.37815126050420167,
+      "precision": null,
+      "recall": 0.0,
+      "f1": null,
+      "specificity": 1.0,
+      "total_flows": 238
+    },
+    "variant3_cnn_lstm": {
+      "confusion_matrix": {
+        "tp": 21,
+        "fp": 0,
+        "tn": 90,
+        "fn": 127
+      },
+      "accuracy": 0.46638655462184875,
+      "precision": 1.0,
+      "recall": 0.14189189189189189,
+      "f1": 0.2485207100591716,
+      "specificity": 1.0,
+      "total_flows": 238
+    },
+    "xgboost": {
+      "confusion_matrix": {
+        "tp": 3,
+        "fp": 3,
+        "tn": 87,
+        "fn": 145
+      },
+      "accuracy": 0.37815126050420167,
+      "precision": 0.5,
+      "recall": 0.02027027027027027,
+      "f1": 0.03896103896103896,
+      "specificity": 0.9666666666666667,
+      "total_flows": 238
+    },
+    "random_forest": {
+      "confusion_matrix": {
+        "tp": 30,
+        "fp": 16,
+        "tn": 74,
+        "fn": 118
+      },
+      "accuracy": 0.4369747899159664,
+      "precision": 0.6521739130434783,
+      "recall": 0.20270270270270271,
+      "f1": 0.30927835051546393,
+      "specificity": 0.8222222222222222,
+      "total_flows": 238
+    },
+    "histgradientboosting": {
+      "confusion_matrix": {
+        "tp": 30,
+        "fp": 16,
+        "tn": 74,
+        "fn": 118
+      },
+      "accuracy": 0.4369747899159664,
+      "precision": 0.6521739130434783,
+      "recall": 0.20270270270270271,
+      "f1": 0.30927835051546393,
+      "specificity": 0.8222222222222222,
+      "total_flows": 238
+    }
+  }
+}
