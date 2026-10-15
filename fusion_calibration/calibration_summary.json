@@ -1,0 +1,41 @@
+{
+  "alpha": 0.3,
+  "threshold": 0.1789,
+  "trials": 3,
+  "train_or": {
+    "recall": 0.9298780487804879,
+    "spec_synthetic": 1.0,
+    "spec_ordinary": 0.7142857142857143,
+    "balanced": 0.8935104529616725,
+    "n_attack": 328,
+    "n_synthetic": 8,
+    "n_ordinary": 14
+  },
+  "train_conf": {
+    "recall": 0.9817073170731707,
+    "spec_synthetic": 1.0,
+    "spec_ordinary": 0.6428571428571429,
+    "balanced": 0.9015679442508711,
+    "n_attack": 328,
+    "n_synthetic": 8,
+    "n_ordinary": 14
+  },
+  "test_or": {
+    "recall": 0.9069767441860465,
+    "spec_synthetic": 1.0,
+    "spec_ordinary": 0.7142857142857143,
+    "balanced": 0.8820598006644518,
+    "n_attack": 172,
+    "n_synthetic": 4,
+    "n_ordinary": 14
+  },
+  "test_conf": {
+    "recall": 0.9825581395348837,
+    "spec_synthetic": 1.0,
+    "spec_ordinary": 0.6428571428571429,
+    "balanced": 0.9019933554817275,
+    "n_attack": 172,
+    "n_synthetic": 4,
+    "n_ordinary": 14
+  }
+}

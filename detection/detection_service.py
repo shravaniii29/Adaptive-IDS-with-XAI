@@ -191,9 +191,18 @@ class DetectionService:
             "isolation_prediction":
                 prediction["isolation_prediction"],
 
+            "isolation_anomaly":
+                prediction["isolation_anomaly"],
+
             # -------------------------------------
             # Hybrid prediction
             # -------------------------------------
+
+            "confidence_score":
+                prediction["confidence_score"],
+
+            "fusion_mode":
+                prediction["fusion_mode"],
 
             "hybrid_prediction":
                 prediction["hybrid_prediction"],

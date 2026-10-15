@@ -223,6 +223,17 @@ On startup the backend:
 
 Before any flow completes, the result endpoints return `{"message": "no flows processed yet"}`.
 
+### How the two detectors are combined (`detection/predictor.py`)
+
+The live predictor supports two fusion rules, selected with the `IDS_FUSION_MODE` environment variable:
+
+| Mode | Rule |
+|---|---|
+| `confidence` (default) | `confidence = 0.7 * xgb_probability + 0.3 * isolation_anomaly`, flagged when `confidence >= threshold`. `isolation_anomaly` is Isolation Forest's own anomaly score in (0, 1]. The threshold and weight are read from `models/fusion_config.json`. |
+| `or` | The previous rule: flagged if XGBoost or Isolation Forest flags the flow. Higher recall, but it flags far more ordinary traffic. |
+
+`/predict`, `/history` and the WebSocket payload also return `isolation_anomaly`, `confidence_score` and `fusion_mode`. The threshold in `models/fusion_config.json` was tuned by `tune_fusion_threshold.py` on live self-targeted traffic (data in `fusion_calibration/`). On the held-out trial it gave 98.3% attack recall against 90.7% for the `or` rule, with the same specificity on the synthetic benign probes. It is sensitive: at a threshold of 0.20 recall falls to 51%, and ordinary traffic overlaps attack scores (ordinary-traffic specificity about 64%, 14 flows). Re-run `tune_fusion_threshold.py` after changing the models or the feature pipeline.
+
 ## Running the frontend
 
 > **Unverified:** these commands come from `frontend/package.json` (the same scripts on both branches) and have not been re-tested.
