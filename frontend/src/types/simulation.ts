@@ -52,6 +52,7 @@ export interface SimulationRunStatus {
   running: boolean;
   out_dir: string | null;
   trials: number | null;
+  target_ip?: string | null;
   started_at: number | null;
   elapsed_seconds: number | null;
   exit_code: number | null;
@@ -62,6 +63,7 @@ export interface SimulationRunStartResponse {
   status: string;
   out_dir: string;
   trials: number;
+  target_ip?: string;
 }
 
 // Mirrors simulate_attacks.py's MODEL_LABELS - kept in sync by hand,

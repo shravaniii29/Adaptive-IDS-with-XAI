@@ -59,10 +59,10 @@ export function useSimulationRun(onComplete?: (finalStatus: SimulationRunStatus)
     return () => { active = false; window.clearInterval(timer); };
   }, []);
 
-  const start = useCallback(async (trials: number) => {
+  const start = useCallback(async (trials: number, targetIp?: string) => {
     setError(null);
     try {
-      await startSimulationRun(trials);
+      await startSimulationRun(trials, targetIp);
       const next = await getSimulationRunStatus();
       setStatus(next);
       wasRunning.current = next.running;
