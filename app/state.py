@@ -10,6 +10,8 @@ import asyncio
 import threading
 import time
 
+from detection.result_views import flatten_result
+
 
 class AppState:
 
@@ -17,8 +19,15 @@ class AppState:
 
         self.lock = threading.Lock()
 
-        # Latest IDS result
-        self.last_result = None
+        # Which model's results the dashboard is viewing ("confidence" or
+        # "v8"). Every flow is scored by both models and stored with both
+        # sets of outputs; this only chooses what the endpoints show, so
+        # switching is instant and also applies to flows scored earlier.
+        self.view_mode = "confidence"
+
+        # Latest IDS result (stored raw, with every model's outputs;
+        # last_result below returns the view for view_mode)
+        self._last_raw = None
 
         # Recent IDS results for dashboard history
         self.result_history = []
@@ -39,6 +48,18 @@ class AppState:
         # Connected websocket clients
         self._clients = set()
 
+
+    @property
+    def last_result(self):
+
+        raw = self._last_raw
+
+        return None if raw is None else flatten_result(raw, self.view_mode)
+
+    @last_result.setter
+    def last_result(self, value):
+
+        self._last_raw = value
 
     # -------------------------------------------------
     # Called from the background capture thread
@@ -84,7 +105,10 @@ class AppState:
 
         with self.lock:
 
-            return list(self.result_history)
+            return [
+                flatten_result(result, self.view_mode)
+                for result in self.result_history
+            ]
 
 
     # -------------------------------------------------
@@ -130,6 +154,8 @@ class AppState:
     # -------------------------------------------------
 
     async def _broadcast(self, result):
+
+        result = flatten_result(result, self.view_mode)
 
         agent_analysis = result.get(
             "agent_analysis",

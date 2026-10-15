@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getFlowHistory, getLatestPrediction } from "../services/predictionService";
 import type { Prediction, PredictionHistoryEntry } from "../types/prediction";
 import { usePolling } from "./usePolling";
+import { useModeVersion } from "./useModeVersion";
 const hasPrediction = (value: Prediction | { message: string }): value is Prediction => "hybrid_prediction" in value;
 
 const HISTORY_LIMIT = 100;
@@ -11,14 +12,16 @@ export function usePrediction() {
   const result = usePolling(request);
   const prediction = result.data && hasPrediction(result.data) ? result.data : null;
   const [history, setHistory] = useState<PredictionHistoryEntry[]>([]);
-  const seeded = useRef(false);
+  // Changes when the Hybrid | V8 switch is used. Every flow is scored by
+  // both models and the backend serves the selected one, so on a switch the
+  // table is replaced with the other model's view of the same flows.
+  const modeVersion = useModeVersion();
 
   useEffect(() => {
-    if (seeded.current) return;
-    seeded.current = true;
+    let active = true;
     getFlowHistory()
       .then((res) => {
-        if (!res.flows || res.flows.length === 0) return;
+        if (!active || !res.flows || res.flows.length === 0) return;
         const entries: PredictionHistoryEntry[] = res.flows
           .map((f) => {
             // /history reports the wall-clock time as `recorded_at` (seconds).
@@ -30,8 +33,9 @@ export function usePrediction() {
           })
           .reverse();
         setHistory((current) => {
-          const ids = new Set(current.map((e) => e.flow_id));
-          const merged = [...current];
+          const replace = modeVersion > 0;
+          const ids = new Set(replace ? [] : current.map((e) => e.flow_id));
+          const merged = replace ? [] : [...current];
           for (const entry of entries) {
             if (!ids.has(entry.flow_id)) {
               merged.push(entry);
@@ -43,7 +47,8 @@ export function usePrediction() {
         });
       })
       .catch(() => {});
-  }, []);
+    return () => { active = false; };
+  }, [modeVersion]);
 
   useEffect(() => {
     if (!prediction) return;

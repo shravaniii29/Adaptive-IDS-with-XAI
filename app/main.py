@@ -311,9 +311,10 @@ def get_mode():
 
 @app.post("/mode")
 def set_mode(request: ModeRequest):
-    """Switch the primary detector ("confidence" or "v8") at run time.
-    Flows already scored keep the mode they were scored with
-    (recorded as fusion_mode in each result)."""
+    """Choose which model's results the dashboard shows ("confidence" or
+    "v8"). Both models score every flow all the time, so this only switches
+    the view: it applies instantly, to past flows as well as new ones, and
+    nothing is lost or reset."""
 
     try:
 
@@ -322,6 +323,8 @@ def set_mode(request: ModeRequest):
     except ValueError as exc:
 
         raise HTTPException(status_code=400, detail=str(exc))
+
+    state.view_mode = detection_service.mode
 
     return {
         "mode": detection_service.mode,

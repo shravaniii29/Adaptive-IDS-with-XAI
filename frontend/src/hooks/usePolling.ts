@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
+import { useModeVersion } from "./useModeVersion";
 
 export function usePolling<T>(request: () => Promise<T>, intervalMs = 5000) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  // Changes when the Hybrid | V8 switch is used: refetch straight away.
+  const modeVersion = useModeVersion();
   useEffect(() => {
     let active = true;
     const load = async () => {
@@ -14,6 +17,6 @@ export function usePolling<T>(request: () => Promise<T>, intervalMs = 5000) {
     void load();
     const timer = window.setInterval(() => void load(), intervalMs);
     return () => { active = false; window.clearInterval(timer); };
-  }, [request, intervalMs]);
+  }, [request, intervalMs, modeVersion]);
   return { data, error, loading };
 }
