@@ -6,7 +6,7 @@ import type { SimulationRunStatus } from "../../types/simulation";
 interface Props {
   status: SimulationRunStatus | null;
   error: string | null;
-  onStart: (trials: number) => Promise<void>;
+  onStart: (trials: number, targetIp?: string) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -23,16 +23,28 @@ const formatElapsed = (seconds: number | null) => {
 // TRIAL_COOLDOWN in simulate_attacks.py.
 const estimateMinutes = (trials: number) => Math.round(((10 + 35) * 6 * trials + 5 * (trials - 1) + 35) / 60);
 
+// The simulation only ever targets this machine: a loopback address
+// (127.x.x.x) or one of its own addresses; the backend refuses anything else.
+const DEFAULT_TARGET = "127.0.0.77";
+const ipv4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+const validTarget = (value: string) => {
+  const match = ipv4.exec(value.trim());
+  return !!match && match.slice(1).every((part) => Number(part) <= 255);
+};
+
 export default function RunSimulationPanel({ status, error, onStart, onCancel }: Props) {
   const [trials, setTrials] = useState(1);
+  const [target, setTarget] = useState("");
   const [starting, setStarting] = useState(false);
 
   const running = status?.running ?? false;
+  const targetInvalid = target.trim() !== "" && !validTarget(target);
 
   const handleStart = async () => {
+    if (targetInvalid) return;
     setStarting(true);
     try {
-      await onStart(trials);
+      await onStart(trials, target.trim() || undefined);
     } catch {
       // surfaced via the `error` prop
     } finally {
@@ -47,13 +59,26 @@ export default function RunSimulationPanel({ status, error, onStart, onCancel }:
           <p className="text-sm text-slate-400">Trigger a new run</p>
           <h2 className="mt-1 text-xl font-semibold text-white">Run live simulation</h2>
           <p className="mt-1 text-xs text-slate-500">
-            Launches simulate_attacks.py against this machine's own loopback interface - self-targeted, real
-            packets, real detection results.
+            Launches simulate_attacks.py against this machine only (a loopback address such as {DEFAULT_TARGET},
+            or this machine's own address) - self-targeted, real packets, real detection results.
           </p>
         </div>
 
         {!running ? (
           <div className="flex items-center gap-3">
+            <label className="text-sm text-slate-400" htmlFor="target-address">
+              Target
+            </label>
+            <input
+              id="target-address"
+              value={target}
+              onChange={(event) => setTarget(event.target.value)}
+              placeholder={`${DEFAULT_TARGET} (default)`}
+              spellCheck={false}
+              aria-invalid={targetInvalid}
+              title="Loopback address (127.x.x.x) or this machine's own address"
+              className={`w-44 rounded-xl border bg-[#111827] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-indigo-400/50 ${targetInvalid ? "border-rose-400/60" : "border-white/10"}`}
+            />
             <label className="text-sm text-slate-400" htmlFor="trial-count">
               Trials
             </label>
@@ -71,7 +96,7 @@ export default function RunSimulationPanel({ status, error, onStart, onCancel }:
             </select>
             <button
               onClick={handleStart}
-              disabled={starting}
+              disabled={starting || targetInvalid}
               className="flex items-center gap-2 rounded-xl bg-indigo-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:opacity-50"
             >
               {starting ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
@@ -115,6 +140,11 @@ export default function RunSimulationPanel({ status, error, onStart, onCancel }:
             <span className="text-slate-400">
               trials: <span className="text-slate-200">{status.trials}</span>
             </span>
+            {status.target_ip && (
+              <span className="text-slate-400">
+                target: <span className="text-slate-200">{status.target_ip}</span>
+              </span>
+            )}
             <span className="text-slate-400">
               elapsed: <span className="text-slate-200">{formatElapsed(status.elapsed_seconds)}</span>
             </span>

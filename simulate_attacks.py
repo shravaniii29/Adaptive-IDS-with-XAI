@@ -130,9 +130,18 @@ def resolve_target_ip():
     Falls back to the real LAN IP if the loopback device isn't available
     for some reason - same fragile behavior as before, but at least
     explicit about why."""
+    # An explicit target (the dashboard's "Target address" box passes it as
+    # SIM_TARGET_IP, or set it when running from a terminal) wins.
+    explicit = os.environ.get("SIM_TARGET_IP", "").strip()
+    if explicit:
+        return explicit
     from packet_capture.capture import has_npcap_loopback
     if has_npcap_loopback():
-        return "127.0.0.1"
+        # A dedicated loopback address, not 127.0.0.1: every 127.x.x.x is
+        # loopback on Windows, and the backend scores loopback flows only to
+        # or from this address (IDS_LAB_ADDRESS, same variable) while
+        # ignoring desktop loopback chatter. See app/main.py.
+        return os.environ.get("IDS_LAB_ADDRESS", "127.0.0.77").strip()
     print("WARNING: Npcap loopback capture not available - falling back to "
           "this machine's real LAN IP, which has been unreliable for "
           "self-targeted traffic capture. This is unusual for any Npcap "
@@ -993,14 +1002,10 @@ def _run():
 # =====================================================
 # Backend coordination
 #
-# The backend ignores loopback traffic normally (desktop background chatter
-# is mostly noise to the models) and this harness aims its attacks at
-# loopback, so it tells the backend it is running - the dashboard's "Run
-# simulation" button needs none of this, the backend sees its own process.
-# It also pins the dashboard's Hybrid | V8 view to the hybrid while it runs:
-# the harness reads the deployed hybrid's verdict from /history, which
-# serves whichever model is being viewed (V8 is scored separately as the
-# v8_candidate column either way).
+# While it runs, pin the dashboard's Hybrid | V8 view to the hybrid: the
+# harness reads the deployed hybrid's verdict from /history, which serves
+# whichever model is being viewed (V8 is scored separately as the
+# v8_candidate column either way). The previous view is restored afterwards.
 # =====================================================
 
 def _backend_call(method, path, **kwargs):
@@ -1011,25 +1016,14 @@ def _backend_call(method, path, **kwargs):
         return None
 
 
-def _heartbeat(stop_event):
-    while not stop_event.is_set():
-        _backend_call("POST", "/simulation/active", json={"active": True, "ttl_seconds": 90})
-        stop_event.wait(20)
-
-
 def main():
-    stop = threading.Event()
     previous = _backend_call("GET", "/mode")
     previous_mode = previous.get("mode") if previous else None
-    beat = threading.Thread(target=_heartbeat, args=(stop,), daemon=True)
-    beat.start()
     if previous_mode and previous_mode != "confidence":
         _backend_call("POST", "/mode", json={"mode": "confidence"})
     try:
         _run()
     finally:
-        stop.set()
-        _backend_call("POST", "/simulation/active", json={"active": False})
         if previous_mode and previous_mode != "confidence":
             _backend_call("POST", "/mode", json={"mode": previous_mode})
 

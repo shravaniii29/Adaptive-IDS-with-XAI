@@ -5,9 +5,11 @@ Connects the live packet-capture pipeline to the
 agentic IDS layer and exposes results to the dashboard.
 """
 
+import ipaddress
 import json
 import os
 import re
+import socket
 import subprocess
 import sys
 import time
@@ -69,45 +71,37 @@ _completed_flow_queue = queue.Queue()
 #
 # The attack simulation has to be aimed at loopback (Windows does not
 # deliver a machine's traffic to its own LAN address to any capture point),
-# so loopback is scored automatically while a simulation is running: when
-# the dashboard's Run simulation button launched it, or when
-# simulate_attacks.py reports itself active through /simulation/active.
-# Nothing needs changing for a demo. Set IDS_IGNORE_LOOPBACK=0 to score
-# loopback traffic all the time.
+# so it targets a dedicated "lab" loopback address instead of 127.0.0.1:
+# every 127.x.x.x address is loopback on Windows. Loopback flows to or from
+# the lab address are always scored; every other loopback flow is ignored.
+# That separates the simulation's traffic from desktop noise permanently -
+# no toggle, timer or port list, nothing to change for a demo, and it also
+# covers attacks started by hand against the lab address (default
+# 127.0.0.77, change with IDS_LAB_ADDRESS; simulate_attacks.py reads the
+# same variable). Set IDS_IGNORE_LOOPBACK=0 to score all loopback traffic.
 _IGNORE_LOOPBACK = os.environ.get("IDS_IGNORE_LOOPBACK", "1").strip().lower() not in ("0", "false", "no")
+_LAB_ADDRESS = os.environ.get("IDS_LAB_ADDRESS", "127.0.0.77").strip()
+# Addresses whose loopback flows are scored: the default lab address plus any
+# target chosen for a simulation run from the dashboard (kept until restart).
+_lab_addresses = {_LAB_ADDRESS}
 _ignored_flow_count = 0
-_external_simulation_until = 0.0  # simulate_attacks.py run from a terminal
 
 
 def _is_loopback(ip):
     return ip is not None and (str(ip).startswith("127.") or str(ip) == "::1")
 
 
-def _simulation_active():
-    """A simulation is running: one launched from the dashboard, or one that
-    has recently reported itself through /simulation/active."""
-
-    process = _simulation_run_state["process"]
-
-    if process is not None and process.poll() is None:
-
-        return True
-
-    return time.time() < _external_simulation_until
-
-
-def _loopback_monitoring_on():
-
-    return (not _IGNORE_LOOPBACK) or _simulation_active()
-
-
 def _is_ignorable_loopback_traffic(flow):
 
-    return (
-        _is_loopback(flow.src_ip)
-        and _is_loopback(flow.dst_ip)
-        and not _loopback_monitoring_on()
-    )
+    if not _IGNORE_LOOPBACK:
+
+        return False
+
+    if not (_is_loopback(flow.src_ip) and _is_loopback(flow.dst_ip)):
+
+        return False
+
+    return not _lab_addresses.intersection((str(flow.src_ip), str(flow.dst_ip)))
 
 
 def _handle_completed_flow(flow):
@@ -371,11 +365,14 @@ def get_status():
         "ignored_loopback_flows":
             _ignored_flow_count,
 
-        "loopback_monitoring":
-            _loopback_monitoring_on(),
+        "ignore_loopback":
+            _IGNORE_LOOPBACK,
 
-        "simulation_active":
-            _simulation_active(),
+        "lab_address":
+            _LAB_ADDRESS,
+
+        "lab_addresses":
+            sorted(_lab_addresses),
 
         "last_error":
             state.last_error,
@@ -1153,9 +1150,54 @@ _simulation_run_state = {
     "process": None,
     "out_dir": None,
     "trials": None,
+    "target_ip": None,
     "started_at": None,
     "log_path": None,
 }
+
+
+def _local_addresses():
+    """This machine's own IPv4 addresses (including the LAN address)."""
+
+    found = set()
+
+    try:
+        found.update(socket.gethostbyname_ex(socket.gethostname())[2])
+    except OSError:
+        pass
+
+    try:
+        probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        probe.connect(("8.8.8.8", 80))
+        found.add(probe.getsockname()[0])
+        probe.close()
+    except OSError:
+        pass
+
+    return found
+
+
+def _validate_simulation_target(raw):
+    """The simulation sends real floods and scans, so its target is limited
+    to this machine: a loopback address (127.x.x.x) or one of its own
+    addresses. Anything else is refused."""
+
+    try:
+        address = ipaddress.ip_address(str(raw).strip())
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"{raw!r} is not a valid IP address")
+
+    if address.version != 4:
+        raise HTTPException(status_code=400, detail="only IPv4 targets are supported")
+
+    if address.is_loopback or str(address) in _local_addresses():
+        return str(address)
+
+    raise HTTPException(
+        status_code=400,
+        detail="the simulation can only target this machine: use a loopback address "
+               "(127.x.x.x, e.g. 127.0.0.77) or this machine's own address",
+    )
 
 
 @app.post("/simulations/run")
@@ -1163,10 +1205,13 @@ def start_simulation_run(payload: dict = None):
 
     trials = 1
     out_dir = None
+    target_ip = _LAB_ADDRESS
 
     if payload:
         trials = int(payload.get("trials", 1))
         out_dir = payload.get("out_dir")
+        if payload.get("target_ip"):
+            target_ip = _validate_simulation_target(payload["target_ip"])
 
     if trials < 1 or trials > 10:
         raise HTTPException(status_code=400, detail="trials must be between 1 and 10")
@@ -1193,44 +1238,28 @@ def start_simulation_run(payload: dict = None):
         log_path = sim_dir / "run.log"
         log_file = open(log_path, "w")
 
+        # Loopback flows to the chosen target are scored (all other loopback
+        # traffic stays ignored); the script reads the target from SIM_TARGET_IP.
+        _lab_addresses.add(target_ip)
+
         process = subprocess.Popen(
             [sys.executable, "simulate_attacks.py", out_dir, str(trials)],
             cwd=_PROJECT_ROOT,
             stdout=log_file,
             stderr=subprocess.STDOUT,
+            env={**os.environ, "SIM_TARGET_IP": target_ip},
         )
 
         _simulation_run_state.update({
             "process": process,
             "out_dir": out_dir,
             "trials": trials,
+            "target_ip": target_ip,
             "started_at": time.time(),
             "log_path": str(log_path),
         })
 
-    return {"status": "started", "out_dir": out_dir, "trials": trials}
-
-
-class SimulationActiveRequest(BaseModel):
-    active: bool
-    ttl_seconds: float = 90.0
-
-
-@app.post("/simulation/active")
-def set_simulation_active(request: SimulationActiveRequest):
-    """simulate_attacks.py run from a terminal reports itself here so
-    loopback traffic is scored while it runs (a run launched from the
-    dashboard is detected automatically). The report expires after
-    ttl_seconds, so a crashed script cannot leave loopback monitoring on."""
-
-    global _external_simulation_until
-
-    _external_simulation_until = (
-        time.time() + min(max(request.ttl_seconds, 1.0), 600.0)
-        if request.active else 0.0
-    )
-
-    return {"simulation_active": _simulation_active()}
+    return {"status": "started", "out_dir": out_dir, "trials": trials, "target_ip": target_ip}
 
 
 @app.get("/simulations/run/status")
@@ -1261,6 +1290,7 @@ def get_simulation_run_status():
             "running": running,
             "out_dir": _simulation_run_state["out_dir"],
             "trials": _simulation_run_state["trials"],
+            "target_ip": _simulation_run_state["target_ip"],
             "started_at": started_at,
             "elapsed_seconds": (time.time() - started_at) if started_at else None,
             "exit_code": None if running else process.returncode,
