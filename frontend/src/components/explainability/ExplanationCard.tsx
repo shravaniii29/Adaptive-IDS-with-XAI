@@ -8,6 +8,15 @@ const friendlyFeature: Record<string, { name: string; meaning: string }> = {
   "Subflow Fwd Byts": { name: "Outgoing data volume", meaning: "how much data was sent out in this part of the connection" },
   "Init Bwd Win Byts": { name: "Incoming connection capacity", meaning: "how much data the remote side was ready to receive" },
   "iat variation": { name: "Timing variation", meaning: "whether the gaps between packets were unusually irregular" },
+  // V8-mode features
+  "Dst Port": { name: "Service contacted", meaning: "which network port the connection was addressed to" },
+  "Init Fwd Win Byts": { name: "Sender's opening window", meaning: "how much data the sender said it could receive when the connection started" },
+  "Fwd Pkt Len Mean": { name: "Average outgoing packet size", meaning: "how big the packets sent out were, on average" },
+  "Fwd Pkt Len Max": { name: "Largest outgoing packet", meaning: "the biggest packet sent out in this connection" },
+  "Fwd Seg Size Avg": { name: "Average outgoing segment size", meaning: "the typical size of the data chunks sent out" },
+  "Pkt Len Std": { name: "Packet size variation", meaning: "how much packet sizes differ within this connection" },
+  "Pkt Len Var": { name: "Packet size spread", meaning: "how widely packet sizes are spread within this connection" },
+  "Bwd Pkts/s": { name: "Reply rate", meaning: "how many packets per second came back from the other side" },
 };
 const fallback = (feature?: string | null) => ({
   name: (feature ?? "Unknown feature").replace(/_/g, " "),

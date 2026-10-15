@@ -19,15 +19,18 @@ class DetectionService:
         ↓
     Feature Extraction
         ↓
-    Hybrid Prediction
+    Hybrid Prediction (deployed hybrid) and V8 Prediction  - both, always
         ↓
-    Drift Detection
+    Drift Detection (one monitor per model)
         ↓
-    SHAP Explainability
+    SHAP Explainability (each model's own explainer)
         ↓
-    Agentic Analysis
+    Agentic Analysis (one coordinator per model)
         ↓
-    Final Detection Result
+    Final Detection Result (one set of outputs per model under "variants")
+
+    Every flow is scored by both models. `mode` only selects which model's
+    results the dashboard views - see detection/result_views.py.
     """
 
     # Placeholder shape returned for shap_explanation/agent_analysis when
@@ -35,6 +38,11 @@ class DetectionService:
     # does result["shap_explanation"].get(...) doesn't need to change.
     _SKIPPED_EXPLANATION = {"skipped": "lightweight mode - SHAP disabled"}
     _SKIPPED_AGENT_ANALYSIS = {"skipped": "lightweight mode - agents disabled"}
+
+    MODES = {
+        "confidence": "Deployed hybrid (confidence fusion)",
+        "v8": "V8 (paper baseline)",
+    }
 
     def __init__(self, lightweight=False):
 
@@ -54,21 +62,22 @@ class DetectionService:
         # False any time the SHAP/agent output itself needs debugging.
         self.lightweight = lightweight
 
-        self.drift_detector = DriftDetector()
+        # One drift monitor and one agent coordinator per model: each
+        # watches / remembers only its own model's verdicts.
+        self.drift_detectors = {mode: DriftDetector() for mode in self.MODES}
+
+        self.coordinators = {
+            mode: (None if lightweight else CoordinatorAgent())
+            for mode in self.MODES
+        }
 
         self.shap_explainer = None if lightweight else SHAPExplainer()
 
-        self.coordinator = None if lightweight else CoordinatorAgent()
-
-        # Which model is the primary detector: "confidence" (the deployed
-        # hybrid with confidence-weighted fusion) or "v8" (the paper's
-        # validated V8 baseline). Switchable at run time from the dashboard.
-        self.mode = "confidence"
-
         self._v8_explainer = None
 
-        # Counter values at the last "Clear Stats" (see reset_statistics)
-        self._stats_baseline = (0, 0, 0)
+        # Which model's results the dashboard is VIEWING. Both models score
+        # every flow regardless; this never changes what is computed.
+        self.mode = "confidence"
 
         # -----------------------------------------
         # Statistics
@@ -76,108 +85,94 @@ class DetectionService:
 
         self.total_flows = 0
 
-        self.normal_flows = 0
+        self._counts = {
+            mode: {"normal": 0, "positive": 0} for mode in self.MODES
+        }
 
-        self.positive_flows = 0
+        # Counter values at the last "Clear Stats" (see reset_statistics)
+        self._stats_baseline = self._snapshot_counts()
+
+    # Kept so existing callers/tests that read the deployed hybrid's
+    # counters keep working.
+    @property
+    def normal_flows(self):
+        return self._counts["confidence"]["normal"]
+
+    @property
+    def positive_flows(self):
+        return self._counts["confidence"]["positive"]
+
+    # -----------------------------------------
+    # Detection
+    # -----------------------------------------
 
     def detect(self, flow):
 
-        # -----------------------------------------
-        # Feature Extraction
-        # -----------------------------------------
-
         features = extract_features(flow)
 
-        # -----------------------------------------
-        # Hybrid Prediction
-        # -----------------------------------------
-
-        prediction = predict_flow(features)
+        dst_port = flow.dst_port if flow.dst_port is not None else 0
 
         # -----------------------------------------
-        # V8 mode: the paper's validated V8 model is the primary detector
-        # (its verdict, probability and features replace the deployed
-        # hybrid's). If V8 cannot score this flow the deployed hybrid's
-        # result is used and the result says so.
+        # Score with both models
         # -----------------------------------------
 
-        explain_features = features
+        predictions = {}
 
-        explainer = self.shap_explainer
+        hybrid = predict_flow(features)
 
-        mode_note = None
+        predictions["confidence"] = {
+            "features": features,
+            "mode_note": None,
+            "xgb_probability": hybrid["xgb_probability"],
+            "xgb_prediction": hybrid["xgb_prediction"],
+            "isolation_score": hybrid["isolation_score"],
+            "isolation_anomaly": hybrid["isolation_anomaly"],
+            "isolation_prediction": hybrid["isolation_prediction"],
+            "confidence_score": hybrid["confidence_score"],
+            "fusion_mode": hybrid["fusion_mode"],
+            "hybrid_prediction": hybrid["hybrid_prediction"],
+        }
 
-        if self.mode == "v8":
+        v8_note = None
 
-            dst_port = flow.dst_port if flow.dst_port is not None else 0
+        v8 = experimental_models.score_v8_detail(flow, dst_port)
 
-            v8 = experimental_models.score_v8_detail(flow, dst_port)
+        if v8.get("available"):
 
-            if v8.get("available"):
+            predictions["v8"] = {
+                "features": v8["features"],
+                "mode_note": None,
+                "xgb_probability": v8["xgb_probability"],
+                "xgb_prediction": v8["xgb_prediction"],
+                "isolation_score": v8["isolation_score"],
+                "isolation_anomaly": v8["isolation_anomaly"],
+                "isolation_prediction": v8["isolation_prediction"],
+                "confidence_score": None,
+                "fusion_mode": "v8",
+                "hybrid_prediction": v8["hybrid_prediction"],
+            }
 
-                prediction = {
-                    **prediction,
-                    "xgb_probability": v8["xgb_probability"],
-                    "xgb_prediction": v8["xgb_prediction"],
-                    "isolation_score": v8["isolation_score"],
-                    "isolation_anomaly": v8["isolation_anomaly"],
-                    "isolation_prediction": v8["isolation_prediction"],
-                    "confidence_score": None,
-                    "fusion_mode": "v8",
-                    "hybrid_prediction": v8["hybrid_prediction"],
-                }
+        else:
 
-                explain_features = v8["features"]
-
-                explainer = self._get_v8_explainer()
-
-            else:
-
-                mode_note = "V8 unavailable for this flow: " + str(v8.get("error"))
-
-        # -----------------------------------------
-        # Drift Detection
-        # -----------------------------------------
-
-        drift_detected = self.drift_detector.update(
-
-            prediction["hybrid_prediction"]
-
-        )
+            v8_note = "V8 unavailable for this flow: " + str(v8.get("error"))
 
         # -----------------------------------------
-        # SHAP Explainability
-        # -----------------------------------------
-
-        shap_explanation = (
-            self._SKIPPED_EXPLANATION
-            if self.lightweight
-            else explainer.explain_flow(explain_features)
-        )
-
-        # -----------------------------------------
-        # Statistics
+        # Statistics (flow_id is the running total across both models)
         # -----------------------------------------
 
         self.total_flows += 1
 
-        if prediction["hybrid_prediction"] == 1:
+        for mode, prediction in predictions.items():
 
-            self.positive_flows += 1
-
-        else:
-
-            self.normal_flows += 1
+            self._counts[mode][
+                "positive" if prediction["hybrid_prediction"] == 1 else "normal"
+            ] += 1
 
         # -----------------------------------------
-        # Detection Result
+        # Flow-level fields, shared by both models' views
         # -----------------------------------------
 
         result = {
-
-            # -------------------------------------
-            # Flow information
-            # -------------------------------------
 
             "flow_id":
                 self.total_flows,
@@ -215,108 +210,86 @@ class DetectionService:
             "flow_start_time":
                 flow.start_time,
 
-            # -------------------------------------
-            # Extracted features
-            # -------------------------------------
+            "v8_note":
+                v8_note,
 
-            "features":
-                explain_features,
-
-            "mode_note":
-                mode_note,
-
-            # -------------------------------------
-            # XGBoost
-            # -------------------------------------
-
-            "xgb_probability":
-                prediction["xgb_probability"],
-
-            "xgb_prediction":
-                prediction["xgb_prediction"],
-
-            # -------------------------------------
-            # Isolation Forest
-            # -------------------------------------
-
-            "isolation_score":
-                prediction["isolation_score"],
-
-            "isolation_prediction":
-                prediction["isolation_prediction"],
-
-            "isolation_anomaly":
-                prediction["isolation_anomaly"],
-
-            # -------------------------------------
-            # Hybrid prediction
-            # -------------------------------------
-
-            "confidence_score":
-                prediction["confidence_score"],
-
-            "fusion_mode":
-                prediction["fusion_mode"],
-
-            "hybrid_prediction":
-                prediction["hybrid_prediction"],
-
-            # -------------------------------------
-            # Drift
-            # -------------------------------------
-
-            "drift_detected":
-                drift_detected,
-
-            # -------------------------------------
-            # SHAP
-            # -------------------------------------
-
-            "shap_explanation":
-                shap_explanation,
-
-            # -------------------------------------
-            # Experimental models (EXPERIMENTAL panel)
-            #
-            # Isolated in its own try/except: a bug here
-            # must never take down the real detection
-            # result the way an unhandled exception from
-            # detect() as a whole would (the caller in
-            # app/main.py::_handle_completed_flow catches
-            # any exception from detect() and discards
-            # the entire result).
-            # -------------------------------------
-
+            # Experimental models (EXPERIMENTAL panel). Isolated in its own
+            # try/except: a bug here must never take down the real
+            # detection result the way an unhandled exception from detect()
+            # as a whole would (the caller in
+            # app/main.py::_handle_completed_flow catches any exception from
+            # detect() and discards the entire result).
             "experimental_models":
-                self._safe_experimental_predict(flow)
+                self._safe_experimental_predict(flow),
         }
 
         # -----------------------------------------
-        # Agentic Layer
+        # Per-model drift, SHAP and agent analysis
         # -----------------------------------------
 
-        agent_analysis = (
-            self._SKIPPED_AGENT_ANALYSIS
-            if self.lightweight
-            else self.coordinator.analyze(result)
-        )
+        variants = {}
 
-        # -----------------------------------------
-        # Attach Agent Analysis
-        # -----------------------------------------
+        for mode, prediction in predictions.items():
 
-        result["agent_analysis"] = agent_analysis
+            try:
+
+                variants[mode] = self._complete_variant(mode, prediction, result)
+
+            except Exception:
+
+                # The deployed hybrid is the primary result: never lose the
+                # flow because the V8 view failed to explain itself.
+                if mode == "confidence":
+
+                    raise
+
+        result["variants"] = variants
+
+        # Top level mirrors the model being viewed at scoring time, so
+        # anything that reads a result directly (tests, scripts) still sees
+        # the flat shape.
+        result.update(variants.get(self.mode, variants["confidence"]))
 
         return result
 
-    # -----------------------------------------
-    # Detection mode (dashboard switch)
-    # -----------------------------------------
+    def _complete_variant(self, mode, prediction, common):
+        """Drift, SHAP and agent analysis for one model's prediction."""
 
-    MODES = {
-        "confidence": "Deployed hybrid (confidence fusion)",
-        "v8": "V8 (paper baseline)",
-    }
+        variant = dict(prediction)
+
+        variant["drift_detected"] = self.drift_detectors[mode].update(
+            prediction["hybrid_prediction"]
+        )
+
+        if self.lightweight:
+
+            variant["shap_explanation"] = self._SKIPPED_EXPLANATION
+
+        else:
+
+            explainer = (
+                self.shap_explainer if mode == "confidence"
+                else self._get_v8_explainer()
+            )
+
+            variant["shap_explanation"] = explainer.explain_flow(
+                prediction["features"]
+            )
+
+        # The coordinator reads a flat result, so give it this model's view.
+        view = {**common, **variant}
+
+        variant["agent_analysis"] = (
+            self._SKIPPED_AGENT_ANALYSIS
+            if self.lightweight
+            else self.coordinators[mode].analyze(view)
+        )
+
+        return variant
+
+    # -----------------------------------------
+    # Which model the dashboard is viewing
+    # -----------------------------------------
 
     def available_modes(self):
 
@@ -330,10 +303,9 @@ class DetectionService:
         ]
 
     def set_mode(self, mode):
-        """Switch the primary detector. Raises ValueError for an unknown
-        or unavailable mode. Resets the drift monitor: it watches the
-        stream of verdicts, and a different model's verdicts would
-        otherwise show up as a false change in the alert rate."""
+        """Choose which model's results are shown. Both models keep scoring
+        every flow, so nothing is lost or reset by switching. Raises
+        ValueError for an unknown or unavailable mode."""
 
         if mode not in self.MODES:
 
@@ -343,11 +315,7 @@ class DetectionService:
 
             raise ValueError("V8 mode is unavailable: the V8 artifacts did not load")
 
-        if mode != self.mode:
-
-            self.mode = mode
-
-            self.drift_detector.reset()
+        self.mode = mode
 
     def _get_v8_explainer(self):
 
@@ -377,6 +345,17 @@ class DetectionService:
                 "error": str(exc),
             }
 
+    # -----------------------------------------
+    # Statistics
+    # -----------------------------------------
+
+    def _snapshot_counts(self):
+
+        return {
+            "total": self.total_flows,
+            **{mode: dict(counts) for mode, counts in self._counts.items()},
+        }
+
     def reset_statistics(self):
         """Zero the counters shown on the dashboard ("Clear Stats").
 
@@ -385,26 +364,27 @@ class DetectionService:
         reused - which is why this records a baseline to subtract instead of
         zeroing total_flows itself."""
 
-        self._stats_baseline = (
-            self.total_flows,
-            self.normal_flows,
-            self.positive_flows,
-        )
+        self._stats_baseline = self._snapshot_counts()
 
-        self.drift_detector.reset()
+        for detector in self.drift_detectors.values():
 
-    def get_statistics(self):
+            detector.reset()
 
-        base_total, base_normal, base_positive = self._stats_baseline
+    def get_statistics(self, mode=None):
+        """Counters for the model being viewed (total is the same for both)."""
+
+        mode = mode or self.mode
+
+        base = self._stats_baseline
 
         return {
 
             "total_flows":
-                self.total_flows - base_total,
+                self.total_flows - base["total"],
 
             "normal_flows":
-                self.normal_flows - base_normal,
+                self._counts[mode]["normal"] - base[mode]["normal"],
 
             "positive_flows":
-                self.positive_flows - base_positive
+                self._counts[mode]["positive"] - base[mode]["positive"],
         }

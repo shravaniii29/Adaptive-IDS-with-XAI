@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { getAgentAnalysis } from "../services/agentService";
 import type { AgentAnalysisResponse } from "../types/agent";
+import { useModeVersion } from "./useModeVersion";
 
 export function useAgentAnalysis(flowId: string | number | undefined) {
   const [analysis, setAnalysis] = useState<AgentAnalysisResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  // The same flow has a different agent analysis under each model.
+  const modeVersion = useModeVersion();
 
   useEffect(() => {
     if (flowId === undefined) {
@@ -19,7 +22,7 @@ export function useAgentAnalysis(flowId: string | number | undefined) {
       .catch(() => { if (active) setAnalysis(null); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [flowId]);
+  }, [flowId, modeVersion]);
 
   return { analysis, loading };
 }

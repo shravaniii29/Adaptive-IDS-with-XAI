@@ -223,6 +223,83 @@ FEATURE_KNOWLEDGE = {
             "Deviations from typical segment sizes can indicate abnormal server responses.",
         "possible_behavior":
             "May reflect crafted or unusual responses generated during an attack."
+    },
+
+    # -------------------------------------------------
+    # Features used only by the V8 model (V8 mode). The deployed model's
+    # 25 features are described above; these 8 are the V8-only ones.
+    # -------------------------------------------------
+
+    "Dst Port": {
+        "meaning":
+            "The destination port the connection was addressed to.",
+        "interpretation":
+            "The port identifies the service being contacted; some ports are far more often targeted than others, and very high or unusual ports can indicate non-standard services.",
+        "possible_behavior":
+            "Scans touch many unusual ports; floods and brute-force attempts concentrate on one service port."
+    },
+
+    "Init Fwd Win Byts": {
+        "meaning":
+            "The TCP receive window the sender advertised when the connection opened.",
+        "interpretation":
+            "Fixed, tool-specific window sizes can identify automated or crafted traffic.",
+        "possible_behavior":
+            "Attack tools often use a constant window value that ordinary operating systems do not."
+    },
+
+    "Fwd Pkt Len Mean": {
+        "meaning":
+            "Average size of packets sent from the initiator to the destination.",
+        "interpretation":
+            "Very small or perfectly uniform outgoing packets deviate from typical application traffic.",
+        "possible_behavior":
+            "Uniform tiny packets are typical of floods and scans; larger ones suggest data transfer."
+    },
+
+    "Fwd Pkt Len Max": {
+        "meaning":
+            "Largest packet sent from the initiator to the destination.",
+        "interpretation":
+            "An unusually large outgoing packet suggests a payload or upload; a very small maximum suggests probing.",
+        "possible_behavior":
+            "Probes keep this near zero; bulk transfers and injection attempts push it up."
+    },
+
+    "Fwd Seg Size Avg": {
+        "meaning":
+            "Average segment size the initiator sent.",
+        "interpretation":
+            "Closely tied to the average outgoing packet size; deviations suggest a non-standard traffic shape.",
+        "possible_behavior":
+            "Very consistent small segments are common in automated attacks."
+    },
+
+    "Pkt Len Std": {
+        "meaning":
+            "How much packet sizes vary across the whole flow (standard deviation).",
+        "interpretation":
+            "Almost no variation means machine-generated traffic; large variation is more typical of real conversations.",
+        "possible_behavior":
+            "Floods and scans repeat identical packets, so variation is close to zero."
+    },
+
+    "Pkt Len Var": {
+        "meaning":
+            "Variance of packet sizes across the whole flow.",
+        "interpretation":
+            "The squared counterpart of packet-size variation; very low values mean repetitive packets.",
+        "possible_behavior":
+            "Repetitive identical packets are typical of denial-of-service traffic."
+    },
+
+    "Bwd Pkts/s": {
+        "meaning":
+            "Packets per second sent back by the destination.",
+        "interpretation":
+            "Very low values mean the target barely answers; very high values mean heavy return traffic.",
+        "possible_behavior":
+            "Scans and floods often get little or no reply, while normal sessions show a steady reply rate."
     }
 }
 
