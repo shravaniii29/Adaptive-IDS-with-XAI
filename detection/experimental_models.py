@@ -299,6 +299,48 @@ def _predict_v8(flow, dst_port):
         return {"available": False, "error": str(exc)}
 
 
+def v8_available():
+    """True when the V8 artifacts loaded and V8 can serve as the live model."""
+    return _v8_ready
+
+
+def score_v8_detail(flow, dst_port):
+    """Full V8 scoring of one live flow, for use as the PRIMARY detector
+    (V8 mode on the dashboard) rather than a side-by-side comparison.
+
+    Same computation as _predict_v8 - V8's own validated rule is kept as
+    published (XGBoost >= V8's threshold, or Isolation Forest anomaly) so
+    live V8 mode reproduces the paper's baseline - but it returns every
+    intermediate value the dashboard and the explanation layer need."""
+    if not _v8_ready:
+        return {"available": False, "error": _v8_load_error}
+    try:
+        features_25 = extract_deployed_features(flow)
+        features_v8 = _extract_v8_features(flow, features_25, dst_port)
+        row = pd.DataFrame([[features_v8[f] for f in v8_top_features]], columns=v8_top_features)
+        scaled = v8_scaler.transform(row)
+
+        xgb_probability = float(v8_xgb.predict_proba(row)[0][1])
+        xgb_prediction = int(xgb_probability >= v8_threshold)
+        isolation_score = float(fast_isolation_forest.decision_function(v8_isolation, scaled)[0])
+        isolation_prediction = int(isolation_score < 0)
+        isolation_anomaly = float(-isolation_score - v8_isolation.offset_)
+
+        return {
+            "available": True,
+            "features": features_v8,
+            "xgb_probability": xgb_probability,
+            "xgb_prediction": xgb_prediction,
+            "isolation_score": isolation_score,
+            "isolation_anomaly": isolation_anomaly,
+            "isolation_prediction": isolation_prediction,
+            "hybrid_prediction": int(xgb_prediction == 1 or isolation_prediction == 1),
+            "threshold": float(v8_threshold),
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"available": False, "error": str(exc)}
+
+
 candidate_models = {}
 candidate_thresholds = {}
 candidate_features = None

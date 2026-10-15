@@ -19,6 +19,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from detection.detection_service import DetectionService
 from feature_extraction.flow_manager import FlowManager
@@ -57,7 +58,42 @@ _completed_flow_queue = queue.Queue()
 # FLOW PROCESSING
 # =====================================================
 
+# The dashboard polls this backend over loopback every few seconds, and the
+# sniffer captures that traffic like any other. Scored as ordinary flows it
+# made up most of a running system's history (112 of 174 flows in one
+# observed session) and was flagged as an attack about 70% of the time, so
+# half of everything on screen was the IDS looking at itself. Flows between
+# loopback addresses that involve one of these ports are management-plane
+# traffic and are skipped. Set IDS_IGNORE_PORTS="" to score everything.
+_IGNORED_PORTS = {
+    int(p) for p in os.environ.get("IDS_IGNORE_PORTS", "8000,5173").split(",")
+    if p.strip().isdigit()
+}
+_ignored_flow_count = 0
+
+
+def _is_loopback(ip):
+    return ip is not None and (str(ip).startswith("127.") or str(ip) == "::1")
+
+
+def _is_own_management_traffic(flow):
+    return (
+        bool(_IGNORED_PORTS)
+        and _is_loopback(flow.src_ip)
+        and _is_loopback(flow.dst_ip)
+        and (flow.dst_port in _IGNORED_PORTS or flow.src_port in _IGNORED_PORTS)
+    )
+
+
 def _handle_completed_flow(flow):
+
+    global _ignored_flow_count
+
+    if _is_own_management_traffic(flow):
+
+        _ignored_flow_count += 1
+
+        return
 
     try:
 
@@ -239,6 +275,40 @@ app.add_middleware(
 # STATUS ENDPOINT
 # =====================================================
 
+class ModeRequest(BaseModel):
+    mode: str
+
+
+@app.get("/mode")
+def get_mode():
+    """Which model is the primary detector, and which modes can be chosen."""
+
+    return {
+        "mode": detection_service.mode,
+        "modes": detection_service.available_modes(),
+    }
+
+
+@app.post("/mode")
+def set_mode(request: ModeRequest):
+    """Switch the primary detector ("confidence" or "v8") at run time.
+    Flows already scored keep the mode they were scored with
+    (recorded as fusion_mode in each result)."""
+
+    try:
+
+        detection_service.set_mode(request.mode)
+
+    except ValueError as exc:
+
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    return {
+        "mode": detection_service.mode,
+        "modes": detection_service.available_modes(),
+    }
+
+
 @app.get("/status")
 def get_status():
 
@@ -249,6 +319,9 @@ def get_status():
     return {
 
         **statistics,
+
+        "ignored_management_flows":
+            _ignored_flow_count,
 
         "last_error":
             state.last_error,
@@ -736,6 +809,9 @@ def get_history():
 
             "confidence_score":
                 result.get("confidence_score"),
+
+            "fusion_mode":
+                result.get("fusion_mode"),
 
             "variant1_xgb_single_flow":
                 experimental.get(

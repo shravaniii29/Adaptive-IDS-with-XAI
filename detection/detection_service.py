@@ -60,6 +60,13 @@ class DetectionService:
 
         self.coordinator = None if lightweight else CoordinatorAgent()
 
+        # Which model is the primary detector: "confidence" (the deployed
+        # hybrid with confidence-weighted fusion) or "v8" (the paper's
+        # validated V8 baseline). Switchable at run time from the dashboard.
+        self.mode = "confidence"
+
+        self._v8_explainer = None
+
         # -----------------------------------------
         # Statistics
         # -----------------------------------------
@@ -85,6 +92,47 @@ class DetectionService:
         prediction = predict_flow(features)
 
         # -----------------------------------------
+        # V8 mode: the paper's validated V8 model is the primary detector
+        # (its verdict, probability and features replace the deployed
+        # hybrid's). If V8 cannot score this flow the deployed hybrid's
+        # result is used and the result says so.
+        # -----------------------------------------
+
+        explain_features = features
+
+        explainer = self.shap_explainer
+
+        mode_note = None
+
+        if self.mode == "v8":
+
+            dst_port = flow.dst_port if flow.dst_port is not None else 0
+
+            v8 = experimental_models.score_v8_detail(flow, dst_port)
+
+            if v8.get("available"):
+
+                prediction = {
+                    **prediction,
+                    "xgb_probability": v8["xgb_probability"],
+                    "xgb_prediction": v8["xgb_prediction"],
+                    "isolation_score": v8["isolation_score"],
+                    "isolation_anomaly": v8["isolation_anomaly"],
+                    "isolation_prediction": v8["isolation_prediction"],
+                    "confidence_score": None,
+                    "fusion_mode": "v8",
+                    "hybrid_prediction": v8["hybrid_prediction"],
+                }
+
+                explain_features = v8["features"]
+
+                explainer = self._get_v8_explainer()
+
+            else:
+
+                mode_note = "V8 unavailable for this flow: " + str(v8.get("error"))
+
+        # -----------------------------------------
         # Drift Detection
         # -----------------------------------------
 
@@ -101,7 +149,7 @@ class DetectionService:
         shap_explanation = (
             self._SKIPPED_EXPLANATION
             if self.lightweight
-            else self.shap_explainer.explain_flow(features)
+            else explainer.explain_flow(explain_features)
         )
 
         # -----------------------------------------
@@ -169,7 +217,10 @@ class DetectionService:
             # -------------------------------------
 
             "features":
-                features,
+                explain_features,
+
+            "mode_note":
+                mode_note,
 
             # -------------------------------------
             # XGBoost
@@ -254,6 +305,56 @@ class DetectionService:
         result["agent_analysis"] = agent_analysis
 
         return result
+
+    # -----------------------------------------
+    # Detection mode (dashboard switch)
+    # -----------------------------------------
+
+    MODES = {
+        "confidence": "Deployed hybrid (confidence fusion)",
+        "v8": "V8 (paper baseline)",
+    }
+
+    def available_modes(self):
+
+        return [
+            {
+                "id": mode_id,
+                "label": label,
+                "available": mode_id != "v8" or experimental_models.v8_available(),
+            }
+            for mode_id, label in self.MODES.items()
+        ]
+
+    def set_mode(self, mode):
+        """Switch the primary detector. Raises ValueError for an unknown
+        or unavailable mode. Resets the drift monitor: it watches the
+        stream of verdicts, and a different model's verdicts would
+        otherwise show up as a false change in the alert rate."""
+
+        if mode not in self.MODES:
+
+            raise ValueError(f"unknown mode {mode!r}; choose one of {list(self.MODES)}")
+
+        if mode == "v8" and not experimental_models.v8_available():
+
+            raise ValueError("V8 mode is unavailable: the V8 artifacts did not load")
+
+        if mode != self.mode:
+
+            self.mode = mode
+
+            self.drift_detector.reset()
+
+    def _get_v8_explainer(self):
+
+        if self._v8_explainer is None:
+
+            from explainability.shap_explainer_v8 import SHAPExplainerV8
+
+            self._v8_explainer = SHAPExplainerV8()
+
+        return self._v8_explainer
 
     def _safe_experimental_predict(self, flow):
         """Never let a failure in the experimental panel propagate - a

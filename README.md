@@ -223,16 +223,22 @@ On startup the backend:
 
 Before any flow completes, the result endpoints return `{"message": "no flows processed yet"}`.
 
-### How the two detectors are combined (`detection/predictor.py`)
+### Detection modes (switch in the dashboard's top bar, or `/mode`)
 
-The live predictor supports two fusion rules, selected with the `IDS_FUSION_MODE` environment variable:
+The primary detector can be switched at run time:
 
-| Mode | Rule |
+| Mode | What decides whether a flow is an attack |
 |---|---|
-| `confidence` (default) | `confidence = 0.7 * xgb_probability + 0.3 * isolation_anomaly`, flagged when `confidence >= threshold`. `isolation_anomaly` is Isolation Forest's own anomaly score in (0, 1]. The threshold and weight are read from `models/fusion_config.json`. |
-| `or` | The previous rule: flagged if XGBoost or Isolation Forest flags the flow. Higher recall, but it flags far more ordinary traffic. |
+| `confidence` (default) | The deployed hybrid with confidence-weighted fusion: `confidence = 0.7 * xgb_probability + 0.3 * isolation_anomaly`, flagged when `confidence >= threshold`. `isolation_anomaly` is Isolation Forest's own anomaly score in (0, 1]. The threshold and weight are read from `models/fusion_config.json`. |
+| `v8` | The paper's validated V8 model (`models/v8_reference/`, its own 25 features and threshold, with V8's own XGBoost-or-Isolation-Forest rule as published) with V8 SHAP explanations. |
 
-`/predict`, `/history` and the WebSocket payload also return `isolation_anomaly`, `confidence_score` and `fusion_mode`. The threshold in `models/fusion_config.json` was tuned by `tune_fusion_threshold.py` on live self-targeted traffic (data in `fusion_calibration/`). On the held-out trial it gave 98.3% attack recall against 90.7% for the `or` rule, with the same specificity on the synthetic benign probes. It is sensitive: at a threshold of 0.20 recall falls to 51%, and ordinary traffic overlaps attack scores (ordinary-traffic specificity about 64%, 14 flows). Re-run `tune_fusion_threshold.py` after changing the models or the feature pipeline.
+`GET /mode` returns the current mode and which modes are available; `POST /mode` with `{"mode": "v8"}` switches it. Flows already scored keep the mode they were scored with (`fusion_mode` in each result). Switching resets the drift monitor, because a different model's verdicts would otherwise look like a change in the alert rate. The mode is held in memory and returns to `confidence` when the backend restarts.
+
+`/predict`, `/history` and the WebSocket payload also return `isolation_anomaly`, `confidence_score` and `fusion_mode`. Full statistics for the confidence mode are in `fusion_calibration/STATS.md`. The threshold was tuned by `tune_fusion_threshold.py` on live self-targeted traffic: on the held-out trial it gave 98.3% attack recall, but it is sensitive (at 0.20 recall falls to 51%), ordinary traffic overlaps attack scores, and the blended score ranks flows slightly worse than Isolation Forest alone (ROC-AUC 0.83 against 0.91) because the deployed XGBoost probability is close to chance on live flows. Re-run `tune_fusion_threshold.py` after changing the models or the feature pipeline.
+
+### The IDS ignores its own dashboard traffic
+
+The dashboard polls the backend over loopback every few seconds, and the sniffer would otherwise capture and score that traffic (in one session 112 of 174 flows, about 70% of them flagged). Loopback flows involving ports 8000 or 5173 are therefore skipped; the count is shown as `ignored_management_flows` in `/status`. Change the ports with `IDS_IGNORE_PORTS` (comma-separated), or set it to an empty string to score everything.
 
 ## Running the frontend
 
