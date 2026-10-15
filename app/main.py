@@ -275,6 +275,26 @@ app.add_middleware(
 # STATUS ENDPOINT
 # =====================================================
 
+@app.post("/clear")
+def clear_stats():
+    """Dashboard "Clear Stats": zero the counters and forget the buffered
+    flow history. The dashboard's button calls this; it previously existed
+    only in the demo backend (app/demo_main.py), so on the real backend the
+    button silently did nothing."""
+
+    with state.lock:
+
+        state.last_result = None
+
+        state.result_history.clear()
+
+        state.last_error = None
+
+    detection_service.reset_statistics()
+
+    return {"status": "cleared"}
+
+
 class ModeRequest(BaseModel):
     mode: str
 

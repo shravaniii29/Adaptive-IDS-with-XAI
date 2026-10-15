@@ -67,6 +67,9 @@ class DetectionService:
 
         self._v8_explainer = None
 
+        # Counter values at the last "Clear Stats" (see reset_statistics)
+        self._stats_baseline = (0, 0, 0)
+
         # -----------------------------------------
         # Statistics
         # -----------------------------------------
@@ -374,16 +377,34 @@ class DetectionService:
                 "error": str(exc),
             }
 
+    def reset_statistics(self):
+        """Zero the counters shown on the dashboard ("Clear Stats").
+
+        flow_id keeps counting up from total_flows - clients (and
+        simulate_attacks.py) de-duplicate flows by id, so ids must never be
+        reused - which is why this records a baseline to subtract instead of
+        zeroing total_flows itself."""
+
+        self._stats_baseline = (
+            self.total_flows,
+            self.normal_flows,
+            self.positive_flows,
+        )
+
+        self.drift_detector.reset()
+
     def get_statistics(self):
+
+        base_total, base_normal, base_positive = self._stats_baseline
 
         return {
 
             "total_flows":
-                self.total_flows,
+                self.total_flows - base_total,
 
             "normal_flows":
-                self.normal_flows,
+                self.normal_flows - base_normal,
 
             "positive_flows":
-                self.positive_flows
+                self.positive_flows - base_positive
         }
