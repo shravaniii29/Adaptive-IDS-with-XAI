@@ -27,7 +27,7 @@ from detection.detection_service import DetectionService
 from feature_extraction.flow_manager import FlowManager
 from packet_capture.capture import start_capture
 
-from app.state import AppState
+from app.state import AppState, explanation_lines
 
 
 # =====================================================
@@ -104,13 +104,62 @@ def _is_ignorable_loopback_traffic(flow):
     return not _lab_addresses.intersection((str(flow.src_ip), str(flow.dst_ip)))
 
 
+# LAN service-discovery chatter: flows this machine sends to a multicast or
+# broadcast address (mDNS 224.0.0.251:5353, SSDP 239.255.255.250:1900,
+# NetBIOS/LLMNR, app LAN-discovery broadcasts such as 192.168.1.255:57621).
+# They are short, repetitive and identical from one minute to the next, so
+# once loopback noise is out of the way they are most of what an idle
+# desktop produces - and the models, trained on unicast flows, flag a good
+# share of them (live: V8 flagged 8 of 11 such flows, the hybrid 3 of 11).
+# That fills an otherwise quiet dashboard with alerts that are not attacks.
+# They are skipped by default and counted in /status as
+# ignored_discovery_flows. An attack is not a multicast announcement from
+# this host; set IDS_IGNORE_DISCOVERY=0 to score them anyway.
+_IGNORE_DISCOVERY = os.environ.get("IDS_IGNORE_DISCOVERY", "1").strip().lower() not in ("0", "false", "no")
+_ignored_discovery_count = 0
+
+
+def _is_discovery_traffic(flow):
+
+    if not _IGNORE_DISCOVERY or flow.dst_ip is None:
+
+        return False
+
+    try:
+
+        address = ipaddress.ip_address(str(flow.dst_ip))
+
+    except ValueError:
+
+        return False
+
+    if address.is_multicast:
+
+        return True
+
+    if address.version == 4:
+
+        text = str(address)
+
+        # limited broadcast, or a directed broadcast on a private network
+        return text == "255.255.255.255" or (address.is_private and text.endswith(".255"))
+
+    return False
+
+
 def _handle_completed_flow(flow):
 
-    global _ignored_flow_count
+    global _ignored_flow_count, _ignored_discovery_count
 
     if _is_ignorable_loopback_traffic(flow):
 
         _ignored_flow_count += 1
+
+        return
+
+    if _is_discovery_traffic(flow):
+
+        _ignored_discovery_count += 1
 
         return
 
@@ -365,6 +414,12 @@ def get_status():
         "ignored_loopback_flows":
             _ignored_flow_count,
 
+        "ignored_discovery_flows":
+            _ignored_discovery_count,
+
+        "ignore_discovery":
+            _IGNORE_DISCOVERY,
+
         "ignore_loopback":
             _IGNORE_LOOPBACK,
 
@@ -507,16 +562,21 @@ def get_predict():
                 []
             ),
 
+        # Rich per-feature objects ({feature, value, impact, ...}), as in
+        # /shap - the Live Logs row reads impact from each one - and the
+        # same explanation as plain text lines.
         "supporting_features":
             explanation.get(
-                "top_features",
+                "detailed_report",
                 []
             ),
 
         "detailed_explanation":
-            explanation.get(
-                "detailed_report",
-                []
+            explanation_lines(
+                explanation.get(
+                    "detailed_report",
+                    []
+                )
             ),
 
         # -----------------------------------------

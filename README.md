@@ -248,6 +248,14 @@ The attack simulation has to be aimed at loopback (Windows does not deliver a ma
 - **From a terminal:** `SIM_TARGET_IP=127.0.0.88 python simulate_attacks.py <out_dir> <trials>`. `IDS_LAB_ADDRESS` changes the default address for both the backend and the script.
 - `IDS_IGNORE_LOOPBACK=0` scores all loopback traffic. While it runs, `simulate_attacks.py` pins the dashboard's Hybrid | V8 view to the hybrid and restores it afterwards.
 
+### LAN discovery traffic is ignored
+
+Flows this machine sends to a multicast or broadcast address (mDNS `224.0.0.251:5353`, SSDP `239.255.255.250:1900`, NetBIOS/LLMNR, app LAN-discovery broadcasts such as `192.168.1.255:57621`) are short, repetitive announcements. Once loopback noise is skipped they are most of what an idle desktop produces, and the models (trained on unicast flows) flag a good share of them: on one network V8 flagged 8 of 11 such flows and the hybrid 3 of 11, which fills a quiet dashboard with alerts that are not attacks. They are skipped by default and counted as `ignored_discovery_flows` in `/status`. Set `IDS_IGNORE_DISCOVERY=0` to score them. How many get flagged depends on the network: the thresholds in this repo were tuned on one home Wi-Fi.
+
+### Reading a flagged row in Live Logs
+
+Click a row to see *Why this verdict*. V8 raises an alarm when either XGBoost or the Isolation Forest fires; the hybrid raises one when its combined confidence score reaches the alert line. The SHAP bars explain **XGBoost only**, so when the Isolation Forest raised the alarm the bars can point the other way. The AI hypothesis is rule-based text built from XGBoost's features and can disagree with the verdict. The explanation for a row is fetched when it is opened, from `/history/{flow_id}`, and the table is wrapped so a malformed explanation can no longer blank the page.
+
 ### Hybrid vs V8 after a simulation
 
 The *Live Simulation* page opens the newest run automatically when a simulation finishes and shows a **Hybrid vs V8** card: pooled recall, specificity, precision, F1 and accuracy for both models on the same flows, and a per-attack table. `python compare_hybrid_v8.py <run_dir>` prints the same comparison and writes `COMPARISON.md` into the run folder.
