@@ -59,8 +59,7 @@ export default function RunSimulationPanel({ status, error, onStart, onCancel }:
           <p className="text-sm text-slate-400">Trigger a new run</p>
           <h2 className="mt-1 text-xl font-semibold text-white">Run live simulation</h2>
           <p className="mt-1 text-xs text-slate-500">
-            Launches simulate_attacks.py against this machine only (a loopback address such as {DEFAULT_TARGET},
-            or this machine's own address) - self-targeted, real packets, real detection results.
+            Launches simulate_attacks.py against this machine - self-targeted, real packets, real detection results.
           </p>
         </div>
 

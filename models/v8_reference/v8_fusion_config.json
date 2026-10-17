@@ -1,0 +1,11 @@
+{
+  "rule": "confidence",
+  "alpha": 0.7,
+  "threshold": 0.4128,
+  "calibrated_at": "2026-10-17T04:17:27+00:00",
+  "method": "tune_v8_fusion.py: summed confidence c=(1-a)*xgb_probability+a*isolation_anomaly, a and t chosen by balanced accuracy (recall over attack scenarios, specificity over benign sources) with 2-fold cross-validation by time",
+  "flows": 90,
+  "cv_balanced_accuracy": 0.7508333333333334,
+  "published_rule_balanced_accuracy": 0.8333333333333334,
+  "caveat": "Fitted on only 90 labelled live flows from one machine and one network (hotspot): 7 benign flows (4 simulation baseline, 3 ordinary) and one flow each for the ICMP, SYN and UDP floods. The threshold is chosen in-sample and the cross-validated balanced accuracy (0.75) is below the published OR rule's (0.83) on the same flows, so treat this rule as provisional. Re-run collect_v8_flows.py and tune_v8_fusion.py with more data; set V8_RULE=paper to use the published OR rule."
+}

@@ -82,6 +82,7 @@ export const MODEL_LABELS: Record<string, string> = {
   rl_verdict_classifier: "RL verdict (bandit)",
   temporal25_candidate: "Candidate: 25feat+temporal",
   v8_candidate: "V8 (paper baseline)",
+  v7_baseline: "V7 (earlier prototype)",
 };
 
 export const modelLabel = (key: string): string => MODEL_LABELS[key] ?? key;

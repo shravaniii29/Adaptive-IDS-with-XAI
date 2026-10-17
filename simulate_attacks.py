@@ -50,7 +50,7 @@ import requests
 from scapy.layers.inet import IP, ICMP, TCP, UDP
 from scapy.sendrecv import send
 
-API_BASE = "http://127.0.0.1:8000"
+API_BASE = os.environ.get("IDS_API_BASE", "http://127.0.0.1:8000")
 VICTIM_HTTP_PORT = 8899
 POLL_INTERVAL = 0.5
 DRAIN_SECONDS = 35  # >= FlowManager's active_timeout + margin - raised from 25s since scoring now runs

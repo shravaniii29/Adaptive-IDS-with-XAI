@@ -41,7 +41,7 @@ class DetectionService:
 
     MODES = {
         "confidence": "Deployed hybrid (confidence fusion)",
-        "v8": "V8 (paper baseline)",
+        "v8": experimental_models.v8_rule_label(),
     }
 
     def __init__(self, lightweight=False):
@@ -147,8 +147,8 @@ class DetectionService:
                 "isolation_score": v8["isolation_score"],
                 "isolation_anomaly": v8["isolation_anomaly"],
                 "isolation_prediction": v8["isolation_prediction"],
-                "confidence_score": None,
-                "fusion_mode": "v8",
+                "confidence_score": v8["confidence_score"],
+                "fusion_mode": v8["fusion_mode"],
                 "hybrid_prediction": v8["hybrid_prediction"],
             }
 

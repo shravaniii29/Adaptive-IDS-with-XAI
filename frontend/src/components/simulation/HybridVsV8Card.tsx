@@ -1,8 +1,16 @@
 import Card from "../common/Card";
 import type { ModelMetrics, SimulationDetail } from "../../types/simulation";
 
-const HYBRID = "deployed_hybrid";
 const V8 = "v8_candidate";
+
+// The two models compared: the deployed hybrid and V8 for a live run, or the
+// earlier V7 prototype and V8 for the paper's offline evaluation entry.
+function pickPair(detail: SimulationDetail) {
+  const m = detail.aggregate_metrics;
+  if (m["deployed_hybrid"] && m[V8]) return { a: "deployed_hybrid", aLabel: "Hybrid", title: "Hybrid vs V8", note: true };
+  if (m["v7_baseline"] && m[V8]) return { a: "v7_baseline", aLabel: "V7", title: "V7 vs V8", note: false };
+  return null;
+}
 
 const pct = (value: number | null | undefined) =>
   value === null || value === undefined || Number.isNaN(value) ? "—" : `${(value * 100).toFixed(1)}%`;
@@ -30,18 +38,20 @@ function Bar({ value, color }: { value: number | null; color: string }) {
 // pooled metrics first, then each attack type (recall) and the benign
 // baseline (specificity).
 export default function HybridVsV8Card({ detail }: { detail: SimulationDetail }) {
-  const hybrid = detail.aggregate_metrics[HYBRID];
-  const v8 = detail.aggregate_metrics[V8];
+  const pair = pickPair(detail);
 
-  if (!hybrid || !v8) {
+  if (!pair) {
     return <Card><p className="text-sm text-slate-400">Hybrid vs V8</p><p className="mt-2 text-sm text-slate-300">This run did not score both the deployed hybrid and V8, so there is nothing to compare. Run a new simulation to see both.</p></Card>;
   }
 
+  const HYBRID = pair.a;
+  const hybrid = detail.aggregate_metrics[HYBRID];
+  const v8 = detail.aggregate_metrics[V8];
+
   return <Card>
     <div className="mb-5">
-      <p className="text-sm text-slate-400">Head to head, same flows</p>
-      <h2 className="mt-1 text-xl font-semibold text-white">Hybrid vs V8</h2>
-      <p className="mt-1 text-xs text-slate-500">Both models scored every flow of this run at the same time. Green marks the better value.</p>
+      <p className="text-sm text-slate-400">Head to head</p>
+      <h2 className="mt-1 text-xl font-semibold text-white">{pair.title}</h2>
     </div>
 
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -53,21 +63,21 @@ export default function HybridVsV8Card({ detail }: { detail: SimulationDetail })
         return <div key={metric.label} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
           <p className="text-xs uppercase tracking-wider text-slate-500">{metric.label}</p>
           <p className="mb-3 text-[11px] text-slate-500">{metric.hint}</p>
-          <div className="flex items-baseline justify-between"><span className="text-xs text-sky-300">Hybrid</span><Value value={a} best={aBest} /></div>
+          <div className="flex items-baseline justify-between"><span className="text-xs text-sky-300">{pair.aLabel}</span><Value value={a} best={aBest} /></div>
           <div className="mt-1 flex items-baseline justify-between"><span className="text-xs text-violet-300">V8</span><Value value={b} best={bBest} /></div>
         </div>;
       })}
     </div>
 
     <div className="mt-3 grid gap-3 text-xs text-slate-400 sm:grid-cols-2">
-      <p>Hybrid: {hybrid.confusion_matrix.tp} attacks caught, {hybrid.confusion_matrix.fn} missed; {hybrid.confusion_matrix.fp} false alarms, {hybrid.confusion_matrix.tn} normal flows correct.</p>
+      <p>{pair.aLabel}: {hybrid.confusion_matrix.tp} attacks caught, {hybrid.confusion_matrix.fn} missed; {hybrid.confusion_matrix.fp} false alarms, {hybrid.confusion_matrix.tn} normal flows correct.</p>
       <p>V8: {v8.confusion_matrix.tp} attacks caught, {v8.confusion_matrix.fn} missed; {v8.confusion_matrix.fp} false alarms, {v8.confusion_matrix.tn} normal flows correct.</p>
     </div>
 
     <div className="mt-6 overflow-x-auto">
       <table className="w-full min-w-[560px] text-left text-sm">
         <thead className="text-xs uppercase tracking-wider text-slate-500">
-          <tr><th className="py-2 pr-4 font-medium">Scenario</th><th className="py-2 pr-4 font-medium">Flows</th><th className="py-2 pr-4 font-medium text-sky-300">Hybrid</th><th className="py-2 font-medium text-violet-300">V8</th></tr>
+          <tr><th className="py-2 pr-4 font-medium">Scenario</th><th className="py-2 pr-4 font-medium">Flows</th><th className="py-2 pr-4 font-medium text-sky-300">{pair.aLabel}</th><th className="py-2 font-medium text-violet-300">V8</th></tr>
         </thead>
         <tbody className="divide-y divide-white/5 text-slate-300">
           {detail.scenarios.map((scenario) => {
@@ -85,6 +95,5 @@ export default function HybridVsV8Card({ detail }: { detail: SimulationDetail })
         </tbody>
       </table>
     </div>
-    <p className="mt-3 text-xs text-slate-500">The hybrid uses whichever fusion rule was live when the run was made (the old either-detector rule before 15 Oct 2026, the confidence-weighted rule after). V8 always uses its own published rule.</p>
   </Card>;
 }

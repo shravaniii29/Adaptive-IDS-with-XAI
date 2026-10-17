@@ -20,6 +20,7 @@ others or the caller - every variant is wrapped in its own try/except
 and returns an error stub on failure instead of raising.
 """
 
+import json
 import os
 import pickle
 from pathlib import Path
@@ -299,6 +300,29 @@ def _predict_v8(flow, dst_port):
         return {"available": False, "error": str(exc)}
 
 
+# V8's alert rule. The paper publishes an OR: alarm if XGBoost fires or the
+# Isolation Forest fires. Live, that lets one Isolation Forest vote raise an
+# alarm on its own, which flags a lot of ordinary traffic, so V8 can instead
+# use a weighted sum of its two scores,
+#     c = (1 - alpha) * xgb_probability + alpha * isolation_anomaly,  alarm if c >= threshold,
+# fitted by tune_v8_fusion.py and stored in V8_MODELS_DIR/v8_fusion_config.json.
+# Without that file, or with V8_RULE=paper, the published OR rule is used.
+V8_FUSION = None
+
+if os.environ.get("V8_RULE", "").strip().lower() != "paper":
+    try:
+        with open(V8_MODELS_DIR / "v8_fusion_config.json", "r", encoding="utf-8") as _fh:
+            _cfg = json.load(_fh)
+        if _cfg.get("rule") == "confidence":
+            V8_FUSION = {"alpha": float(_cfg["alpha"]), "threshold": float(_cfg["threshold"])}
+    except (OSError, ValueError, KeyError):
+        V8_FUSION = None
+
+
+def v8_rule_label():
+    return "V8 (calibrated)" if V8_FUSION else "V8 (paper baseline)"
+
+
 def v8_available():
     """True when the V8 artifacts loaded and V8 can serve as the live model."""
     return _v8_ready
@@ -326,6 +350,13 @@ def score_v8_detail(flow, dst_port):
         isolation_prediction = int(isolation_score < 0)
         isolation_anomaly = float(-isolation_score - v8_isolation.offset_)
 
+        if V8_FUSION:
+            confidence = (1.0 - V8_FUSION["alpha"]) * xgb_probability + V8_FUSION["alpha"] * isolation_anomaly
+            verdict = int(confidence >= V8_FUSION["threshold"])
+        else:
+            confidence = None
+            verdict = int(xgb_prediction == 1 or isolation_prediction == 1)
+
         return {
             "available": True,
             "features": features_v8,
@@ -334,7 +365,9 @@ def score_v8_detail(flow, dst_port):
             "isolation_score": isolation_score,
             "isolation_anomaly": isolation_anomaly,
             "isolation_prediction": isolation_prediction,
-            "hybrid_prediction": int(xgb_prediction == 1 or isolation_prediction == 1),
+            "confidence_score": confidence,
+            "fusion_mode": "v8-confidence" if V8_FUSION else "v8",
+            "hybrid_prediction": verdict,
             "threshold": float(v8_threshold),
         }
     except Exception as exc:  # noqa: BLE001

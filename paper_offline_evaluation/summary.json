@@ -1,0 +1,189 @@
+{
+ "generated_at": 1792210745.7014868,
+ "target_ip": "offline CSE-CIC-IDS2018 evaluation set (not a live run)",
+ "trials": 1,
+ "source": "review-integration: v8_training/evaluation_results/v7_vs_v8_per_attack.csv (paper evaluation, matched 22,382-flow subset)",
+ "scenarios": [
+  {
+   "name": "Benign traffic",
+   "is_attack": false,
+   "flow_count": 4987,
+   "model_scores": {
+    "v7_baseline": 0.6011630238620413,
+    "v8_candidate": 0.7667936635251654
+   },
+   "file": ""
+  },
+  {
+   "name": "Bot",
+   "is_attack": true,
+   "flow_count": 1500,
+   "model_scores": {
+    "v7_baseline": 1.0,
+    "v8_candidate": 1.0
+   },
+   "file": ""
+  },
+  {
+   "name": "Brute Force - Web",
+   "is_attack": true,
+   "flow_count": 611,
+   "model_scores": {
+    "v7_baseline": 0.5270049099836334,
+    "v8_candidate": 0.49754500818330605
+   },
+   "file": ""
+  },
+  {
+   "name": "Brute Force - XSS",
+   "is_attack": true,
+   "flow_count": 230,
+   "model_scores": {
+    "v7_baseline": 0.6565217391304348,
+    "v8_candidate": 0.6869565217391305
+   },
+   "file": ""
+  },
+  {
+   "name": "DDoS - HOIC",
+   "is_attack": true,
+   "flow_count": 1500,
+   "model_scores": {
+    "v7_baseline": 0.49933333333333335,
+    "v8_candidate": 1.0
+   },
+   "file": ""
+  },
+  {
+   "name": "DDoS - LOIC-HTTP",
+   "is_attack": true,
+   "flow_count": 1500,
+   "model_scores": {
+    "v7_baseline": 0.0,
+    "v8_candidate": 1.0
+   },
+   "file": ""
+  },
+  {
+   "name": "DDoS - LOIC-UDP",
+   "is_attack": true,
+   "flow_count": 1500,
+   "model_scores": {
+    "v7_baseline": 1.0,
+    "v8_candidate": 1.0
+   },
+   "file": ""
+  },
+  {
+   "name": "DoS - GoldenEye",
+   "is_attack": true,
+   "flow_count": 1500,
+   "model_scores": {
+    "v7_baseline": 0.006666666666666667,
+    "v8_candidate": 1.0
+   },
+   "file": ""
+  },
+  {
+   "name": "DoS - Hulk",
+   "is_attack": true,
+   "flow_count": 1500,
+   "model_scores": {
+    "v7_baseline": 0.3313333333333333,
+    "v8_candidate": 1.0
+   },
+   "file": ""
+  },
+  {
+   "name": "DoS - SlowHTTPTest",
+   "is_attack": true,
+   "flow_count": 1500,
+   "model_scores": {
+    "v7_baseline": 0.0,
+    "v8_candidate": 1.0
+   },
+   "file": ""
+  },
+  {
+   "name": "DoS - Slowloris",
+   "is_attack": true,
+   "flow_count": 1500,
+   "model_scores": {
+    "v7_baseline": 0.7473333333333333,
+    "v8_candidate": 1.0
+   },
+   "file": ""
+  },
+  {
+   "name": "FTP brute force",
+   "is_attack": true,
+   "flow_count": 1500,
+   "model_scores": {
+    "v7_baseline": 0.0,
+    "v8_candidate": 1.0
+   },
+   "file": ""
+  },
+  {
+   "name": "Infiltration",
+   "is_attack": true,
+   "flow_count": 1467,
+   "model_scores": {
+    "v7_baseline": 0.24608043626448534,
+    "v8_candidate": 0.4492160872528971
+   },
+   "file": ""
+  },
+  {
+   "name": "SQL injection",
+   "is_attack": true,
+   "flow_count": 87,
+   "model_scores": {
+    "v7_baseline": 0.3103448275862069,
+    "v8_candidate": 0.4827586206896552
+   },
+   "file": ""
+  },
+  {
+   "name": "SSH brute force",
+   "is_attack": true,
+   "flow_count": 1500,
+   "model_scores": {
+    "v7_baseline": 1.0,
+    "v8_candidate": 1.0
+   },
+   "file": ""
+  }
+ ],
+ "aggregate_metrics": {
+  "v7_baseline": {
+   "confusion_matrix": {
+    "tp": 7738,
+    "fp": 1989,
+    "tn": 2998,
+    "fn": 9657
+   },
+   "accuracy": 0.47967116432847823,
+   "precision": 0.795517631335458,
+   "recall": 0.4448404713998275,
+   "f1": 0.5706068873976845,
+   "specificity": 0.6011630238620413,
+   "total_flows": 22382
+  },
+  "v8_candidate": {
+   "confusion_matrix": {
+    "tp": 16163,
+    "fp": 1163,
+    "tn": 3824,
+    "fn": 1232
+   },
+   "accuracy": 0.8929943704762756,
+   "precision": 0.9328754473046289,
+   "recall": 0.9291750503018109,
+   "f1": 0.931021571959333,
+   "specificity": 0.7667936635251654,
+   "total_flows": 22382
+  }
+ },
+ "family_aware_metrics": {}
+}
