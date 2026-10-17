@@ -60,7 +60,7 @@ Many machine-learning IDS models are trained once on historical data, give no ex
 
 | Component | Behaviour | Branch |
 |---|---|---|
-| Packet capture | Scapy `sniff()` on the default network interface, started automatically when the backend starts (no packet limit). | Both |
+| Packet capture | Scapy `sniff()` on the LAN adapter and on Npcap's loopback device at the same time, started automatically when the backend starts (no packet limit). | Both |
 | Flow building | Packets are grouped into bidirectional flows. A flow is considered complete after **5 seconds of inactivity**; expired flows are checked every second. | Both |
 | Detection | XGBoost and Isolation Forest; a flow is flagged if **either** model flags it. `main` uses the V7 models in `models/`. | Both (model version differs) |
 | Detection (V8 details) | 25 V8 features; XGBoost on unscaled features, Isolation Forest on RobustScaler-scaled features; flagged if `XGBoost probability ≥ 0.4949` **OR** Isolation Forest anomaly. | `review-integration` only |
@@ -210,7 +210,7 @@ uvicorn app.main:app
 On startup the backend:
 
 1. Loads the model artifacts (`main`: V7 artifacts in `models/`; `review-integration`: V8 artifacts in `v8_training/models_v8/`). Startup fails if they are missing.
-2. Starts packet capture on the default network interface.
+2. Starts packet capture on the LAN adapter and the Npcap loopback device.
 3. Starts the flow-expiry worker.
 
 | Endpoint (both branches) | Returns |
@@ -291,7 +291,7 @@ If `VITE_API_BASE_URL` is unset, the frontend defaults to `http://127.0.0.1:8000
 ## Live packet capture requirements
 
 - Capture starts **as soon as the backend starts** and runs until it stops.
-- It uses Scapy's default interface; no interface option is exposed.
+- It sniffs two interfaces at once: the adapter carrying this machine's LAN IP (real traffic) and Npcap's loopback device (the attack simulation's self-targeted traffic). No interface option is exposed. Earlier builds listened on loopback only, which left the dashboard blind to real traffic.
 - It passively observes traffic on that interface. It does not generate, inject or replay attack traffic.
 - Only capture on networks and devices you own or are authorised to monitor.
 - Most traffic on an ordinary machine is benign, so live results are a **functional demonstration**, not an accuracy measurement.

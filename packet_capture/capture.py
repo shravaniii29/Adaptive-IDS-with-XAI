@@ -1,4 +1,5 @@
 import socket
+import threading
 
 from scapy.all import sniff
 
@@ -39,54 +40,84 @@ def has_npcap_loopback():
     return bool(conf.use_npcap) and conf.loopback_name in conf.ifaces
 
 
-def _select_interface():
-    """Finds the scapy/Npcap interface to sniff() on, instead of letting
-    scapy fall back to its own automatic default-interface pick.
-
-    Without this, sniff() with no `iface` uses scapy's default-route
-    heuristic, which is unreliable on a machine with many adapters (seen
-    here: 50+, including VirtualBox virtual adapters, several hidden
-    "Local Area Connection*" APIPA adapters, and a Npcap/WFP sub-driver
-    entry per real adapter) - it can silently pick the wrong one,
-    especially after a reboot, VPN connect, or adapter state change,
-    with no exception raised.
-
-    Prefers the loopback device when present (see has_npcap_loopback())
-    - that's the only reliable way to capture self-targeted test traffic
-    (127.0.0.1) on Windows; self-addressing a real adapter's own IP is
-    not reliably captured at all. Otherwise falls back to whichever
-    adapter carries this machine's real LAN IP.
-    """
-    if has_npcap_loopback():
-        from scapy.all import conf
-        return conf.loopback_name
-
+def _lan_interface():
+    """The adapter that carries this machine's real LAN IP (None if it
+    cannot be resolved, or off Windows where scapy's own pick is fine)."""
     try:
         from scapy.arch.windows import get_windows_if_list
     except ImportError:
-        return None  # non-Windows: let scapy pick its own default
+        return None
 
-    target_ip = _local_lan_ip()
+    try:
+        target_ip = _local_lan_ip()
+    except OSError:
+        return None
+
     for iface in get_windows_if_list():
         if target_ip in iface.get("ips", []):
             return iface.get("name")
     return None
 
 
+def _select_interfaces():
+    """Interfaces to sniff on - always the real LAN adapter, plus Npcap's
+    loopback device when present.
+
+    Both are needed and neither can stand in for the other. Self-targeted
+    test traffic (the attack simulation) only exists on the loopback device
+    - Windows short-circuits it before any NIC driver (see
+    has_npcap_loopback()). Real traffic - browsing, a video, a LAN
+    attacker - only exists on the physical adapter. An earlier version
+    returned loopback *instead of* the LAN adapter, which left the live
+    dashboard blind to every real flow (only loopback flows were ever
+    built, and nearly all of those are ignored as desktop noise).
+
+    Resolving the adapter by IP, instead of letting scapy pick its default,
+    matters on a machine with many adapters (seen here: 50+, including
+    VirtualBox virtual adapters, hidden "Local Area Connection*" APIPA
+    adapters, and a Npcap/WFP sub-driver entry per real adapter) - scapy's
+    default-route heuristic can silently pick the wrong one after a reboot,
+    VPN connect or adapter state change, with no exception raised.
+    """
+    ifaces = []
+
+    lan = _lan_interface()
+    if lan is not None:
+        ifaces.append(lan)
+
+    if has_npcap_loopback():
+        from scapy.all import conf
+        ifaces.append(conf.loopback_name)
+
+    return ifaces
+
+
+def _select_interface():
+    """Single-interface pick for the offline live-test scripts, which only
+    drive self-targeted traffic: loopback if available, else the LAN
+    adapter. The live backend uses _select_interfaces() instead."""
+    if has_npcap_loopback():
+        from scapy.all import conf
+        return conf.loopback_name
+    return _lan_interface()
+
+
 def start_capture(callback, packet_count=0):
     """
-    Starts packet capture.
+    Starts packet capture on every interface from _select_interfaces().
 
-    callback      : Function to process each packet
-    packet_count  : Number of packets to capture
+    callback      : Function to process each packet (must be thread-safe -
+                    FlowManager.process_packet is, it holds a lock)
+    packet_count  : Number of packets to capture per interface
                     0 = infinite capture
     """
 
-    iface = _select_interface()
-    if iface is None:
+    ifaces = _select_interfaces()
+    if not ifaces:
         print("WARNING: could not resolve this machine's LAN interface by IP - "
               "falling back to scapy's default interface selection, which may "
               "be wrong on a multi-adapter machine.")
+        ifaces = [None]
 
     def _prn(packet):
         # scapy's sniff() print()s whatever prn returns, if it isn't None -
@@ -102,9 +133,19 @@ def start_capture(callback, packet_count=0):
         # never has anything to print.
         callback(packet)
 
-    sniff(
-        iface=iface,
-        prn=_prn,
-        count=packet_count,
-        store=False
-    )
+    def _sniff(iface):
+        sniff(iface=iface, prn=_prn, count=packet_count, store=False)
+
+    # One sniff() per interface, each on its own thread; the first runs on
+    # the calling thread so start_capture still blocks like it always did.
+    threads = [
+        threading.Thread(target=_sniff, args=(iface,), daemon=True)
+        for iface in ifaces[1:]
+    ]
+    for t in threads:
+        t.start()
+
+    _sniff(ifaces[0])
+
+    for t in threads:
+        t.join()
