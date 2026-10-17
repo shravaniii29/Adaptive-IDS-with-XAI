@@ -55,7 +55,9 @@ function ExpandedRow({ entry, analysis }: { entry: PredictionHistoryEntry; analy
   const xgbFired = Number(entry.xgb_prediction) === 1;
   const isoFired = Number(entry.isolation_prediction) === 1;
   const xgbPct = Number.isFinite(entry.xgb_probability) ? `${(entry.xgb_probability * 100).toFixed(1)}%` : "n/a";
-  const whyFlagged = entry.fusion_mode === "v8"
+  const whyFlagged = entry.fusion_mode === "v8-confidence"
+    ? `V8 adds its two detectors into one confidence score (XGBoost ${xgbPct} and Isolation Forest anomaly ${Number(entry.isolation_anomaly ?? 0).toFixed(2)}, weighted) = ${Number(entry.confidence_score ?? 0).toFixed(3)}, which ${flagged ? "reached" : "stayed below"} its alert line.`
+    : entry.fusion_mode === "v8"
     ? (flagged
       ? `V8 raises an alarm when either detector fires. ${isoFired ? "The Isolation Forest found the flow unusual" : ""}${isoFired && xgbFired ? ", and " : ""}${xgbFired ? "XGBoost rated it an attack" : ""}${!xgbFired ? ` (XGBoost alone said normal: ${xgbPct}, below its alarm line)` : ""}.`
       : `Both detectors left this flow alone (XGBoost ${xgbPct}, Isolation Forest normal).`)
@@ -73,7 +75,7 @@ function ExpandedRow({ entry, analysis }: { entry: PredictionHistoryEntry; analy
         <h4 className="mb-3 text-sm font-semibold text-slate-200">Feature Impact (SHAP)</h4>
         {features.length > 0 ? features.map((f) => <FeatureBar key={f.feature} name={f.feature} impact={f.impact} />)
           : <p className="text-xs text-slate-500">No feature data available for this flow.</p>}
-        <p className="mt-2 text-xs text-slate-500">Red = pushes toward attack, Green = pushes toward normal. These bars explain XGBoost only, not the Isolation Forest.</p>
+        <p className="mt-2 text-xs text-slate-500">Red = pushes toward attack, Green = pushes toward normal</p>
       </div>
       <div>
         {whyFlagged && <div className="mb-4 rounded-lg border border-white/10 bg-white/[0.04] p-3">
@@ -81,7 +83,7 @@ function ExpandedRow({ entry, analysis }: { entry: PredictionHistoryEntry; analy
           <p className="text-xs leading-5 text-slate-300">{whyFlagged}</p>
         </div>}
         {hypothesis && <div className="mb-4">
-          <h4 className="mb-1 text-sm font-semibold text-slate-200">AI Hypothesis <span className="text-[10px] font-normal text-slate-500">(rule-based text from XGBoost's features; it can disagree with the verdict)</span></h4>
+          <h4 className="mb-1 text-sm font-semibold text-slate-200">AI Hypothesis</h4>
           <p className="text-sm text-slate-300">{hypothesis}</p>
           {summary && <p className="mt-1 text-xs text-slate-400">{summary}</p>}
         </div>}

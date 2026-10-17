@@ -232,7 +232,7 @@ Before any flow completes, the result endpoints return `{"message": "no flows pr
 | View | What decides whether a flow is an attack |
 |---|---|
 | `confidence` (default) | The deployed hybrid with confidence-weighted fusion: `confidence = 0.7 * xgb_probability + 0.3 * isolation_anomaly`, flagged when `confidence >= threshold`. `isolation_anomaly` is Isolation Forest's own anomaly score in (0, 1]. The threshold and weight are read from `models/fusion_config.json`. |
-| `v8` | The paper's validated V8 model (`models/v8_reference/`, its own 25 features and threshold, with V8's own XGBoost-or-Isolation-Forest rule as published) with V8 SHAP explanations. |
+| `v8` | The paper's V8 model (`models/v8_reference/`, its own 25 features and thresholds) with V8 SHAP explanations. It decides with a weighted sum of its two scores, `0.3 * xgb_probability + 0.7 * isolation_anomaly >= 0.4128`, read from `models/v8_reference/v8_fusion_config.json` and shown on the dashboard as *V8 (calibrated)*. Without that file, or with `V8_RULE=paper`, it uses the paper's published rule (alarm if XGBoost or the Isolation Forest fires). |
 
 Each stored result keeps one complete set of outputs per model under `variants` (verdict, probabilities, features, SHAP explanation, agent analysis, drift flag). Each model has its own drift monitor and its own agent coordinator. `GET /mode` returns the current view and which are available; `POST /mode` with `{"mode": "v8"}` switches it. Switching is instant and applies to flows scored earlier as well as new ones, nothing is reset, and the Total / Normal / Attacks counters follow the model being shown. The view is held in memory and returns to `confidence` when the backend restarts. Scoring with both models roughly doubles the SHAP and agent work per flow.
 
@@ -247,6 +247,14 @@ The attack simulation has to be aimed at loopback (Windows does not deliver a ma
 - **Target box:** the dashboard's *Run simulation* panel has a *Target* box (empty = `127.0.0.77`). The simulation sends real floods and scans, so the backend accepts only a loopback address (`127.x.x.x`) or this machine's own address and refuses anything else with HTTP 400. The chosen target is added to the scored addresses until the backend restarts (`lab_addresses` in `/status`).
 - **From a terminal:** `SIM_TARGET_IP=127.0.0.88 python simulate_attacks.py <out_dir> <trials>`. `IDS_LAB_ADDRESS` changes the default address for both the backend and the script.
 - `IDS_IGNORE_LOOPBACK=0` scores all loopback traffic. While it runs, `simulate_attacks.py` pins the dashboard's Hybrid | V8 view to the hybrid and restores it afterwards.
+
+### Calibrating V8's rule
+
+The paper's V8 raises an alarm when either of its two detectors fires, so a single Isolation Forest vote can flag an ordinary flow on its own. `collect_v8_flows.py` runs one simulation trial and records V8's scores for every flow (lab flows labelled by scenario, other network flows treated as benign); `tune_v8_fusion.py` compares the published rule, each detector alone and weighted sums with two-fold cross-validation, and `--write` stores the best weight and threshold in `models/v8_reference/v8_fusion_config.json`. The shipped values were fitted on only 90 flows from one machine and network (7 of them benign), so they are provisional: re-run both scripts with more data (`IDS_IGNORE_DISCOVERY=0 python -m uvicorn app.main:app --port 8001`, then `set IDS_API_BASE=http://127.0.0.1:8001`).
+
+### Paper evaluation on the dashboard
+
+`paper_offline_evaluation/` holds the paper's offline results (V7 and V8 on the held-out CSE-CIC-IDS2018 flows: 4,987 benign flows and 14 attack types, built from `v8_training/evaluation_results/v7_vs_v8_per_attack.csv` on the `review-integration` branch). It appears in the Live Simulation page's run list with a V7 vs V8 comparison and one tab per attack type.
 
 ### LAN discovery traffic is ignored
 
