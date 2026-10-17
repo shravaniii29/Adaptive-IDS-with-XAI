@@ -32,7 +32,9 @@ Needs: Python 3.11+ (this project runs on 3.13), Node.js, Npcap
 Wait for this line (it takes 20-40 seconds while the models load):
   Uvicorn running on http://127.0.0.1:8000
 
-It starts live packet capture on the default network interface by itself.
+It starts live packet capture by itself, on two interfaces at once: your real
+Wi-Fi/Ethernet adapter (browsing, video, other devices on the network) and the
+Npcap loopback device (the attack simulation).
 If capture fails, close the terminal and reopen PowerShell as Administrator.
 
 Check it is up (any terminal):
@@ -145,6 +147,10 @@ No flows appear
   -> normal while the PC is quiet; open a web page to make some traffic.
      Loopback flows (programs talking to each other) are ignored on purpose;
      the counter "ignored_loopback_flows" in /status shows how many.
+  -> if ignored_loopback_flows grows but total_flows stays 0 while you browse,
+     you are running an old backend that listened on loopback only: stop it
+     (step 6) and start it again. Wi-Fi flows take about 5-10 s to appear
+     after a connection goes quiet.
   -> if capture failed, reopen PowerShell as Administrator and check that
      Npcap is installed.
 
