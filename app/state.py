@@ -13,6 +13,35 @@ import time
 from detection.result_views import flatten_result
 
 
+def explanation_lines(report):
+    """Plain-text lines for a detailed explanation report.
+
+    The explainability agent's detailed_report is a list of objects
+    ({feature, value, impact, meaning, ...}); clients that show the
+    explanation as text (the Live Logs row) want strings, and must never be
+    handed objects where they render text."""
+
+    lines = []
+
+    for item in report or []:
+
+        if isinstance(item, dict):
+
+            name = item.get("feature", "feature")
+
+            detail = " ".join(
+                part for part in (item.get("meaning"), item.get("interpretation")) if part
+            )
+
+            lines.append(f"{name}: {detail}" if detail else str(name))
+
+        else:
+
+            lines.append(str(item))
+
+    return lines
+
+
 class AppState:
 
     def __init__(self):
@@ -275,14 +304,13 @@ class AppState:
             "reasoning":
                 explanation.get("reasoning", []),
 
+            # The rich per-feature objects ({feature, value, impact, ...}) - the
+            # shape the dashboard types and /shap use - not the bare names.
             "supporting_features":
-                explanation.get("top_features", []),
+                explanation.get("detailed_report", []),
 
             "detailed_explanation":
-                explanation.get(
-                    "detailed_report",
-                    []
-                ),
+                explanation_lines(explanation.get("detailed_report", [])),
 
             # -----------------------------------------
             # Memory Agent
