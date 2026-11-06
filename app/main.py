@@ -9,6 +9,7 @@ import ipaddress
 import json
 import os
 import re
+import secrets
 import socket
 import subprocess
 import sys
@@ -19,7 +20,7 @@ import queue
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -1371,6 +1372,208 @@ def cancel_simulation_run():
         process.terminate()
 
     return {"status": "cancelling"}
+
+
+# =====================================================
+# REMOTE-TEST CONSENT HANDSHAKE
+#
+# A second PC on the same LAN can only send its (bounded, already-defined)
+# test scenarios at THIS machine after this machine's own operator clicks
+# Approve on the dashboard. The handshake lives here; this backend issues a
+# short-lived, single-use token scoped to exactly one (source, scenario,
+# duration) and nothing starts until that token exists.
+#
+# This is consent, not enforcement: packets that do arrive are captured and
+# scored like any other LAN traffic (they are ordinary unicast between two
+# LAN IPs, so the loopback/discovery filters never touch them). The control
+# is that the cooperating client refuses to send without an approved token,
+# so the receiving operator is always the one who authorises the test. Only
+# run it between machines you own or are authorised to test.
+# =====================================================
+
+_REMOTE_ALLOWED_SCENARIOS = {
+    "icmp_flood", "syn_flood", "udp_flood", "http_flood", "port_scan",
+}
+_REMOTE_MAX_DURATION = 15          # seconds; matches the local scenarios' cap
+_REMOTE_REQUEST_TTL = 120          # a pending request waits this long for a decision
+_REMOTE_TOKEN_TTL = 90             # an approved token is valid to start for this long
+_REMOTE_MAX_REQUESTS = 200         # bound the in-memory store
+
+_remote_attack_lock = threading.Lock()
+_remote_attack_requests = {}       # id -> request dict
+
+
+def _remote_now():
+    return time.time()
+
+
+def _remote_public_view(req):
+    """Request as the dashboard/attacker should see it - never leaks the token
+    except through the dedicated poll endpoint for the matching requester."""
+    return {
+        "id": req["id"],
+        "source_ip": req["source_ip"],
+        "scenario": req["scenario"],
+        "duration": req["duration"],
+        "status": req["status"],
+        "created_at": req["created_at"],
+        "expires_at": req["expires_at"],
+        "decided_at": req.get("decided_at"),
+    }
+
+
+def _remote_prune_locked():
+    """Expire pending requests past their decision window and approved-but-
+    unused tokens past the start window. Called under _remote_attack_lock."""
+    now = _remote_now()
+    drop = []
+    for rid, req in _remote_attack_requests.items():
+        if req["status"] == "pending" and now > req["expires_at"]:
+            req["status"] = "expired"
+        if req["status"] == "approved" and now > req.get("token_expires_at", 0):
+            req["status"] = "expired"
+            req["token"] = None
+        # keep terminal states briefly, then forget the oldest
+    if len(_remote_attack_requests) > _REMOTE_MAX_REQUESTS:
+        for rid, _ in sorted(_remote_attack_requests.items(),
+                             key=lambda kv: kv[1]["created_at"])[:50]:
+            drop.append(rid)
+    for rid in drop:
+        _remote_attack_requests.pop(rid, None)
+
+
+@app.post("/remote_attack/requests")
+def create_remote_attack_request(payload: dict, request: Request):
+    """A second machine asks this one for permission to send ONE bounded test
+    scenario. Nothing is authorised here - this only creates a pending card
+    the operator must approve."""
+    scenario = str(payload.get("scenario", "")).strip()
+    if scenario not in _REMOTE_ALLOWED_SCENARIOS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"scenario must be one of {sorted(_REMOTE_ALLOWED_SCENARIOS)}",
+        )
+
+    try:
+        duration = int(payload.get("duration", 10))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="duration must be a whole number of seconds")
+    if duration < 1 or duration > _REMOTE_MAX_DURATION:
+        raise HTTPException(
+            status_code=400,
+            detail=f"duration must be between 1 and {_REMOTE_MAX_DURATION} seconds",
+        )
+
+    # Trust the socket's peer address, not a client-supplied field: the
+    # request can only speak for where it actually came from.
+    source_ip = request.client.host if request.client else "unknown"
+
+    now = _remote_now()
+    req = {
+        "id": secrets.token_hex(8),
+        "source_ip": source_ip,
+        "scenario": scenario,
+        "duration": duration,
+        "status": "pending",
+        "created_at": now,
+        "expires_at": now + _REMOTE_REQUEST_TTL,
+        "decided_at": None,
+        "token": None,
+        "token_expires_at": 0,
+    }
+
+    with _remote_attack_lock:
+        _remote_prune_locked()
+        _remote_attack_requests[req["id"]] = req
+
+    return {**_remote_public_view(req), "poll_after_seconds": 2}
+
+
+@app.get("/remote_attack/requests")
+def list_remote_attack_requests():
+    """For the dashboard: every request still worth showing, newest first."""
+    with _remote_attack_lock:
+        _remote_prune_locked()
+        items = [_remote_public_view(r) for r in _remote_attack_requests.values()]
+    items.sort(key=lambda r: r["created_at"], reverse=True)
+    return {
+        "requests": items,
+        "pending": sum(1 for r in items if r["status"] == "pending"),
+        "max_duration": _REMOTE_MAX_DURATION,
+    }
+
+
+@app.post("/remote_attack/requests/{request_id}/approve")
+def approve_remote_attack_request(request_id: str):
+    """The operator consents. Mints a single-use token scoped to exactly this
+    request's (source, scenario, duration)."""
+    with _remote_attack_lock:
+        _remote_prune_locked()
+        req = _remote_attack_requests.get(request_id)
+        if req is None:
+            raise HTTPException(status_code=404, detail="no such request")
+        if req["status"] != "pending":
+            raise HTTPException(status_code=409, detail=f"request is already {req['status']}")
+        now = _remote_now()
+        req["status"] = "approved"
+        req["decided_at"] = now
+        req["token"] = secrets.token_urlsafe(24)
+        req["token_expires_at"] = now + _REMOTE_TOKEN_TTL
+        view = _remote_public_view(req)
+    return {**view, "token_valid_seconds": _REMOTE_TOKEN_TTL}
+
+
+@app.post("/remote_attack/requests/{request_id}/deny")
+def deny_remote_attack_request(request_id: str):
+    with _remote_attack_lock:
+        _remote_prune_locked()
+        req = _remote_attack_requests.get(request_id)
+        if req is None:
+            raise HTTPException(status_code=404, detail="no such request")
+        if req["status"] not in ("pending", "approved"):
+            raise HTTPException(status_code=409, detail=f"request is already {req['status']}")
+        req["status"] = "denied"
+        req["decided_at"] = _remote_now()
+        req["token"] = None
+        return _remote_public_view(req)
+
+
+@app.get("/remote_attack/requests/{request_id}")
+def poll_remote_attack_request(request_id: str):
+    """The requesting machine polls this for the decision. The token is handed
+    back only here and only while the approval is still valid."""
+    with _remote_attack_lock:
+        _remote_prune_locked()
+        req = _remote_attack_requests.get(request_id)
+        if req is None:
+            raise HTTPException(status_code=404, detail="no such request")
+        view = _remote_public_view(req)
+        token = req["token"] if req["status"] == "approved" else None
+    return {**view, "token": token}
+
+
+@app.post("/remote_attack/requests/{request_id}/consume")
+def consume_remote_attack_token(request_id: str, payload: dict):
+    """The requesting machine presents its token to spend it. Single use: once
+    consumed it cannot authorise a second run."""
+    supplied = str(payload.get("token", ""))
+    with _remote_attack_lock:
+        _remote_prune_locked()
+        req = _remote_attack_requests.get(request_id)
+        if req is None:
+            raise HTTPException(status_code=404, detail="no such request")
+        if req["status"] != "approved" or not req["token"]:
+            raise HTTPException(status_code=409, detail=f"request is {req['status']}, not approved")
+        if _remote_now() > req["token_expires_at"]:
+            req["status"] = "expired"
+            req["token"] = None
+            raise HTTPException(status_code=410, detail="the approval expired before it was used")
+        if not secrets.compare_digest(supplied, req["token"]):
+            raise HTTPException(status_code=403, detail="token does not match")
+        req["status"] = "consumed"
+        req["decided_at"] = _remote_now()
+        req["token"] = None
+        return {**_remote_public_view(req), "ok": True}
 
 
 # =====================================================

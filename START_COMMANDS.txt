@@ -79,6 +79,39 @@ Live Simulation page.
 
 
 ------------------------------------------------
+3b. CALIBRATE FOR THE NETWORK YOU ARE ON
+------------------------------------------------
+Different Wi-Fi networks make ordinary traffic look more or less anomalous, so
+the default threshold can over- or under-flag when you move. This finds the
+best confidence combination (alpha + threshold) for the current network in a
+couple of minutes, no retraining:
+
+  1. Start the backend, then browse / play a video for ~1 minute so it captures
+     some of this network's normal traffic.
+  2. python calibrate_network.py              (shows the recommended alpha + threshold)
+     python calibrate_network.py --collect 90  (watches live flows for 90s first)
+     python calibrate_network.py --write        (also saves it to fusion_config.json)
+  3. If you used --write, restart the backend to apply it.
+
+
+------------------------------------------------
+3c. TEST FROM A SECOND PC ON YOUR LAN (needs approval here)
+------------------------------------------------
+A second PC you own can send one bounded test scenario at THIS machine so the
+attack shows up on this dashboard - but only after you click Approve on the
+pop-up card here. Nothing runs without that approval.
+
+  ON THIS PC (the target): just keep the backend + dashboard running. An
+    "Approve / Deny" card appears when the other PC asks.
+
+  ON THE SECOND PC (same repo + Npcap, run as Administrator):
+    python lan_consent_test.py http://<THIS-PC-IP>:8000 icmp_flood --duration 10 --i-am-authorized
+    (scenarios: icmp_flood, syn_flood, udp_flood, http_flood, port_scan)
+
+Only do this between machines you own or are authorised to test.
+
+
+------------------------------------------------
 4. SWITCH BETWEEN HYBRID AND V8
 ------------------------------------------------
 Top bar of the dashboard:  Showing [ Hybrid | V8 ]
