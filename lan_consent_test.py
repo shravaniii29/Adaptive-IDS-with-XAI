@@ -25,6 +25,9 @@ is that the receiving operator is always the one who authorises the test.
 import argparse
 import os
 import sys
+
+# Unbuffered status output so a parent reading the log sees each phase live.
+sys.stdout.reconfigure(line_buffering=True)
 import time
 
 import requests

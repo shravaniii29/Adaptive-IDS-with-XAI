@@ -319,6 +319,27 @@ if os.environ.get("V8_RULE", "").strip().lower() != "paper":
         V8_FUSION = None
 
 
+def reload_v8_fusion():
+    """Re-read v8_fusion_config.json into the V8_FUSION global so a dashboard
+    recalibration of V8 takes effect without a restart. score_v8_detail() reads
+    V8_FUSION at call time, so reassigning it here is enough. Returns the active
+    fusion dict (or None if V8 is on the paper OR rule)."""
+    global V8_FUSION
+    if os.environ.get("V8_RULE", "").strip().lower() == "paper":
+        V8_FUSION = None
+        return V8_FUSION
+    try:
+        with open(V8_MODELS_DIR / "v8_fusion_config.json", "r", encoding="utf-8") as handle:
+            cfg = json.load(handle)
+        if cfg.get("rule") == "confidence":
+            V8_FUSION = {"alpha": float(cfg["alpha"]), "threshold": float(cfg["threshold"])}
+        else:
+            V8_FUSION = None
+    except (OSError, ValueError, KeyError):
+        V8_FUSION = None
+    return V8_FUSION
+
+
 def v8_rule_label():
     return "V8 (calibrated)" if V8_FUSION else "V8 (paper baseline)"
 

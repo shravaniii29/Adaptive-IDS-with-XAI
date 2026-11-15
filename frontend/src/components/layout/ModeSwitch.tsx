@@ -1,54 +1,40 @@
-import { useCallback, useEffect, useState } from "react";
-import { getDetectionMode, setDetectionMode, type DetectionModeState } from "../../services/modeService";
+import { useEffect, useState } from "react";
+import { getDetectionMode, setDetectionMode } from "../../services/modeService";
 import { MODE_CHANGED_EVENT } from "../../hooks/useModeVersion";
 
-const shortLabel: Record<string, string> = { confidence: "Hybrid", v8: "V8" };
+// The dashboard is V8-only: the hybrid view has been removed, so there is no
+// model toggle any more. This renders a static "V8" badge and, on mount,
+// makes sure the backend is actually serving V8 (the backend also defaults to
+// V8, but a backend left in hybrid mode from an earlier session would
+// otherwise still show hybrid numbers). It never offers hybrid as a choice.
+let forced = false;
 
-// Kept outside the component so the switch never blanks out when it is
-// re-mounted (page changes, hot reload): it renders the last known state
-// straight away and refreshes it in the background.
-let lastKnown: DetectionModeState | null = null;
-
-// Both models score every flow all the time; this only chooses whose results
-// the dashboard shows. The backend switches instantly (past flows included),
-// and the event below makes every page refetch immediately.
 export default function ModeSwitch() {
-  const [state, setState] = useState<DetectionModeState | null>(lastKnown);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [ok, setOk] = useState(false);
 
-  const apply = (value: DetectionModeState) => { lastKnown = value; setState(value); setError(null); };
-
-  const load = useCallback(() => {
-    getDetectionMode().then((value) => { lastKnown = value; setState(value); setError(null); }).catch(() => setError("Backend unavailable"));
+  useEffect(() => {
+    let cancelled = false;
+    getDetectionMode()
+      .then((state) => {
+        if (cancelled) return;
+        setOk(true);
+        if (state.mode !== "v8" && !forced) {
+          forced = true;
+          setDetectionMode("v8")
+            .then(() => window.dispatchEvent(new Event(MODE_CHANGED_EVENT)))
+            .catch(() => undefined);
+        }
+      })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
   }, []);
 
-  useEffect(() => { load(); const id = window.setInterval(load, 15000); return () => window.clearInterval(id); }, [load]);
+  if (!ok) return null;
 
-  const choose = (mode: string) => {
-    if (busy || state?.mode === mode) return;
-    setBusy(true);
-    // Optimistic: show the choice now, correct it if the backend refuses.
-    if (state) apply({ ...state, mode });
-    setDetectionMode(mode)
-      .then((value) => { apply(value); window.dispatchEvent(new Event(MODE_CHANGED_EVENT)); })
-      .catch((reason: Error) => { setError(reason.message); load(); })
-      .finally(() => setBusy(false));
-  };
-
-  if (!state) return error ? <span className="hidden text-xs text-rose-300 lg:block">{error}</span> : null;
-
-  return <div className="hidden items-center gap-2 lg:flex" title={error ?? "Both models score every flow; this chooses whose results are shown"}>
-    <span className="text-xs text-slate-500">Showing</span>
-    <div role="group" aria-label="Detection mode" className="flex rounded-lg border border-white/10 bg-white/5 p-0.5">
-      {state.modes.map((option) => {
-        const active = option.id === state.mode;
-        return <button key={option.id} type="button" disabled={!option.available || busy} aria-pressed={active} title={option.label} onClick={() => choose(option.id)}
-          className={`rounded-md px-3 py-1 text-xs font-medium transition ${active ? "bg-indigo-500 text-white" : "text-slate-400 hover:text-white"} disabled:cursor-not-allowed disabled:opacity-40`}>
-          {shortLabel[option.id] ?? option.label}
-        </button>;
-      })}
+  return (
+    <div className="hidden items-center gap-2 lg:flex" title="Detection model">
+      <span className="text-xs text-slate-500">Model</span>
+      <span className="rounded-md border border-indigo-400/40 bg-indigo-500/15 px-3 py-1 text-xs font-semibold text-indigo-200">V8</span>
     </div>
-    {error && <span className="text-xs text-rose-300">{error}</span>}
-  </div>;
+  );
 }

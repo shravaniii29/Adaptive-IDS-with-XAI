@@ -11,6 +11,7 @@ import FlowHistoryChart from "../../components/dashboard/FlowHistoryChart";
 import AgentInsightsCard from "../../components/dashboard/AgentInsightsCard";
 import ModelConsensusCard from "../../components/dashboard/ModelConsensusCard";
 import LiveLogTable from "../../components/dashboard/LiveLogTable";
+import ModelHealthPanel from "../../components/dashboard/ModelHealthPanel";
 import ExplanationCard from "../../components/explainability/ExplanationCard";
 import StatCard from "../../components/dashboard/StatCard";
 import SystemHealthCard from "../../components/dashboard/SystemHealthCard";
@@ -42,6 +43,7 @@ export default function Dashboard() {
     <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4"><ConnectionStatus connected={Boolean(system) && !error} backend="FastAPI" /><DriftCard detected={drift?.drift_detected ?? false} /><SystemHealthCard uptime={system ? duration(system.uptime_seconds) : "—"} status={system?.status === "ok" ? "Healthy" : "Warning"} /><ThreatSummary attacks={stats?.positive_flows ?? 0} normal={stats?.normal_flows ?? 0} /></div>
     <div className="mt-6 grid gap-6 xl:grid-cols-2"><FlowHistoryChart entries={history} /><ExplanationCard explanation={explanation} /></div>
     <div className="mt-6 grid gap-6 xl:grid-cols-2"><ModelConsensusCard prediction={prediction} /><AgentInsightsCard result={analysis} prediction={prediction} /></div>
+    <div className="mt-6"><ModelHealthPanel /></div>
     <LiveLogTable entries={history} driftDetected={drift?.drift_detected} latestAnalysis={analysis} />
     {loading && !stats && <Loader label="Connecting to backend..." />}
   </PageContainer>;

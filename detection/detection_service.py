@@ -77,7 +77,9 @@ class DetectionService:
 
         # Which model's results the dashboard is VIEWING. Both models score
         # every flow regardless; this never changes what is computed.
-        self.mode = "confidence"
+        # The dashboard is V8-only, so default to V8 when its artifacts loaded,
+        # falling back to the hybrid if V8 is unavailable.
+        self.mode = "v8" if experimental_models.v8_available() else "confidence"
 
         # -----------------------------------------
         # Statistics

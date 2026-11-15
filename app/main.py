@@ -10,6 +10,7 @@ import json
 import os
 import re
 import secrets
+import shutil
 import socket
 import subprocess
 import sys
@@ -24,6 +25,7 @@ from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconn
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from detection import predictor
 from detection.detection_service import DetectionService
 from feature_extraction.flow_manager import FlowManager
 from packet_capture.capture import start_capture
@@ -637,6 +639,20 @@ def get_predict():
 @app.get("/drift")
 def get_drift():
 
+    # Demo override: while a trigger is active, report drift as degrading so
+    # the drift indicator and the retrain flow can be shown on cue.
+    if time.time() < _demo_drift_until:
+        return {
+            "flow_id": None,
+            "drift_detected": True,
+            "status": "MODEL DEGRADING",
+            "severity": "HIGH",
+            "trend": "rising",
+            "recommendation": "Concept drift triggered for the demo. A candidate model is being retrained; "
+                              "review and promote it from the Model panel.",
+            "demo": True,
+        }
+
     if state.last_result is None:
 
         return {
@@ -1216,6 +1232,31 @@ _simulation_run_state = {
     "log_path": None,
 }
 
+# Dashboard-launched attack at ANOTHER PC, through the consent handshake: this
+# backend is the attacker side, it runs lan_consent_test.py, which asks the
+# target PC's operator for approval and only sends its one bounded scenario
+# once that PC approves. Separate from the self-targeted run state above.
+_remote_run_lock = threading.Lock()
+_remote_run_state = {
+    "process": None,
+    "target_backend": None,
+    "scenario": None,
+    "duration": None,
+    "started_at": None,
+    "log_path": None,
+}
+_REMOTE_RUN_SCENARIOS = {"icmp_flood", "syn_flood", "udp_flood", "http_flood", "port_scan"}
+
+# Drift-and-retrain demo state. A trigger forces the drift indicator to
+# "MODEL DEGRADING" for a short window and kicks off a candidate retrain in the
+# background. The candidate is written to models/candidates/ and NEVER replaces
+# the deployed model until an operator promotes it from the dashboard.
+_demo_drift_until = 0.0
+_retrain_lock = threading.Lock()
+_retrain_state = {"running": False, "started_at": None, "result": None, "error": None}
+_CANDIDATES_DIR = _PROJECT_ROOT / "models" / "candidates"
+_DEPLOYED_BACKUP_DIR = _PROJECT_ROOT / "models" / "backup_before_promote"
+
 
 def _local_addresses():
     """This machine's own IPv4 addresses (including the LAN address)."""
@@ -1372,6 +1413,398 @@ def cancel_simulation_run():
         process.terminate()
 
     return {"status": "cancelling"}
+
+
+# =====================================================
+# DASHBOARD-LAUNCHED REMOTE ATTACK (attacker side)
+#
+# Runs lan_consent_test.py, which raises a consent request on the target PC's
+# backend, waits for that PC's operator to approve it on their dashboard, and
+# only then sends its one bounded scenario. Nothing leaves this machine until
+# the target approves. Only for machines you own or are authorised to test.
+# =====================================================
+
+def _normalise_backend_url(raw):
+    text = str(raw or "").strip().rstrip("/")
+    if not text:
+        raise HTTPException(status_code=400, detail="target_backend is required (e.g. http://192.168.1.20:8000)")
+    if not text.startswith(("http://", "https://")):
+        text = "http://" + text
+    host = text.split("//", 1)[1].split("/", 1)[0].split(":", 1)[0]
+    if not host:
+        raise HTTPException(status_code=400, detail="target_backend must include a host, e.g. http://192.168.1.20:8000")
+    return text
+
+
+@app.post("/simulations/run_remote")
+def start_remote_attack(payload: dict):
+    target_backend = _normalise_backend_url((payload or {}).get("target_backend"))
+    scenario = str((payload or {}).get("scenario", "")).strip()
+    if scenario not in _REMOTE_RUN_SCENARIOS:
+        raise HTTPException(status_code=400, detail=f"scenario must be one of {sorted(_REMOTE_RUN_SCENARIOS)}")
+    try:
+        duration = int((payload or {}).get("duration", 10))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="duration must be a whole number of seconds")
+    if duration < 1 or duration > 15:
+        raise HTTPException(status_code=400, detail="duration must be between 1 and 15 seconds")
+
+    with _remote_run_lock:
+        existing = _remote_run_state["process"]
+        if existing is not None and existing.poll() is None:
+            raise HTTPException(status_code=409, detail="a remote attack is already in progress")
+
+        log_dir = _PROJECT_ROOT / "remote_runs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_path = log_dir / f"remote_{time.strftime('%Y%m%d_%H%M%S')}.log"
+        log_file = open(log_path, "w")
+
+        process = subprocess.Popen(
+            [sys.executable, "lan_consent_test.py", target_backend, scenario,
+             "--duration", str(duration), "--i-am-authorized"],
+            cwd=_PROJECT_ROOT,
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+        )
+
+        _remote_run_state.update({
+            "process": process,
+            "target_backend": target_backend,
+            "scenario": scenario,
+            "duration": duration,
+            "started_at": time.time(),
+            "log_path": str(log_path),
+        })
+
+    return {"status": "started", "target_backend": target_backend, "scenario": scenario, "duration": duration}
+
+
+@app.get("/simulations/run_remote/status")
+def get_remote_attack_status():
+    with _remote_run_lock:
+        process = _remote_run_state["process"]
+        if process is None:
+            return {"running": False}
+
+        running = process.poll() is None
+        log_tail = ""
+        log_path = _remote_run_state.get("log_path")
+        if log_path and Path(log_path).exists():
+            try:
+                with open(log_path, "r", errors="replace") as f:
+                    log_tail = "".join(f.readlines()[-40:])
+            except Exception:
+                pass
+
+        # Infer a friendly phase from the client's own log lines.
+        phase = "running"
+        if not running:
+            phase = "finished" if process.returncode == 0 else "stopped"
+        elif "waiting for the operator" in log_tail and "approved" not in log_tail:
+            phase = "awaiting_approval"
+        elif "running the approved scenario" in log_tail or "approval spent" in log_tail:
+            phase = "attacking"
+
+        started_at = _remote_run_state["started_at"]
+        return {
+            "running": running,
+            "phase": phase,
+            "target_backend": _remote_run_state["target_backend"],
+            "scenario": _remote_run_state["scenario"],
+            "duration": _remote_run_state["duration"],
+            "started_at": started_at,
+            "elapsed_seconds": (time.time() - started_at) if started_at else None,
+            "exit_code": None if running else process.returncode,
+            "log_tail": log_tail,
+        }
+
+
+@app.post("/simulations/run_remote/cancel")
+def cancel_remote_attack():
+    with _remote_run_lock:
+        process = _remote_run_state["process"]
+        if process is None or process.poll() is not None:
+            raise HTTPException(status_code=400, detail="no remote attack is currently running")
+        process.terminate()
+    return {"status": "cancelling"}
+
+
+# =====================================================
+# DRIFT TRIGGER + CANDIDATE RETRAINING (demo)
+#
+# A trigger flags drift and retrains a candidate in the background. The
+# candidate is written to models/candidates/ and the deployed model is left
+# untouched; replacing it (promote) is a separate, operator-approved action.
+# =====================================================
+
+def _retrain_worker():
+    import demo_retrain
+    try:
+        result = demo_retrain.run_demo_retrain()
+        with _retrain_lock:
+            _retrain_state.update({"running": False, "result": result, "error": None})
+    except Exception as exc:
+        with _retrain_lock:
+            _retrain_state.update({"running": False, "error": str(exc)})
+
+
+@app.post("/drift/demo_trigger")
+def trigger_demo_drift():
+    """Force the drift indicator to 'MODEL DEGRADING' for ~90s and start a
+    background candidate retrain."""
+    global _demo_drift_until
+    _demo_drift_until = time.time() + 90
+
+    with _retrain_lock:
+        if _retrain_state["running"]:
+            return {"status": "drift triggered", "retrain": "already running"}
+        _retrain_state.update({"running": True, "started_at": time.time(), "result": None, "error": None})
+
+    threading.Thread(target=_retrain_worker, daemon=True).start()
+    return {"status": "drift triggered", "retrain": "started"}
+
+
+@app.get("/retrain/status")
+def get_retrain_status():
+    with _retrain_lock:
+        return dict(_retrain_state)
+
+
+def _read_candidates():
+    items = []
+    if _CANDIDATES_DIR.exists():
+        for folder in _CANDIDATES_DIR.iterdir():
+            meta = folder / "candidate.json"
+            if folder.is_dir() and meta.exists():
+                try:
+                    items.append(json.load(open(meta)))
+                except Exception:
+                    pass
+    items.sort(key=lambda c: c.get("created_at", 0), reverse=True)
+    return items
+
+
+@app.get("/retrain/candidates")
+def list_candidates():
+    return {"candidates": _read_candidates()}
+
+
+@app.post("/retrain/candidates/{candidate_id}/promote")
+def promote_candidate(candidate_id: str):
+    """Replace the deployed XGBoost + Isolation Forest with this candidate's.
+    The current deployed artifacts are backed up first so it is reversible, and
+    the models are reloaded live. This is the explicitly-approved step."""
+    if not _SIMULATION_NAME_RE.match(candidate_id):
+        raise HTTPException(status_code=400, detail="invalid candidate id")
+    folder = _CANDIDATES_DIR / candidate_id
+    meta_path = folder / "candidate.json"
+    if not meta_path.exists():
+        raise HTTPException(status_code=404, detail="no such candidate")
+
+    models_dir = _PROJECT_ROOT / "models"
+    _DEPLOYED_BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        for name in ("xgb_model.pkl", "isolation_forest.pkl"):
+            src = folder / name
+            if not src.exists():
+                raise HTTPException(status_code=400, detail=f"candidate is missing {name}")
+            # back up the current deployed artifact, then swap in the candidate
+            shutil.copy2(models_dir / name, _DEPLOYED_BACKUP_DIR / name)
+            shutil.copy2(src, models_dir / name)
+        predictor.reload_models()
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"promotion failed: {exc}")
+
+    meta = json.load(open(meta_path))
+    meta["status"] = "promoted"
+    meta["promoted_at"] = time.time()
+    json.dump(meta, open(meta_path, "w"), indent=2)
+    return {"status": "promoted", "candidate_id": candidate_id, "reverted_backup": str(_DEPLOYED_BACKUP_DIR)}
+
+
+@app.post("/retrain/candidates/{candidate_id}/discard")
+def discard_candidate(candidate_id: str):
+    if not _SIMULATION_NAME_RE.match(candidate_id):
+        raise HTTPException(status_code=400, detail="invalid candidate id")
+    meta_path = _CANDIDATES_DIR / candidate_id / "candidate.json"
+    if not meta_path.exists():
+        raise HTTPException(status_code=404, detail="no such candidate")
+    meta = json.load(open(meta_path))
+    meta["status"] = "discarded"
+    json.dump(meta, open(meta_path, "w"), indent=2)
+    return {"status": "discarded", "candidate_id": candidate_id}
+
+
+@app.get("/calibration")
+def get_calibration():
+    """The current confidence-fusion calibration for both models, read from
+    their fusion_config.json files, for display on the dashboard."""
+    def read(path):
+        try:
+            return json.load(open(path))
+        except Exception:
+            return None
+    return {
+        "hybrid": read(_PROJECT_ROOT / "models" / "fusion_config.json"),
+        "v8": read(_PROJECT_ROOT / "models" / "v8_reference" / "v8_fusion_config.json"),
+        "proposal": _calibration_pending,
+    }
+
+
+# -----------------------------------------------------
+# Per-network recalibration of V8 (the dashboard "Recalibrate" button)
+#
+# The dashboard is V8-only, so this tunes V8's confidence fusion for the
+# network you are on, in-process and applied live:
+#   benign side  = this network's own captured flows, scored by V8
+#                  (result["variants"]["v8"], which is always present)
+#   attack side  = the stored self-generated V8 flood/scan flows
+#                  (v8_calibration/v8_flows.json, V8's own model scores)
+# It grid-searches (alpha, threshold) for the best balanced accuracy and holds
+# the result as a PROPOSAL. Nothing changes until the operator clicks Apply,
+# which writes models/v8_reference/v8_fusion_config.json and reloads V8's fusion
+# live (no restart). Mirrors the candidate-retrain "never replace without
+# asking" rule, but for V8's fusion threshold.
+# -----------------------------------------------------
+
+_V8_ATTACKS_PATH = _PROJECT_ROOT / "v8_calibration" / "v8_flows.json"
+_V8_FUSION_CONFIG_PATH = _PROJECT_ROOT / "models" / "v8_reference" / "v8_fusion_config.json"
+_calibration_pending = None       # last proposal, awaiting Apply / Discard
+
+
+def _load_v8_attacks():
+    """Stored V8 attack flows as (xgb_probability, isolation_anomaly) pairs,
+    using V8's own model scores. Raises HTTPException on a missing/empty file."""
+    if not _V8_ATTACKS_PATH.exists():
+        raise HTTPException(
+            status_code=400,
+            detail="no stored V8 attack flows (v8_calibration/v8_flows.json) - run collect_v8_flows.py once first.",
+        )
+    try:
+        rows = json.load(open(_V8_ATTACKS_PATH))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"could not read stored V8 attacks: {exc}")
+    atk = [
+        (r["xgb_probability"], r["isolation_anomaly"])
+        for r in rows
+        if r.get("label") == 1 and r.get("xgb_probability") is not None and r.get("isolation_anomaly") is not None
+    ]
+    if not atk:
+        raise HTTPException(status_code=400, detail="stored V8 calibration file has no attack flows.")
+    return atk
+
+
+def _live_v8_benign_pairs():
+    """Every flow captured so far, scored by V8, as (xgb_probability,
+    isolation_anomaly) pairs - all treated as BENIGN (a benign network
+    baseline: the operator recalibrates on their own ordinary traffic). Read
+    from the RAW history, where each result still carries its per-model V8
+    variant (get_history() flattens the view and drops `variants`)."""
+    out = []
+    with state.lock:
+        results = list(state.result_history)
+    for result in results:
+        v8 = (result.get("variants") or {}).get("v8") or {}
+        xgb = v8.get("xgb_probability")
+        iso = v8.get("isolation_anomaly")
+        # Fallback: a result already flattened to the V8 view carries the
+        # V8 scores at the top level instead.
+        if (xgb is None or iso is None) and result.get("view_mode") == "v8":
+            xgb = result.get("xgb_probability")
+            iso = result.get("isolation_anomaly")
+        if xgb is not None and iso is not None:
+            out.append((xgb, iso))
+    return out
+
+
+def _read_v8_fusion_config():
+    if _V8_FUSION_CONFIG_PATH.exists():
+        try:
+            return json.load(open(_V8_FUSION_CONFIG_PATH))
+        except Exception:
+            return {}
+    return {}
+
+
+@app.post("/calibration/recalibrate")
+def recalibrate_network():
+    """Compute the best V8 fusion (alpha, threshold) for THIS network and hold it
+    as a proposal. Does not change anything until /calibration/apply is called."""
+    from calibrate_network import best_fusion   # pure grid-search, no side effects
+
+    global _calibration_pending
+    attacks = _load_v8_attacks()
+    benign = _live_v8_benign_pairs()
+    if len(benign) < 10:
+        raise HTTPException(
+            status_code=400,
+            detail=f"only {len(benign)} V8-scored benign flows captured yet - browse / stream for a minute so the estimate is stable, then try again.",
+        )
+
+    bal, alpha, threshold, recall, spec = best_fusion(attacks, benign)
+    current = _read_v8_fusion_config()
+
+    _calibration_pending = {
+        "model": "v8",
+        "alpha": alpha,
+        "threshold": threshold,
+        "recall": recall,
+        "specificity": spec,
+        "balanced": bal,
+        "benign_flows": len(benign),
+        "attack_flows": len(attacks),
+        "current_alpha": current.get("alpha"),
+        "current_threshold": current.get("threshold"),
+        "computed_at": time.time(),
+    }
+    return _calibration_pending
+
+
+@app.post("/calibration/apply")
+def apply_calibration():
+    """Write the pending proposal to v8_fusion_config.json and reload V8's fusion
+    live. This is the explicitly-approved step."""
+    from detection import experimental_models
+
+    global _calibration_pending
+    if not _calibration_pending:
+        raise HTTPException(status_code=400, detail="no pending calibration - run recalibrate first.")
+
+    prop = _calibration_pending
+    cfg = _read_v8_fusion_config()
+    cfg.update({
+        "rule": "confidence",          # required for V8 to use the fused threshold
+        "alpha": prop["alpha"],
+        "threshold": prop["threshold"],
+        "calibrated_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "method": "dashboard recalibrate: best balanced accuracy, stored V8 attacks vs this network's live V8-scored benign flows",
+        "network_benign_flows": prop["benign_flows"],
+        "network_recall": prop["recall"],
+        "network_specificity": prop["specificity"],
+    })
+    try:
+        _V8_FUSION_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        json.dump(cfg, open(_V8_FUSION_CONFIG_PATH, "w"), indent=2)
+        fusion = experimental_models.reload_v8_fusion()
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"apply failed: {exc}")
+
+    _calibration_pending = None
+    return {
+        "status": "applied",
+        "alpha": (fusion or {}).get("alpha", prop["alpha"]),
+        "threshold": (fusion or {}).get("threshold", prop["threshold"]),
+    }
+
+
+@app.post("/calibration/discard")
+def discard_calibration():
+    """Drop the pending proposal without changing anything."""
+    global _calibration_pending
+    _calibration_pending = None
+    return {"status": "discarded"}
 
 
 # =====================================================

@@ -52,7 +52,9 @@ class AppState:
         # "v8"). Every flow is scored by both models and stored with both
         # sets of outputs; this only chooses what the endpoints show, so
         # switching is instant and also applies to flows scored earlier.
-        self.view_mode = "confidence"
+        # Dashboard is V8-only, so default the view to V8. flatten_result()
+        # falls back to the hybrid for any flow V8 could not score.
+        self.view_mode = "v8"
 
         # Latest IDS result (stored raw, with every model's outputs;
         # last_result below returns the view for view_mode)

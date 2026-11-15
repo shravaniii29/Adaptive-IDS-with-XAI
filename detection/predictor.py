@@ -59,6 +59,19 @@ with open(MODELS_DIR / "top_features.pkl", "rb") as file:
     top_features = pickle.load(file)
 
 
+def reload_models():
+    """Re-read the XGBoost and Isolation Forest artifacts from MODELS_DIR into
+    the module globals, so a freshly promoted candidate takes effect without a
+    restart. predict_flow() reads these globals at call time, so reassigning
+    them here is enough. The scaler, threshold and feature list are unchanged
+    by a candidate promotion, so they are not reloaded."""
+    global xgb_model, isolation_forest
+    with open(MODELS_DIR / "xgb_model.pkl", "rb") as handle:
+        xgb_model = _force_single_threaded(pickle.load(handle))
+    with open(MODELS_DIR / "isolation_forest.pkl", "rb") as handle:
+        isolation_forest = _force_single_threaded(pickle.load(handle))
+
+
 # -------------------------------------------------
 # Fusion of the two detectors
 # -------------------------------------------------
@@ -93,6 +106,20 @@ if _fusion_config_path.exists():
         _fusion_config = json.load(file)
     FUSION_ALPHA = float(_fusion_config.get("alpha", FUSION_ALPHA))
     FUSION_THRESHOLD = float(_fusion_config.get("threshold", FUSION_THRESHOLD))
+
+
+def reload_fusion():
+    """Re-read fusion_config.json into the FUSION_ALPHA / FUSION_THRESHOLD
+    globals so a dashboard recalibration takes effect without a restart.
+    predict_flow() reads these globals at call time, so reassigning them here
+    is enough. Returns the active (alpha, threshold)."""
+    global FUSION_ALPHA, FUSION_THRESHOLD
+    if _fusion_config_path.exists():
+        with open(_fusion_config_path, "r", encoding="utf-8") as handle:
+            cfg = json.load(handle)
+        FUSION_ALPHA = float(cfg.get("alpha", FUSION_ALPHA))
+        FUSION_THRESHOLD = float(cfg.get("threshold", FUSION_THRESHOLD))
+    return FUSION_ALPHA, FUSION_THRESHOLD
 
 
 # -------------------------------------------------

@@ -10,6 +10,7 @@ import ScenarioTabs from "../../components/simulation/ScenarioTabs";
 import ScenarioModelChart from "../../components/simulation/ScenarioModelChart";
 import ModelF1Chart from "../../components/simulation/ModelF1Chart";
 import RunSimulationPanel from "../../components/simulation/RunSimulationPanel";
+import RemoteAttackPanel from "../../components/simulation/RemoteAttackPanel";
 import HybridVsV8Card from "../../components/simulation/HybridVsV8Card";
 import { useSimulationDetail, useSimulationList, useSimulationRun } from "../../hooks/useSimulations";
 import { modelLabel } from "../../types/simulation";
@@ -74,6 +75,10 @@ export default function LiveSimulation() {
       />
 
       <RunSimulationPanel status={runStatus} error={runError} onStart={startRun} onCancel={cancelRun} />
+
+      <div className="mt-6">
+        <RemoteAttackPanel />
+      </div>
 
       {(!simulations || simulations.length === 0) && (
         <div className="mt-6">
