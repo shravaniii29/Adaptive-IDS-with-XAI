@@ -28,7 +28,7 @@ function FeatureBar({ name, impact }: { name: string; impact: number }) {
   </div>;
 }
 
-function ExpandedRow({ entry, analysis }: { entry: PredictionHistoryEntry; analysis?: AgentAnalysisResponse["analysis"] | null }) {
+function ExpandedContent({ entry, analysis }: { entry: PredictionHistoryEntry; analysis?: AgentAnalysisResponse["analysis"] | null }) {
   // /history rows carry only the verdict; fetch this flow's explanation when
   // the row is opened (and again if the Hybrid | V8 view is switched).
   const modeVersion = useModeVersion();
@@ -69,8 +69,7 @@ function ExpandedRow({ entry, analysis }: { entry: PredictionHistoryEntry; analy
   const reasoning = (entry.reasoning ?? []).filter((line): line is string => typeof line === "string");
   const details = (entry.detailed_explanation ?? []).filter((line): line is string => typeof line === "string");
 
-  return <tr><td colSpan={9} className="bg-slate-900/60 px-6 py-5">
-    <div className="grid gap-6 lg:grid-cols-2">
+  return <div className="grid gap-6 lg:grid-cols-2">
       <div>
         <h4 className="mb-3 text-sm font-semibold text-slate-200">Feature Impact (SHAP)</h4>
         {features.length > 0 ? features.map((f) => <FeatureBar key={f.feature} name={f.feature} impact={f.impact} />)
@@ -110,14 +109,39 @@ function ExpandedRow({ entry, analysis }: { entry: PredictionHistoryEntry; analy
           {entry.destination_ip && <span className="rounded-md bg-white/5 px-2 py-1 text-slate-400">Dest: <span className="font-mono text-slate-200">{entry.destination_ip}</span></span>}
         </div>
       </div>
-    </div>
-  </td></tr>;
+    </div>;
+}
+
+// Table row wrapper (md+ view) around the shared explanation content.
+function ExpandedRow({ entry, analysis }: { entry: PredictionHistoryEntry; analysis?: AgentAnalysisResponse["analysis"] | null }) {
+  return <tr><td colSpan={9} className="bg-slate-900/60 px-6 py-5"><ExpandedContent entry={entry} analysis={analysis} /></td></tr>;
 }
 
 export default function LiveLogTable({ entries, driftDetected, latestAnalysis }: LiveLogTableProps) {
   const [expandedId, setExpandedId] = useState<string | number | null>(null);
 
   return <Card className="mt-6 overflow-hidden p-0 hover:translate-y-0"><div className="flex items-start justify-between gap-4 border-b border-white/5 px-6 py-5"><div><p className="text-sm text-slate-400">Live activity</p><h2 className="mt-1 text-xl font-semibold text-white">What is happening on your network</h2><p className="mt-1 text-xs text-slate-500">Each row is one recent connection checked by the security system. Click a row to see the AI explanation.</p></div><span className="rounded-full bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-400">LIVE</span></div>
-    {entries.length === 0 ? <div className="p-6"><EmptyState title="No connections checked yet" description="As soon as the system sees network traffic, simple results and next steps will appear here." /></div> : <div className="overflow-x-auto"><table className="w-full min-w-[1180px] text-left text-sm"><thead className="bg-slate-900/50 text-xs uppercase tracking-wider text-slate-500"><tr><th className="px-6 py-4 font-medium">Connection</th><th className="px-6 py-4 font-medium">Time checked</th><th className="px-6 py-4 font-medium">Overall result</th><th className="px-6 py-4 font-medium">AI check 1</th><th className="px-6 py-4 font-medium">AI check 2</th><th className="px-6 py-4 font-medium">Do they agree?</th><th className="px-6 py-4 font-medium">Risk</th><th className="px-6 py-4 font-medium">What you should do</th>{driftDetected !== undefined && <th className="px-6 py-4 font-medium">Traffic changed?</th>}</tr></thead><tbody className="divide-y divide-white/5 text-slate-300">{entries.map((entry) => { const attack = isAttack(entry.hybrid_prediction); const agreed = agreement(entry); const agent = String(latestAnalysis?.flow_id) === String(entry.flow_id) ? latestAnalysis?.analysis : null; const risk = agent?.severity?.toUpperCase() || riskLevel(entry); const expanded = expandedId === entry.flow_id; return <Fragment key={`${entry.flow_id}-${entry.observedAt}`}><tr onClick={() => setExpandedId(expanded ? null : entry.flow_id)} className={`cursor-pointer transition-colors hover:bg-white/[0.04] ${expanded ? "bg-white/[0.03]" : ""}`}><td className="px-6 py-4 font-mono text-xs text-sky-300">#{entry.flow_id} {expanded ? <span className="text-slate-500">▼</span> : <span className="text-slate-600">▶</span>}</td><td className="px-6 py-4 whitespace-nowrap text-slate-400">{displayTimestamp(entry.observedAt)}</td><td className="px-6 py-4"><Badge text={attack ? "NEEDS REVIEW" : "LOOKS NORMAL"} variant={attack ? "danger" : "success"} /></td><td className="px-6 py-4">{isAttack(entry.xgb_prediction) ? "Attack likely" : "Looks normal"} {Number.isFinite(entry.xgb_probability) && <span className="text-xs text-slate-500"> ({(entry.xgb_probability * 100).toFixed(1)}%)</span>}</td><td className="px-6 py-4">{isAttack(entry.isolation_prediction) ? "Unusual traffic found" : "Looks normal"}</td><td className="px-6 py-4"><Badge text={agreed ? "YES" : "NO — REVIEW"} variant={agreed ? "success" : "warning"} /></td><td className="px-6 py-4"><Badge text={risk} variant={riskVariant(risk)} /></td><td className="max-w-72 px-6 py-4 text-xs leading-5 text-slate-300">{agent?.incident_report?.recommended_next_step || agent?.recommended_mitigation?.[0] || nextAction(entry)}</td>{driftDetected !== undefined && <td className="px-6 py-4"><Badge text={driftDetected ? "YES — CHECK" : "NO"} variant={driftDetected ? "warning" : "success"} /></td>}</tr>{expanded && <tr><td colSpan={9}><ErrorBoundary label="The explanation"><table className="w-full"><tbody><ExpandedRow entry={entry} analysis={agent} /></tbody></table></ErrorBoundary></td></tr>}</Fragment>;})}</tbody></table></div>}
+    {entries.length === 0 ? <div className="p-6"><EmptyState title="No connections checked yet" description="As soon as the system sees network traffic, simple results and next steps will appear here." /></div> : <>
+      {/* Desktop / tablet: full table (scrolls sideways only below its min width) */}
+      <div className="hidden overflow-x-auto md:block"><table className="w-full min-w-[1180px] text-left text-sm"><thead className="bg-slate-900/50 text-xs uppercase tracking-wider text-slate-500"><tr><th className="px-6 py-4 font-medium">Connection</th><th className="px-6 py-4 font-medium">Time checked</th><th className="px-6 py-4 font-medium">Overall result</th><th className="px-6 py-4 font-medium">AI check 1</th><th className="px-6 py-4 font-medium">AI check 2</th><th className="px-6 py-4 font-medium">Do they agree?</th><th className="px-6 py-4 font-medium">Risk</th><th className="px-6 py-4 font-medium">What you should do</th>{driftDetected !== undefined && <th className="px-6 py-4 font-medium">Traffic changed?</th>}</tr></thead><tbody className="divide-y divide-white/5 text-slate-300">{entries.map((entry) => { const attack = isAttack(entry.hybrid_prediction); const agreed = agreement(entry); const agent = String(latestAnalysis?.flow_id) === String(entry.flow_id) ? latestAnalysis?.analysis : null; const risk = agent?.severity?.toUpperCase() || riskLevel(entry); const expanded = expandedId === entry.flow_id; return <Fragment key={`${entry.flow_id}-${entry.observedAt}`}><tr onClick={() => setExpandedId(expanded ? null : entry.flow_id)} className={`cursor-pointer transition-colors hover:bg-white/[0.04] ${expanded ? "bg-white/[0.03]" : ""}`}><td className="px-6 py-4 font-mono text-xs text-sky-300">#{entry.flow_id} {expanded ? <span className="text-slate-500">▼</span> : <span className="text-slate-600">▶</span>}</td><td className="px-6 py-4 whitespace-nowrap text-slate-400">{displayTimestamp(entry.observedAt)}</td><td className="px-6 py-4"><Badge text={attack ? "NEEDS REVIEW" : "LOOKS NORMAL"} variant={attack ? "danger" : "success"} /></td><td className="px-6 py-4">{isAttack(entry.xgb_prediction) ? "Attack likely" : "Looks normal"} {Number.isFinite(entry.xgb_probability) && <span className="text-xs text-slate-500"> ({(entry.xgb_probability * 100).toFixed(1)}%)</span>}</td><td className="px-6 py-4">{isAttack(entry.isolation_prediction) ? "Unusual traffic found" : "Looks normal"}</td><td className="px-6 py-4"><Badge text={agreed ? "YES" : "NO — REVIEW"} variant={agreed ? "success" : "warning"} /></td><td className="px-6 py-4"><Badge text={risk} variant={riskVariant(risk)} /></td><td className="max-w-72 px-6 py-4 text-xs leading-5 text-slate-300">{agent?.incident_report?.recommended_next_step || agent?.recommended_mitigation?.[0] || nextAction(entry)}</td>{driftDetected !== undefined && <td className="px-6 py-4"><Badge text={driftDetected ? "YES — CHECK" : "NO"} variant={driftDetected ? "warning" : "success"} /></td>}</tr>{expanded && <tr><td colSpan={9}><ErrorBoundary label="The explanation"><table className="w-full"><tbody><ExpandedRow entry={entry} analysis={agent} /></tbody></table></ErrorBoundary></td></tr>}</Fragment>;})}</tbody></table></div>
+
+      {/* Phone: one stacked card per connection, tap to expand the explanation */}
+      <ul className="divide-y divide-white/5 md:hidden">{entries.map((entry) => { const attack = isAttack(entry.hybrid_prediction); const agreed = agreement(entry); const agent = String(latestAnalysis?.flow_id) === String(entry.flow_id) ? latestAnalysis?.analysis : null; const risk = agent?.severity?.toUpperCase() || riskLevel(entry); const expanded = expandedId === entry.flow_id; const action = agent?.incident_report?.recommended_next_step || agent?.recommended_mitigation?.[0] || nextAction(entry); return <li key={`${entry.flow_id}-${entry.observedAt}`}>
+        <button type="button" onClick={() => setExpandedId(expanded ? null : entry.flow_id)} className={`w-full px-4 py-4 text-left transition-colors ${expanded ? "bg-white/[0.03]" : ""}`}>
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-mono text-xs text-sky-300">#{entry.flow_id} {expanded ? <span className="text-slate-500">▼</span> : <span className="text-slate-600">▶</span>}</span>
+            <span className="text-[11px] text-slate-500">{displayTimestamp(entry.observedAt)}</span>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Badge text={attack ? "NEEDS REVIEW" : "LOOKS NORMAL"} variant={attack ? "danger" : "success"} />
+            <Badge text={risk} variant={riskVariant(risk)} />
+            <Badge text={agreed ? "AGREE" : "DISAGREE"} variant={agreed ? "success" : "warning"} />
+            {driftDetected && <Badge text="TRAFFIC CHANGED" variant="warning" />}
+          </div>
+          <p className="mt-2 text-xs leading-5 text-slate-400"><span className="text-slate-500">What to do: </span>{action}</p>
+        </button>
+        {expanded && <div className="px-4 pb-5"><ErrorBoundary label="The explanation"><ExpandedContent entry={entry} analysis={agent} /></ErrorBoundary></div>}
+      </li>;})}</ul>
+    </>}
   </Card>;
 }

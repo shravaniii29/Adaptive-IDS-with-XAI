@@ -38,7 +38,7 @@ export default function RemoteAttackConsent() {
   if (pending.length === 0) return null;
 
   return (
-    <div className="pointer-events-auto fixed bottom-4 right-4 z-50 w-80 space-y-3">
+    <div className="pointer-events-auto fixed bottom-4 right-4 z-50 w-[calc(100vw-2rem)] space-y-3 sm:w-80">
       {pending.map((req) => {
         const secondsLeft = Math.max(0, Math.round(req.expires_at - Date.now() / 1000));
         return (

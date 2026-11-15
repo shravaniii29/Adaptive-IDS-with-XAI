@@ -64,39 +64,43 @@ export default function RunSimulationPanel({ status, error, onStart, onCancel }:
         </div>
 
         {!running ? (
-          <div className="flex items-center gap-3">
-            <label className="text-sm text-slate-400" htmlFor="target-address">
-              Target
-            </label>
-            <input
-              id="target-address"
-              value={target}
-              onChange={(event) => setTarget(event.target.value)}
-              placeholder={`${DEFAULT_TARGET} (default)`}
-              spellCheck={false}
-              aria-invalid={targetInvalid}
-              title="Loopback address (127.x.x.x) or this machine's own address"
-              className={`w-44 rounded-xl border bg-[#111827] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-indigo-400/50 ${targetInvalid ? "border-rose-400/60" : "border-white/10"}`}
-            />
-            <label className="text-sm text-slate-400" htmlFor="trial-count">
-              Trials
-            </label>
-            <select
-              id="trial-count"
-              value={trials}
-              onChange={(event) => setTrials(Number(event.target.value))}
-              className="rounded-xl border border-white/10 bg-[#111827] px-3 py-2 text-sm text-slate-100 outline-none focus:border-indigo-400/50"
-            >
-              {[1, 2, 3, 5].map((n) => (
-                <option key={n} value={n}>
-                  {n} trial{n === 1 ? "" : "s"} (~{estimateMinutes(n)} min)
-                </option>
-              ))}
-            </select>
+          <div className="grid w-full grid-cols-1 gap-3 sm:flex sm:w-auto sm:items-center">
+            <div className="flex items-center gap-2">
+              <label className="w-14 shrink-0 text-sm text-slate-400 sm:w-auto" htmlFor="target-address">
+                Target
+              </label>
+              <input
+                id="target-address"
+                value={target}
+                onChange={(event) => setTarget(event.target.value)}
+                placeholder={`${DEFAULT_TARGET} (default)`}
+                spellCheck={false}
+                aria-invalid={targetInvalid}
+                title="Loopback address (127.x.x.x) or this machine's own address"
+                className={`w-full rounded-xl border bg-[#111827] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-indigo-400/50 sm:w-44 ${targetInvalid ? "border-rose-400/60" : "border-white/10"}`}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="w-14 shrink-0 text-sm text-slate-400 sm:w-auto" htmlFor="trial-count">
+                Trials
+              </label>
+              <select
+                id="trial-count"
+                value={trials}
+                onChange={(event) => setTrials(Number(event.target.value))}
+                className="w-full rounded-xl border border-white/10 bg-[#111827] px-3 py-2 text-sm text-slate-100 outline-none focus:border-indigo-400/50 sm:w-auto"
+              >
+                {[1, 2, 3, 5].map((n) => (
+                  <option key={n} value={n}>
+                    {n} trial{n === 1 ? "" : "s"} (~{estimateMinutes(n)} min)
+                  </option>
+                ))}
+              </select>
+            </div>
             <button
               onClick={handleStart}
               disabled={starting || targetInvalid}
-              className="flex items-center gap-2 rounded-xl bg-indigo-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-xl bg-indigo-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:opacity-50"
             >
               {starting ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
               Run simulation
@@ -105,7 +109,7 @@ export default function RunSimulationPanel({ status, error, onStart, onCancel }:
         ) : (
           <button
             onClick={onCancel}
-            className="flex items-center gap-2 rounded-xl bg-rose-500/15 px-4 py-2 text-sm font-semibold text-rose-200 ring-1 ring-inset ring-rose-400/30 transition hover:bg-rose-500/25"
+            className="flex items-center justify-center gap-2 rounded-xl bg-rose-500/15 px-4 py-2 text-sm font-semibold text-rose-200 ring-1 ring-inset ring-rose-400/30 transition hover:bg-rose-500/25"
           >
             <Square size={16} />
             Cancel run
