@@ -1,3 +1,4 @@
+import { useLocation } from "react-router-dom";
 import PageHeader from "../../components/common/PageHeader";
 import LiveLogTable from "../../components/dashboard/LiveLogTable";
 import PageContainer from "../../components/layout/PageContainer";
@@ -9,9 +10,11 @@ export default function LiveLogs() {
   const { history, prediction } = usePrediction();
   const { drift } = useDrift();
   const { analysis } = useAgentAnalysis(prediction?.flow_id);
+  const { search } = useLocation();
+  const initialIp = new URLSearchParams(search).get("q") ?? "";
 
   return <PageContainer>
     <PageHeader title="Live threat feed" subtitle="Live flow detections from the connected IDS." />
-    <LiveLogTable entries={history} driftDetected={drift?.drift_detected} latestAnalysis={analysis} />
+    <LiveLogTable entries={history} driftDetected={drift?.drift_detected} latestAnalysis={analysis} showFilters initialIpQuery={initialIp} />
   </PageContainer>;
 }

@@ -195,5 +195,30 @@ Demo checklist (in this order)
   2. Start dashboard, open http://localhost:5173
   3. Press Clear Stats.
   4. Live Simulation -> Run simulation (1 trial, ~5 min).
-  5. Show the Hybrid vs V8 card, then flip the Hybrid | V8 switch on the
-     Overview / Live Logs / Explainability pages.
+  5. The dashboard runs the V8 model only (the "Model: V8" badge in the top
+     bar). Open Live Logs and use the Attacks / Safe / All toggle and the
+     "Search by IP" box to pull up specific flows - handy because a whole
+     flood collapses into one flow.
+
+Prove it is real, not a canned show - trigger detection with REAL data flow
+(not the dashboard button), from a second terminal while the backend captures:
+
+    cd <this folder>
+    python exfil_demo.py                 # ~12 MB outbound UDP data to 127.0.0.77
+    python exfil_demo.py --mb 25         # heavier
+    python exfil_demo.py --target <your-second-PC-ip> --i-am-authorized
+
+  -> This sends a genuine high-volume one-directional OUTBOUND data stream.
+     The sensor captures it on the wire, the real XGBoost + Isolation Forest
+     models score it, and it is flagged NEEDS REVIEW. In the dashboard, open
+     Live Logs, search the target IP (127.0.0.77), switch the toggle to
+     Attacks, open the flow and read the SHAP reason (Fwd Header Len and
+     pkt_rate_ratio push it to "attack" = lots of data leaving, one-way).
+  -> Nothing about the dashboard or the model is involved in triggering it -
+     the detection happens purely because the packets are on the wire.
+  -> Honest note: a slow, quiet TCP bulk copy is CAUGHT (the Isolation Forest
+     marks it anomalous) but not flagged - the fused alert threshold is tuned
+     for attack-shaped outbound traffic, not every large transfer. The demo
+     uses a high-volume UDP stream, which the model flags reliably.
+  -> IMPORTANT: run app.main (the real backend), never app.demo_main - the
+     latter is a UI-only mock that fabricates random verdicts.
